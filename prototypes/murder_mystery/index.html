@@ -1,0 +1,492 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Advanced Murder Mystery Generator with LLM</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            line-height: 1.6;
+            background-color: #f4f4f4;
+        }
+        #game-container {
+            background-color: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        button {
+            background-color: #333;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            margin: 5px;
+            cursor: pointer;
+            border-radius: 5px;
+        }
+        button:hover {
+            background-color: #555;
+        }
+        #inventory, #error-message, #conversation {
+            margin-top: 20px;
+            padding: 10px;
+            background-color: #f9f9f9;
+            border-radius: 5px;
+        }
+        #error-message {
+            color: red;
+            border: 1px solid red;
+        }
+        #conversation-input {
+            width: 70%;
+            padding: 5px;
+            margin-top: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div id="game-container">
+        <h1>Advanced Murder Mystery Generator</h1>
+        <div id="error-message" style="display:none;"></div>
+        <div id="story-text"></div>
+        <div id="choices"></div>
+        <div id="conversation" style="display:none;"></div>
+		<input type="text" id="conversation-input" style="display:none;" placeholder="Type your question...">
+		<div id="prefill-container" style="display:none; margin-top: 10px;">
+			<select id="prefill-select"></select>
+			<button id="prefill-button">Prefill Question</button>
+		</div>        
+        <div id="inventory"></div>
+    </div>
+
+    <script>
+        class MysteryGenerator {
+            constructor() {
+                this.locations = [
+                    { name: 'Raven Manor', type: 'historic mansion', atmosphere: 'dark and foreboding' },
+                    { name: 'Sunset Mansion', type: 'coastal estate', atmosphere: 'windswept and isolated' },
+                    { name: 'Crimson Hill Estate', type: 'rural countryside home', atmosphere: 'eerily quiet' }
+                ];
+                
+                this.victims = [
+                    { name: 'Richard Blackwood', profession: 'Wealthy Businessman', background: 'Known for cutthroat business tactics', age: 'late 50s' },
+                    { name: 'Elizabeth Hartford', profession: 'Famous Novelist', background: 'Bestselling author with controversial works', age: 'early 40s' }
+                ];
+                
+                this.suspects = [
+                    { relation: 'spouse', motivations: ['financial gain', 'discovered infidelity'], characteristics: ['calculated', 'emotional'] },
+                    { relation: 'child', motivations: ['inheritance dispute', 'family conflict'], characteristics: ['rebellious', 'desperate'] },
+                    { relation: 'business partner', motivations: ['failed deal', 'professional rivalry'], characteristics: ['ambitious', 'ruthless'] },
+                    { relation: 'housekeeper', motivations: ['hidden grudge', 'blackmail'], characteristics: ['quiet', 'observant'] }
+                ];
+                
+                this.murdererProfiles = [
+                    { type: 'Calculated', planningLevel: 'Meticulously planned', emotionalState: 'Cold', coverup: 'Sophisticated' },
+                    { type: 'Passionate', planningLevel: 'Impulsive', emotionalState: 'Troubled', coverup: 'Messy' }
+                ];
+            }
+            
+            generateMystery() {
+				const victim = this.randomItem(this.victims);
+				const location = this.randomItem(this.locations);
+				const suspects = this.shuffleArray([...this.suspects]).slice(0, 3);
+				const murderer = this.randomItem(suspects);				
+				const clues = [];			
+				return {
+					victim,
+					location,
+					suspects,
+					murderer,
+					clues,
+					murdererProfile: this.randomItem(this.murdererProfiles),
+					timeOfMurder: this.randomItem(['Late at night', 'Early morning']),
+					requiredClues: 3
+				};
+			}
+
+            
+            randomItem(array) {
+                return array[Math.floor(Math.random() * array.length)];
+            }
+
+            shuffleArray(array) {
+                for (let i = array.length - 1; i > 0; i--) {
+                    const j = Math.floor(Math.random() * (i + 1));
+                    [array[i], array[j]] = [array[j], array[i]];
+                }
+                return array;
+            }
+        }
+
+        class MurderMysteryGame {
+			constructor() {
+				this.mysteryGenerator = new MysteryGenerator();
+				this.inventory = [];
+				this.currentScene = 'start';
+				this.scenes = null;
+				this.conversationHistory = [];
+				this.currentSuspect = null;
+				this.mystery = null;
+			}
+
+			// Initialize the game asynchronously so we can generate clues dynamically.
+			async initializeGame() {
+				this.mystery = await this.generateMysteryWithDynamicClues();
+				this.scenes = this.generateScenes();
+			}
+			
+			// This method asks the LLM to generate a list of clues.
+			async generateClues() {
+				const prompt = `Generate a list of 4 unique clues for a murder mystery game. Output in JSON format as an array of objects, where each object has the keys: "name", "significance", and "location". The "name" is a brief title, "significance" describes its importance, and "location" describes where it was found. Do not include any extra keys or explanation.`;
+				const response = await this.getLLMResponse(prompt);
+				try {
+				
+					const jsonString = response.replace(/```json\s*([\s\S]*?)\s*```/, '$1').trim();
+					let clues = JSON.parse(jsonString);
+					// Add a placeholder property "pointsTo" that we will assign later.
+					clues.forEach(clue => clue.pointsTo = "random");
+					return clues;
+				} catch (e) {
+					console.error("Failed to parse clues from LLM response:", e);
+					// Fallback to default clues if LLM response fails.
+					return [
+						{ name: 'Fallback Letter', significance: 'Suggests hidden motives', location: 'under the desk', pointsTo: "random" },
+						{ name: 'Fallback Watch', significance: 'Stopped at time of murder', location: 'in the foyer', pointsTo: "random" },
+						{ name: 'Fallback Footprints', significance: 'Indicate hurried exit', location: 'near the back door', pointsTo: "random" },
+						{ name: 'Fallback Contract', significance: 'Implies financial dealings', location: 'in the study', pointsTo: "random" }
+					];
+				}
+			}
+			
+			// Generate the mystery using the generated clues.
+			async generateMysteryWithDynamicClues() {
+				// Get dynamic clues from the LLM.
+				const dynamicClues = await this.generateClues();
+				// Generate the rest of the mystery using your generator, but override the clues.
+				const mystery = this.mysteryGenerator.generateMystery();
+				mystery.clues = dynamicClues;
+				
+				// Randomly assign each clue to a suspect.
+				const suspects = mystery.suspects;
+				const murderer = mystery.murderer;
+				const assignments = dynamicClues.map(() => this.mysteryGenerator.randomItem(suspects).relation);
+				
+				// Ensure that at least one clue points to the murderer.
+				if (!assignments.includes(murderer.relation)) {
+					assignments[Math.floor(Math.random() * assignments.length)] = murderer.relation;
+				}
+				
+				mystery.clues.forEach((clue, index) => {
+					clue.pointsTo = assignments[index];
+				});
+				return mystery;
+			}
+			
+            showError(message) {
+                const errorEl = document.getElementById('error-message');
+                errorEl.textContent = message;
+                errorEl.style.display = 'block';
+            }
+
+            async getLLMResponse(prompt) {
+                try {
+                    const response = await fetch('http://localhost:11434/api/generate', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            model: 'deepseek-r1:32b', // Adjust model name as needed
+                            prompt: prompt,
+                            stream: false
+                        })
+                    });
+                    const data = await response.json();
+					let cleanedResponse = data.response || "I don't have much to say about that.";
+					cleanedResponse = cleanedResponse.replace(/<think>[\s\S]*?<\/think>/g,'');
+                    return cleanedResponse;
+                } catch (error) {
+                    this.showError('Failed to contact LLM server: ' + error.message);
+                    return "Sorry, I can't respond right now.";
+                }
+            }
+
+            updateInventory() {
+				const inventoryEl = document.getElementById('inventory');
+				inventoryEl.innerHTML = '<h3>Inventory:</h3>' + 
+					(this.inventory.length > 0 
+						? this.inventory.map(item => `<p>• ${item}</p>`).join('') 
+						: '<p>Empty</p>');
+				// Refresh the prefill dropdown if visible
+				if(document.getElementById('prefill-container').style.display !== 'none') {
+					this.updatePrefillDropdown();
+				}
+			}
+
+			updatePrefillDropdown() {
+				const select = document.getElementById('prefill-select');
+				select.innerHTML = ''; // Clear any previous options
+				if (this.inventory.length === 0) {
+					const option = document.createElement('option');
+					option.value = '';
+					option.textContent = 'No items in inventory';
+					select.appendChild(option);
+				} else {
+					this.inventory.forEach(item => {
+						const option = document.createElement('option');
+						option.value = item;
+						option.textContent = item;
+						select.appendChild(option);
+					});
+				}
+			}
+			
+			startConversation(suspect) {
+				this.currentSuspect = suspect;
+				this.conversationHistory = [];
+				const conversationEl = document.getElementById('conversation');
+				const inputEl = document.getElementById('conversation-input');
+				const prefillContainer = document.getElementById('prefill-container');
+				conversationEl.style.display = 'block';
+				inputEl.style.display = 'block';
+				prefillContainer.style.display = 'block'; // Show the prefill UI
+				
+				conversationEl.innerHTML = '<h3>Conversation with the ' + suspect.relation + '</h3>';
+				
+				// Update the prefill dropdown with current inventory items
+				this.updatePrefillDropdown();
+				
+				// Wire up the prefill button to insert a pre-made question
+				document.getElementById('prefill-button').onclick = () => {
+					const selectedItem = document.getElementById('prefill-select').value;
+					if (selectedItem) {
+						inputEl.value = `What do you know about ${selectedItem}?`;
+					}
+				};
+
+				this.updateConversation("Detective: Hello, I'm investigating the murder. Can you tell me about your relationship with " + this.mystery.victim.name + "?");
+				
+				inputEl.onkeypress = (e) => {
+					if (e.key === 'Enter' && inputEl.value.trim()) {
+						this.handleUserInput(inputEl.value.trim());
+						inputEl.value = '';
+					}
+				};
+			}
+
+            async handleUserInput(input) {
+                this.conversationHistory.push({ speaker: 'Detective', text: input });
+                const prompt = this.buildLLMPrompt(input);
+                const response = await this.getLLMResponse(prompt);
+                this.conversationHistory.push({ speaker: this.currentSuspect.relation, text: response });
+                this.updateConversation(response);
+            }
+
+            buildLLMPrompt(userInput) {
+                const m = this.mystery;
+				const suspect = this.currentSuspect;
+				const isMurderer = suspect === m.murderer;
+
+				// Get the clues associated with the current suspect
+				const suspectClues = m.clues.filter(clue => clue.pointsTo === suspect.relation);
+				let cluesDescription = '';
+				if (suspectClues.length > 0) {
+					cluesDescription = suspectClues
+						.map(clue => `${clue.name} (significance: ${clue.significance}, found ${clue.location})`)
+						.join(', ');
+				} else {
+					cluesDescription = 'No specific clues directly point to you';
+				}
+				
+				// Compile all established facts for context
+				const establishedFacts = `
+Location: ${m.location.name} (${m.location.type}, ${m.location.atmosphere} atmosphere)
+Time of murder: ${m.timeOfMurder}
+Victim: ${m.victim.name}, a ${m.victim.profession} known for ${m.victim.background}
+Suspects: ${m.suspects.map(s => `${s.relation} (motivations: ${s.motivations.join(', ')}, characteristics: ${s.characteristics.join(' and ')})`).join('; ')}
+Clues: ${m.clues.map(clue => `${clue.name} (significance: ${clue.significance}, found ${clue.location}, points to: ${clue.pointsTo})`).join('; ')}
+				`.trim();
+
+				// Provide suspect-specific instructions
+				let suspectInstructions;
+				if (isMurderer) {
+					suspectInstructions = `IMPORTANT: Although the clues associated with you are: ${cluesDescription}, you must fabricate a lie about your connection to these clues. Your lie should be inconsistent with the known details and made up on the spot.`;
+				} else {
+					suspectInstructions = `The clues associated with you are: ${cluesDescription}. Provide a realistic and honest backstory for these clues if questioned.`;
+				}
+				
+				return `
+All Established Facts:
+${establishedFacts}
+
+You are the ${suspect.relation} of ${m.victim.name}, a ${m.victim.profession} who was murdered.
+Your characteristics are: ${suspect.characteristics.join(' and ')}.
+Your potential motives are: ${suspect.motivations.join(' or ')}.
+${isMurderer ? 
+	`You ARE the murderer. The murder was ${m.murdererProfile.planningLevel} and your emotional state is ${m.murdererProfile.emotionalState}. You attempt a ${m.murdererProfile.coverup} cover-up. ${suspectInstructions}` :
+	`You are NOT the murderer. Respond with plausible denials and point suspicion elsewhere if possible. ${suspectInstructions}`}
+Previous conversation:
+${this.conversationHistory.map(c => `${c.speaker}: ${c.text}`).join('\n')}
+
+Detective asks: "${userInput}"
+Respond as the ${suspect.relation} in character:
+			`;
+            }
+
+            updateConversation(latestMessage) {
+                const conversationEl = document.getElementById('conversation');
+                conversationEl.innerHTML = '<h3>Conversation with the ' + this.currentSuspect.relation + '</h3>' +
+                    this.conversationHistory.map(c => `<p><strong>${c.speaker}:</strong> ${c.text}</p>`).join('');
+                conversationEl.scrollTop = conversationEl.scrollHeight;
+            }
+
+            endConversation() {
+                document.getElementById('conversation').style.display = 'none';
+                document.getElementById('conversation-input').style.display = 'none';
+                this.currentSuspect = null;
+                this.conversationHistory = [];
+            }
+
+            generateScenes() {
+                const m = this.mystery;
+                return {
+                    'start': {
+                        text: `It's ${m.timeOfMurder} at ${m.location.name}, a ${m.location.type}. You're Detective Alex Morgan, investigating the murder of ${m.victim.name}, a ${m.victim.profession}.`,
+                        choices: [
+                            { text: "Examine crime scene", next: 'crime_scene' },
+                            { text: "Interview suspects", next: 'suspect_selection' }
+                        ]
+                    },
+                    'crime_scene': {
+                        text: `The crime scene shows a ${m.murdererProfile.planningLevel} murder with ${m.murdererProfile.coverup} cover-up attempts.`,
+                        choices: m.clues.map((clue, index) => ({
+                            text: `Investigate ${clue.location}`,
+                            next: `clue_${index}`,
+                            condition: () => !this.inventory.includes(clue.name)
+                        })).concat([{ text: "Return to investigation", next: 'start' }])
+                    },
+                    ...m.clues.reduce((acc, clue, index) => ({
+                        ...acc,
+                        [`clue_${index}`]: {
+                            text: `You find a ${clue.name} ${clue.location}. ${clue.significance}. It might point to the ${clue.pointsTo}.`,
+                            choices: [
+                                { text: "Take the clue", next: 'crime_scene', item: clue.name },
+                                { text: "Leave it", next: 'crime_scene' }
+                            ]
+                        }
+                    }), {}),
+                    'suspect_selection': {
+                        text: `Several suspects emerge in the case. Who would you like to interview?`,
+                        choices: m.suspects.map(suspect => ({
+                            text: `The ${suspect.relation}`,
+                            next: `interview_${suspect.relation}`
+                        })).concat([{ text: "Return to crime scene", next: 'crime_scene' }])
+                    },
+                    ...m.suspects.reduce((acc, suspect) => ({
+                        ...acc,
+                        [`interview_${suspect.relation}`]: {
+                            text: `You approach the ${suspect.relation}. They seem ${suspect.characteristics.join(' and ')}.`,
+                            choices: [
+                                { text: "Start conversation", next: () => { this.startConversation(suspect); return 'interviewing'; } },
+                                { text: "Back to suspects", next: 'suspect_selection' }
+                            ]
+                        }
+                    }), {}),
+                    'interviewing': {
+                        text: `You're currently interviewing the ${this.currentSuspect ? this.currentSuspect.relation : 'suspect'}.`,
+                        choices: [
+                            { text: "End conversation", next: 'suspect_selection', action: () => this.endConversation() },
+                            { text: "Make an accusation", next: 'accusation', suspect: () => this.currentSuspect }
+                        ]
+                    },
+                    'accusation': {
+                        text: `You have ${this.inventory.length} clues. You need at least ${m.requiredClues} to make a solid case. Who do you accuse?`,
+                        choices: m.suspects.map(suspect => ({
+                            text: `Accuse the ${suspect.relation}`,
+                            next: () => this.inventory.length >= m.requiredClues ? 'game_over' : 'evidence_warning',
+                            suspect: suspect
+                        })).concat([{ text: "Gather more evidence", next: 'start' }])
+                    },
+                    'evidence_warning': {
+                        text: `You don't have enough evidence yet (${this.inventory.length}/${m.requiredClues}).`,
+                        choices: [{ text: "Continue investigating", next: 'start' }]
+                    },
+                    'game_over': {
+                        text: (suspect) => {
+                            const correct = suspect === m.murderer;
+                            return correct ? 
+                                `Success! The ${suspect.relation} was the killer. Case closed!` :
+                                `Wrong! The real killer, the ${m.murderer.relation}, escapes justice.`;
+                        },
+                        choices: [{ text: "Play Again", next: 'restart' }]
+                    },
+                    'restart': {
+                        text: "A new mystery awaits...",
+                        choices: [{ text: "Begin New Case", next: 'start' }],
+                        action: (game) => {
+                            game.initializeGame();
+                            game.inventory = [];
+                            game.updateInventory();
+                        }
+                    }
+                };
+            }
+
+            addToInventory(item) {
+                if (!this.inventory.includes(item)) {
+                    this.inventory.push(item);
+                    this.updateInventory();
+                }
+            }
+
+            updateInventory() {
+                const inventoryEl = document.getElementById('inventory');
+                inventoryEl.innerHTML = '<h3>Inventory:</h3>' + 
+                    (this.inventory.length > 0 
+                        ? this.inventory.map(item => `<p>• ${item}</p>`).join('') 
+                        : '<p>Empty</p>');
+            }
+
+            displayScene(sceneName, suspect = null) {
+                try {
+                    const scene = this.scenes[sceneName];
+                    if (!scene) throw new Error(`Scene "${sceneName}" not found`);
+
+                    this.currentScene = sceneName;
+                    const storyTextEl = document.getElementById('story-text');
+                    const choicesEl = document.getElementById('choices');
+
+                    storyTextEl.textContent = typeof scene.text === 'function' ? scene.text(suspect) : scene.text;
+                    choicesEl.innerHTML = '';
+
+                    if (scene.action) scene.action(this);
+
+                    scene.choices
+                        .filter(choice => !choice.condition || choice.condition())
+                        .forEach(choice => {
+                            const button = document.createElement('button');
+                            button.textContent = choice.text;
+                            button.onclick = () => {
+                                if (choice.item) this.addToInventory(choice.item);
+                                const nextScene = typeof choice.next === 'function' ? choice.next() : choice.next;
+                                this.displayScene(nextScene, choice.suspect || suspect);
+                            };
+                            choicesEl.appendChild(button);
+                        });
+                } catch (error) {
+                    this.showError('Error displaying scene: ' + error.message);
+                }
+            }
+
+			async start() {
+				await this.initializeGame();
+				this.displayScene('start');
+			}
+        }
+
+        const game = new MurderMysteryGame();
+        game.start();
+    </script>
+</body>
+</html>

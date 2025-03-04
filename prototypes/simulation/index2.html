@@ -1,0 +1,1998 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Fantasy World Simulation</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: #1a1a2e;
+      color: #e6e6e6;
+      margin: 0;
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+    h1 {
+      margin-top: 10px;
+      color: #a7c5eb;
+      text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+    }
+    #controls {
+      margin: 15px;
+      background: #16213e;
+      padding: 10px 20px;
+      border-radius: 8px;
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+    }
+    #simulationCanvas {
+      border: 2px solid #533483;
+      background: #0f3460;
+      border-radius: 5px;
+      box-shadow: 0 6px 12px rgba(0, 0, 0, 0.4);
+    }
+    button {
+      margin-right: 10px;
+      padding: 8px 15px;
+      font-size: 14px;
+      background: #533483;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      transition: background 0.3s;
+    }
+    button:hover {
+      background: #6247aa;
+    }
+    .stat-display {
+      background: #16213e;
+      padding: 10px;
+      margin: 10px 0;
+      border-radius: 8px;
+      max-height: 200px;
+      overflow-y: auto;
+      width: 800px;
+    }
+    .log-entry {
+      margin: 5px 0;
+      font-size: 14px;
+    }
+    .stat-panel {
+      display: flex;
+      justify-content: space-between;
+      margin-top: 10px;
+    }
+    .stat-column {
+      flex: 1;
+      margin: 0 10px;
+    }
+    .world-info {
+      display: flex;
+      justify-content: space-around;
+      width: 800px;
+      margin: 10px 0;
+      color: #a7c5eb;
+    }
+    select {
+      background: #16213e;
+      color: white;
+      padding: 5px;
+      border: 1px solid #533483;
+      border-radius: 4px;
+    }
+    .legend {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      margin: 10px 0;
+      width: 800px;
+    }
+    .legend-item {
+      display: flex;
+      align-items: center;
+      margin: 5px 10px;
+    }
+    .legend-color {
+      width: 20px;
+      height: 20px;
+      margin-right: 5px;
+      border: 1px solid #ccc;
+      border-radius: 3px;
+    }
+  </style>
+</head>
+<body>
+  <h1>Fantasy World Simulation</h1>
+  
+  <div class="world-info">
+    <div>Season: <span id="seasonDisplay">Spring</span></div>
+    <div>Day/Night: <span id="dayNightDisplay">Day</span></div>
+    <div>Year: <span id="yearDisplay">1</span></div>
+    <div>Day: <span id="dayDisplay">1</span></div>
+  </div>
+  
+  <div id="controls">
+    <button id="startButton">Start</button>
+    <button id="pauseButton">Pause</button>
+    <button id="stepButton">Step</button>
+    <span style="margin-left: 10px;">Speed: </span>
+    <select id="speedSelector">
+      <option value="1000">Slow</option>
+      <option value="500" selected>Normal</option>
+      <option value="200">Fast</option>
+      <option value="50">Very Fast</option>
+    </select>
+    <span style="margin-left: 20px;">Cycles: <span id="stepCounter">0</span></span>
+  </div>
+  
+  <div class="legend">
+    <div class="legend-item"><div class="legend-color" style="background: #8bc34a;"></div>Forest</div>
+    <div class="legend-item"><div class="legend-color" style="background: #f9d56e;"></div>Plains</div>
+    <div class="legend-item"><div class="legend-color" style="background: #b39ddb;"></div>Magic Grove</div>
+    <div class="legend-item"><div class="legend-color" style="background: #78909c;"></div>Mountains</div>
+    <div class="legend-item"><div class="legend-color" style="background: #2196f3;"></div>Lakes</div>
+    <div class="legend-item"><div class="legend-color" style="background: #ff5722;"></div>Dragon</div>
+    <div class="legend-item"><div class="legend-color" style="background: #ffc107;"></div>Griffin</div>
+    <div class="legend-item"><div class="legend-color" style="background: #4caf50;"></div>Goblin</div>
+    <div class="legend-item"><div class="legend-color" style="background: #9c27b0;"></div>Wizard</div>
+    <div class="legend-item"><div class="legend-color" style="background: #f44336;"></div>Knight</div>
+    <div class="legend-item"><div class="legend-color" style="background: #3f51b5;"></div>Elf</div>
+    <div class="legend-item"><div class="legend-color" style="background: #e91e63;"></div>Fairy</div>
+  </div>
+  
+  <canvas id="simulationCanvas" width="800" height="600"></canvas>
+  
+  <div class="stat-panel">
+    <div class="stat-column">
+      <h3>Population</h3>
+      <div id="populationStats"></div>
+    </div>
+    <div class="stat-column">
+      <h3>Resources</h3>
+      <div id="resourceStats"></div>
+    </div>
+  </div>
+  
+  <h3>Event Log</h3>
+  <div id="eventLog" class="stat-display"></div>
+
+  <script>
+    // --------------------------------------------------
+    // Simulation Module: Contains Entities, Behaviors, World, etc.
+    // --------------------------------------------------
+    const Simulation = (() => {
+      // ---------------------------
+      // Base Behavior Class
+      // ---------------------------
+      class Behavior {
+        constructor(type, parameters) {
+          this.type = type;
+          this.parameters = parameters || {};
+        }
+        
+        execute(entity, world) {
+          // Base implementation
+        }
+      }
+
+      // ---------------------------
+      // Movement Behaviors
+      // ---------------------------
+      class MovementBehavior extends Behavior {
+        constructor(parameters) {
+          super('movement', parameters);
+          this.cooldown = 0;
+        }
+        
+        execute(entity, world) {
+          // Skip movement if on cooldown
+          if (this.cooldown > 0) {
+            this.cooldown--;
+            return;
+          }
+          
+          // Get current grid position
+          const currentCol = Math.floor(entity.x / world.cellWidth);
+          const currentRow = Math.floor(entity.y / world.cellHeight);
+          
+          // Determine possible movement directions (including diagonals)
+          const directions = [
+            {row: -1, col: 0},  // up
+            {row: 1, col: 0},   // down
+            {row: 0, col: -1},  // left
+            {row: 0, col: 1},   // right
+            {row: -1, col: -1}, // up-left
+            {row: -1, col: 1},  // up-right
+            {row: 1, col: -1},  // down-left
+            {row: 1, col: 1}    // down-right
+          ];
+          
+          let moved = false;
+          
+          // Prioritize moving toward targets if hunting or fleeing
+          if (entity.target && this.parameters.huntingMode) {
+            const targetCol = Math.floor(entity.target.x / world.cellWidth);
+            const targetRow = Math.floor(entity.target.y / world.cellHeight);
+            
+            const dx = targetCol - currentCol;
+            const dy = targetRow - currentRow;
+            
+            // Choose direction that moves toward target
+            const direction = {
+              row: dy === 0 ? 0 : (dy > 0 ? 1 : -1),
+              col: dx === 0 ? 0 : (dx > 0 ? 1 : -1)
+            };
+            
+            const newRow = currentRow + direction.row;
+            const newCol = currentCol + direction.col;
+            
+            if (this.isValidMove(newRow, newCol, world, entity)) {
+              this.moveEntity(entity, newRow, newCol, world);
+              moved = true;
+            }
+          } 
+          // Check if entity should flee
+          else if (entity.threatNearby && this.parameters.fleeFromPredators) {
+            const threat = entity.threatNearby;
+            const threatCol = Math.floor(threat.x / world.cellWidth);
+            const threatRow = Math.floor(threat.y / world.cellHeight);
+            
+            // Move away from the threat
+            const dx = currentCol - threatCol;
+            const dy = currentRow - threatRow;
+            
+            const direction = {
+              row: dy === 0 ? 0 : (dy > 0 ? 1 : -1),
+              col: dx === 0 ? 0 : (dx > 0 ? 1 : -1)
+            };
+            
+            const newRow = currentRow + direction.row;
+            const newCol = currentCol + direction.col;
+            
+            if (this.isValidMove(newRow, newCol, world, entity)) {
+              this.moveEntity(entity, newRow, newCol, world);
+              moved = true;
+            }
+          }
+          
+          // Random movement if not hunting/fleeing or if directed movement failed
+          if (!moved && Math.random() < this.parameters.moveProbability) {
+            // Shuffle directions for random selection
+            const shuffledDirs = directions.sort(() => Math.random() - 0.5);
+            
+            for (const direction of shuffledDirs) {
+              const newRow = currentRow + direction.row;
+              const newCol = currentCol + direction.col;
+              
+              if (this.isValidMove(newRow, newCol, world, entity)) {
+                this.moveEntity(entity, newRow, newCol, world);
+                moved = true;
+                break;
+              }
+            }
+          }
+          
+          // Set cooldown based on speed
+          if (moved) {
+            this.cooldown = Math.max(1, Math.floor(10 / (this.parameters.speed || 1)));
+            entity.energy -= this.parameters.energyCost * (world.isNight ? 1.5 : 1);
+            
+            // Terrain effects
+            const currentTerrain = world.getTerrainAt(entity.x, entity.y);
+            if (currentTerrain === 'mountains' && entity.type !== 'griffin' && entity.type !== 'dragon') {
+              entity.energy -= this.parameters.energyCost * 0.5; // Mountains cost extra energy
+            } else if (currentTerrain === 'lakes' && !entity.canSwim) {
+              entity.energy -= this.parameters.energyCost * 2; // Water costs extra for non-swimmers
+            }
+          }
+        }
+        
+        isValidMove(row, col, world, entity) {
+          // Check if new position is within grid bounds
+          if (row < 0 || row >= world.gridRows || col < 0 || col >= world.gridCols) {
+            return false;
+          }
+          
+          // Get terrain type at new position
+          const newTerrain = world.grid[row][col].terrain;
+          
+          // Check terrain restrictions
+          if (newTerrain === 'mountains' && !entity.canClimb && entity.type !== 'griffin' && entity.type !== 'dragon') {
+            return Math.random() < 0.2; // Small chance to enter mountains for non-climbers
+          }
+          
+          if (newTerrain === 'lakes' && !entity.canSwim) {
+            return Math.random() < 0.1; // Very small chance to enter water for non-swimmers
+          }
+          
+          return true;
+        }
+        
+        moveEntity(entity, newRow, newCol, world) {
+          // Move to center of new cell with some randomness
+          entity.x = (newCol + 0.3 + Math.random() * 0.4) * world.cellWidth;
+          entity.y = (newRow + 0.3 + Math.random() * 0.4) * world.cellHeight;
+        }
+      }
+
+      // ---------------------------
+      // Hunting Behavior
+      // ---------------------------
+      class HuntingBehavior extends Behavior {
+        constructor(parameters) {
+          super('hunting', parameters);
+          this.huntCooldown = 0;
+        }
+        
+        execute(entity, world) {
+          if (this.huntCooldown > 0) {
+            this.huntCooldown--;
+            return;
+          }
+          
+          // Skip hunting if not hungry enough
+          if (entity.energy > entity.maxEnergy * 0.7) {
+            return;
+          }
+          
+          // Search for prey
+          const huntRadius = this.parameters.radius;
+          let potentialPrey = Array.from(world.entities.values()).filter(other => {
+            return (
+              other.id !== entity.id &&
+              this.parameters.targetTypes.includes(other.type) &&
+              Math.hypot(entity.x - other.x, entity.y - other.y) < huntRadius
+            );
+          });
+          
+          // Sort by distance
+          potentialPrey.sort((a, b) => {
+            const distA = Math.hypot(entity.x - a.x, entity.y - a.y);
+            const distB = Math.hypot(entity.x - b.x, entity.y - b.y);
+            return distA - distB;
+          });
+          
+          if (potentialPrey.length > 0) {
+            const prey = potentialPrey[0];
+            const distance = Math.hypot(entity.x - prey.x, entity.y - prey.y);
+            
+            // Set as target if not in attack range
+            if (distance > entity.radius + prey.radius) {
+              entity.target = prey;
+              
+              // Alert prey of nearby predator
+              prey.threatNearby = entity;
+              
+              // Hunting fails sometimes based on prey's evasion skill
+              if (prey.evasion && Math.random() < prey.evasion) {
+                world.addEventLog(`${prey.name} (${prey.type}) evaded ${entity.name}'s hunt!`);
+                this.huntCooldown = 10;
+                return;
+              }
+            } else {
+              // Attack when in range
+              const attackSuccess = Math.random() < this.parameters.attackSuccess;
+              
+              if (attackSuccess) {
+                world.addEventLog(`${entity.name} killed ${prey.name} (${prey.type}) and gained ${this.parameters.energyGain} energy!`);
+                world.removeEntity(prey.id);
+                entity.energy += this.parameters.energyGain;
+                entity.killCount = (entity.killCount || 0) + 1;
+                entity.target = null;
+                this.huntCooldown = 20; // Rest after successful hunt
+              } else {
+                world.addEventLog(`${entity.name}'s attack on ${prey.name} failed!`);
+                this.huntCooldown = 5;
+              }
+            }
+          } else {
+            entity.target = null;
+          }
+          
+          // Energy cost for hunting
+          entity.energy -= this.parameters.searchCost;
+        }
+      }
+
+      // ---------------------------
+      // Foraging Behavior (for creatures eating plants, berries, etc.)
+      // ---------------------------
+      class ForagingBehavior extends Behavior {
+        constructor(parameters) {
+          super('foraging', parameters);
+          this.forageCooldown = 0;
+        }
+        
+        execute(entity, world) {
+          if (this.forageCooldown > 0) {
+            this.forageCooldown--;
+            return;
+          }
+          
+          const col = Math.floor(entity.x / world.cellWidth);
+          const row = Math.floor(entity.y / world.cellHeight);
+          
+          if (row < 0 || row >= world.gridRows || col < 0 || col >= world.gridCols) {
+            return;
+          }
+          
+          const cell = world.grid[row][col];
+          if (cell.plantEnergy > 0) {
+            // Foraging success depends on terrain and entity skill
+            let foragingSuccess = this.parameters.foragingSkill || 0.5;
+            
+            // Adjust for terrain
+            if (cell.terrain === 'forest') foragingSuccess *= 1.2;
+            if (cell.terrain === 'mountains') foragingSuccess *= 0.7;
+            if (cell.terrain === 'magicGrove') foragingSuccess *= 1.5;
+            if (cell.terrain === 'lakes') foragingSuccess *= 0.5;
+            
+            if (Math.random() < foragingSuccess) {
+              const energyConsumed = Math.min(this.parameters.eatAmount, cell.plantEnergy);
+              const energyGained = energyConsumed * this.parameters.efficiencyFactor;
+              
+              entity.energy += energyGained;
+              cell.plantEnergy -= energyConsumed;
+              
+              if (energyGained > 5) {
+                world.addEventLog(`${entity.name} foraged at (${row}, ${col}), gaining ${energyGained.toFixed(1)} energy`);
+              }
+              
+              // Special effects in magic groves
+              if (cell.terrain === 'magicGrove' && Math.random() < 0.1) {
+                const bonusEffect = Math.random();
+                if (bonusEffect < 0.33) {
+                  entity.energy += 10;
+                  world.addEventLog(`${entity.name} found magical berries and gained extra energy!`);
+                } else if (bonusEffect < 0.66) {
+                  entity.maxEnergy += 5;
+                  world.addEventLog(`${entity.name} absorbed magic enhancing their vitality!`);
+                } else {
+                  // Temporary buff
+                  entity.buffedUntil = world.currentStep + 100;
+                  world.addEventLog(`${entity.name} is empowered by magical energy for a time!`);
+                }
+              }
+              
+              this.forageCooldown = 5;
+            }
+          }
+          
+          // Energy cost for foraging
+          entity.energy -= this.parameters.searchCost;
+        }
+      }
+
+      // ---------------------------
+      // Magic Behavior (for magical entities)
+      // ---------------------------
+      class MagicBehavior extends Behavior {
+        constructor(parameters) {
+          super('magic', parameters);
+          this.cooldown = 0;
+          this.mana = parameters.maxMana || 100;
+          this.maxMana = parameters.maxMana || 100;
+        }
+        
+        execute(entity, world) {
+          if (this.cooldown > 0) {
+            this.cooldown--;
+            return;
+          }
+          
+          // Regenerate mana
+          this.mana = Math.min(this.maxMana, this.mana + this.parameters.manaRegen);
+          
+          // Skip if not enough mana
+          if (this.mana < this.parameters.manaCost) {
+            return;
+          }
+          
+          // Cast spell based on type
+          const spellType = this.parameters.spellType;
+          const spellChance = this.parameters.spellChance || 0.3;
+          
+          if (Math.random() < spellChance) {
+            switch (spellType) {
+              case 'heal':
+                this.castHealingSpell(entity, world);
+                break;
+              case 'damage':
+                this.castDamageSpell(entity, world);
+                break;
+              case 'environment':
+                this.castEnvironmentSpell(entity, world);
+                break;
+              case 'protection':
+                this.castProtectionSpell(entity, world);
+                break;
+            }
+          }
+        }
+        
+        castHealingSpell(entity, world) {
+          // Heal self or allies
+          const targets = Array.from(world.entities.values()).filter(other => {
+            return (
+              (other.id === entity.id || this.parameters.allyTypes.includes(other.type)) &&
+              Math.hypot(entity.x - other.x, entity.y - other.y) < this.parameters.radius &&
+              other.energy < other.maxEnergy * 0.6
+            );
+          });
+          
+          if (targets.length > 0) {
+            const target = targets[Math.floor(Math.random() * targets.length)];
+            const healAmount = this.parameters.spellPower;
+            
+            target.energy = Math.min(target.maxEnergy, target.energy + healAmount);
+            this.mana -= this.parameters.manaCost;
+            this.cooldown = this.parameters.cooldownTime;
+            
+            world.addEventLog(`${entity.name} cast a healing spell on ${target.name}, restoring ${healAmount} energy!`);
+            
+            // Visual effect
+            world.addEffect({
+              x: target.x,
+              y: target.y,
+              type: 'heal',
+              duration: 10
+            });
+          }
+        }
+        
+        castDamageSpell(entity, world) {
+          // Attack enemies
+          const targets = Array.from(world.entities.values()).filter(other => {
+            return (
+              other.id !== entity.id &&
+              this.parameters.enemyTypes.includes(other.type) &&
+              Math.hypot(entity.x - other.x, entity.y - other.y) < this.parameters.radius
+            );
+          });
+          
+          if (targets.length > 0) {
+            const target = targets[Math.floor(Math.random() * targets.length)];
+            const damageAmount = this.parameters.spellPower;
+            
+            target.energy -= damageAmount;
+            this.mana -= this.parameters.manaCost;
+            this.cooldown = this.parameters.cooldownTime;
+            
+            world.addEventLog(`${entity.name} cast a ${this.parameters.spellName} at ${target.name}, dealing ${damageAmount} damage!`);
+            
+            // Visual effect
+            world.addEffect({
+              x: target.x,
+              y: target.y,
+              type: 'damage',
+              duration: 10
+            });
+            
+            if (target.energy <= 0) {
+              world.addEventLog(`${target.name} was defeated by ${entity.name}'s magic!`);
+              world.removeEntity(target.id);
+              entity.killCount = (entity.killCount || 0) + 1;
+            }
+          }
+        }
+        
+        castEnvironmentSpell(entity, world) {
+          // Affect the environment (change terrain, grow plants, etc.)
+          const col = Math.floor(entity.x / world.cellWidth);
+          const row = Math.floor(entity.y / world.cellHeight);
+          
+          // Influence surrounding cells
+          const radius = 2;
+          for (let r = row - radius; r <= row + radius; r++) {
+            for (let c = col - radius; c <= col + radius; c++) {
+              if (r >= 0 && r < world.gridRows && c >= 0 && c < world.gridCols) {
+                const cell = world.grid[r][c];
+                
+                // Enhance plant growth
+                cell.plantEnergy = Math.min(cell.maxPlantEnergy, cell.plantEnergy + this.parameters.spellPower);
+                
+                // Small chance to transform terrain to magic grove
+                if (Math.random() < 0.05 && cell.terrain !== 'magicGrove' && cell.terrain !== 'lakes' && cell.terrain !== 'mountains') {
+                  cell.terrain = 'magicGrove';
+                  cell.maxPlantEnergy = 120;
+                  cell.regrowthRate = 3;
+                  cell.color = '#b39ddb';
+                }
+              }
+            }
+          }
+          
+          this.mana -= this.parameters.manaCost;
+          this.cooldown = this.parameters.cooldownTime;
+          
+          world.addEventLog(`${entity.name} cast a nature spell, enriching the surrounding land!`);
+          
+          // Visual effect
+          world.addEffect({
+            x: entity.x,
+            y: entity.y,
+            type: 'nature',
+            duration: 15,
+            radius: radius * world.cellWidth
+          });
+        }
+        
+        castProtectionSpell(entity, world) {
+          // Cast protection on self or allies
+          const targets = Array.from(world.entities.values()).filter(other => {
+            return (
+              (other.id === entity.id || this.parameters.allyTypes.includes(other.type)) &&
+              Math.hypot(entity.x - other.x, entity.y - other.y) < this.parameters.radius &&
+              !other.protection
+            );
+          });
+          
+          if (targets.length > 0) {
+            const target = targets[Math.floor(Math.random() * targets.length)];
+            
+            target.protection = true;
+            target.protectionUntil = world.currentStep + this.parameters.protectionDuration;
+            this.mana -= this.parameters.manaCost;
+            this.cooldown = this.parameters.cooldownTime;
+            
+            world.addEventLog(`${entity.name} cast a protection spell on ${target.name}!`);
+            
+            // Visual effect
+            world.addEffect({
+              x: target.x,
+              y: target.y,
+              type: 'protection',
+              duration: 10
+            });
+          }
+        }
+      }
+
+      // ---------------------------
+      // Reproduction Behavior
+      // ---------------------------
+      class ReproductionBehavior extends Behavior {
+        constructor(parameters) {
+          super('reproduction', parameters);
+          this.cooldown = parameters.initialCooldown || 0;
+        }
+        
+        execute(entity, world) {
+          if (this.cooldown > 0) {
+            this.cooldown--;
+            return;
+          }
+          
+          // Only reproduce if entity has sufficient energy
+          if (entity.energy < entity.maxEnergy * this.parameters.energyThreshold) {
+            return;
+          }
+          
+          // Find a mate of the same type
+          const potentialMates = Array.from(world.entities.values()).filter(other => {
+            return (
+              other.id !== entity.id &&
+              other.type === entity.type &&
+              Math.hypot(entity.x - other.x, entity.y - other.y) < this.parameters.findMateRadius &&
+              other.energy > other.maxEnergy * this.parameters.energyThreshold
+            );
+          });
+          
+          if (potentialMates.length > 0 && Math.random() < this.parameters.reproductionChance) {
+            const mate = potentialMates[Math.floor(Math.random() * potentialMates.length)];
+            
+            // Create offspring
+            const numOffspring = Math.floor(Math.random() * this.parameters.maxOffspring) + 1;
+            
+            for (let i = 0; i < numOffspring; i++) {
+              // Offspring appears near parents
+              const offsetX = (Math.random() - 0.5) * world.cellWidth;
+              const offsetY = (Math.random() - 0.5) * world.cellHeight;
+              
+              const offspring = world.createEntity(
+                entity.type, 
+                entity.x + offsetX, 
+                entity.y + offsetY,
+                true // Mark as offspring
+              );
+              
+              // Genetic variation - offspring may have slight variations
+              if (Math.random() < 0.2) {
+                const variation = (Math.random() * 0.2) - 0.1; // -10% to +10%
+                offspring.maxEnergy = Math.max(20, Math.floor(entity.maxEnergy * (1 + variation)));
+              }
+              
+              world.addEventLog(`${entity.name} and ${mate.name} produced offspring (${offspring.name})!`);
+            }
+            
+            // Parents lose energy
+            entity.energy -= this.parameters.energyCost;
+            mate.energy -= this.parameters.energyCost;
+            
+            // Set cooldown
+            this.cooldown = this.parameters.cooldownTime;
+            
+            // Find mate's reproduction behavior and set cooldown
+            const mateBehaviors = mate.behaviors.filter(b => b.type === 'reproduction');
+            if (mateBehaviors.length > 0) {
+              mateBehaviors[0].cooldown = this.parameters.cooldownTime;
+            }
+          }
+        }
+      }
+
+      // ---------------------------
+      // Crafting/Building Behavior (for intelligent entities)
+      // ---------------------------
+      class CraftingBehavior extends Behavior {
+        constructor(parameters) {
+          super('crafting', parameters);
+          this.cooldown = 0;
+          this.progress = 0;
+          this.currentProject = null;
+        }
+        
+        execute(entity, world) {
+          if (this.cooldown > 0) {
+            this.cooldown--;
+            return;
+          }
+          
+          // Skip if energy is too low
+          if (entity.energy < entity.maxEnergy * 0.4) {
+            return;
+          }
+          
+          // If not currently crafting, decide on a project
+          if (!this.currentProject && Math.random() < this.parameters.craftChance) {
+            const possibleProjects = this.parameters.projects;
+            this.currentProject = possibleProjects[Math.floor(Math.random() * possibleProjects.length)];
+            this.progress = 0;
+            
+            world.addEventLog(`${entity.name} started crafting: ${this.currentProject.name}`);
+          }
+          
+          // Work on current project
+          if (this.currentProject) {
+            // Make progress
+            this.progress += this.parameters.craftingSkill;
+            entity.energy -= this.parameters.energyCost;
+            
+            // Check if project is complete
+            if (this.progress >= this.currentProject.requiredWork) {
+              this.applyProjectEffects(entity, world);
+              this.currentProject = null;
+              this.cooldown = this.parameters.cooldownTime;
+            }
+          }
+        }
+        
+        applyProjectEffects(entity, world) {
+          const project = this.currentProject;
+          
+          world.addEventLog(`${entity.name} completed crafting: ${project.name}!`);
+          
+          switch (project.effect) {
+            case 'shelter':
+              // Create a shelter at current location
+              const col = Math.floor(entity.x / world.cellWidth);
+              const row = Math.floor(entity.y / world.cellHeight);
+              
+			  if (row >= 0 && row < world.gridRows && col >= 0 && col < world.gridCols) {
+                world.grid[row][col].hasShelter = true;
+                entity.hasShelter = true;
+                entity.shelterLocation = {row, col};
+                
+                // Visual marker for shelter
+                world.addStructure({
+                  type: 'shelter',
+                  x: (col + 0.5) * world.cellWidth,
+                  y: (row + 0.5) * world.cellHeight,
+                  owner: entity.id
+                });
+              }
+              break;
+              
+            case 'tool':
+              // Create a tool that improves efficiency
+              entity.hasTool = true;
+              entity.toolQuality = (entity.toolQuality || 0) + project.quality;
+              
+              // Apply tool effects to behaviors
+              entity.behaviors.forEach(behavior => {
+                if (behavior.type === 'foraging' && behavior.parameters.foragingSkill) {
+                  behavior.parameters.foragingSkill *= (1 + 0.1 * project.quality);
+                }
+                if (behavior.type === 'hunting' && behavior.parameters.attackSuccess) {
+                  behavior.parameters.attackSuccess *= (1 + 0.1 * project.quality);
+                }
+              });
+              break;
+              
+            case 'potion':
+              // Create a magical potion that provides temporary benefits
+              entity.energy = entity.maxEnergy;
+              entity.buffedUntil = world.currentStep + 200;
+              entity.buffAmount = project.quality;
+              
+              world.addEffect({
+                x: entity.x,
+                y: entity.y,
+                type: 'potion',
+                duration: 15
+              });
+              break;
+              
+            case 'trap':
+              // Set a trap for hunting
+              const trapCol = Math.floor(entity.x / world.cellWidth);
+              const trapRow = Math.floor(entity.y / world.cellHeight);
+              
+              if (trapRow >= 0 && trapRow < world.gridRows && trapCol >= 0 && trapCol < world.gridCols) {
+                world.addStructure({
+                  type: 'trap',
+                  x: (trapCol + 0.5) * world.cellWidth,
+                  y: (trapRow + 0.5) * world.cellHeight,
+                  quality: project.quality,
+                  owner: entity.id,
+                  checkChance: 0.1,
+                  duration: 500
+                });
+              }
+              break;
+          }
+        }
+      }
+
+      // ---------------------------
+      // Social Behavior (for intelligent entities)
+      // ---------------------------
+      class SocialBehavior extends Behavior {
+        constructor(parameters) {
+          super('social', parameters);
+          this.cooldown = 0;
+          this.allies = new Set();
+          this.enemies = new Set();
+        }
+        
+        execute(entity, world) {
+          if (this.cooldown > 0) {
+            this.cooldown--;
+            return;
+          }
+          
+          // Interact with nearby entities
+          const nearbyEntities = Array.from(world.entities.values()).filter(other => {
+            return other.id !== entity.id && 
+                   Math.hypot(entity.x - other.x, entity.y - other.y) < this.parameters.interactionRadius;
+          });
+          
+          if (nearbyEntities.length > 0) {
+            // Choose one entity to interact with
+            const other = nearbyEntities[Math.floor(Math.random() * nearbyEntities.length)];
+            
+            // Determine interaction type based on relationship
+            if (this.parameters.allyTypes.includes(other.type)) {
+              // Friendly interaction
+              this.friendlyInteraction(entity, other, world);
+              this.allies.add(other.id);
+            } else if (this.parameters.enemyTypes.includes(other.type)) {
+              // Hostile interaction
+              this.hostileInteraction(entity, other, world);
+              this.enemies.add(other.id);
+            } else {
+              // Neutral interaction
+              this.neutralInteraction(entity, other, world);
+            }
+            
+            this.cooldown = this.parameters.cooldownTime;
+          }
+          
+          // Share information with allies (if this is an intelligent entity)
+          if (entity.intelligence && entity.intelligence > 0.5) {
+            this.shareInformation(entity, world);
+          }
+        }
+        
+        friendlyInteraction(entity, other, world) {
+          const interactionType = Math.random();
+          
+          if (interactionType < 0.4 && entity.energy > entity.maxEnergy * 0.6) {
+            // Share resources
+            const sharedEnergy = entity.energy * 0.1;
+            entity.energy -= sharedEnergy;
+            other.energy += sharedEnergy;
+            
+            world.addEventLog(`${entity.name} shared resources with ${other.name}`);
+          } else if (interactionType < 0.7) {
+            // Form alliance
+            entity.alliedWith = entity.alliedWith || new Set();
+            entity.alliedWith.add(other.id);
+            
+            other.alliedWith = other.alliedWith || new Set();
+            other.alliedWith.add(entity.id);
+            
+            if (Math.random() < 0.3) {
+              world.addEventLog(`${entity.name} formed an alliance with ${other.name}`);
+            }
+          } else {
+            // Knowledge sharing (slight buff to both)
+            const otherSocial = other.behaviors.find(b => b.type === 'social');
+            if (otherSocial) {
+              otherSocial.allies.add(entity.id);
+            }
+            
+            if (Math.random() < 0.1) {
+              world.addEventLog(`${entity.name} and ${other.name} exchanged knowledge`);
+            }
+          }
+        }
+        
+        hostileInteraction(entity, other, world) {
+          // Check if either entity is protected
+          if (entity.protection || other.protection) {
+            return;
+          }
+          
+          const interactionType = Math.random();
+          
+          if (interactionType < 0.3) {
+            // Intimidate
+            if (entity.power > other.power && Math.random() < 0.7) {
+              other.energy -= 5;
+              world.addEventLog(`${entity.name} intimidated ${other.name}`);
+              
+              // Cause fleeing behavior
+              other.threatNearby = entity;
+            }
+          } else if (interactionType < 0.6) {
+            // Territory marking
+            const col = Math.floor(entity.x / world.cellWidth);
+            const row = Math.floor(entity.y / world.cellHeight);
+            
+            if (row >= 0 && row < world.gridRows && col >= 0 && col < world.gridCols) {
+              world.grid[row][col].claimedBy = entity.id;
+            }
+          } else {
+            // Direct conflict (resolved by social status and power)
+            if (entity.power > other.power * 1.2) {
+              other.energy -= 10;
+              entity.energy -= 3;
+              
+              world.addEventLog(`${entity.name} drove ${other.name} away in a conflict`);
+              
+              if (other.energy <= 0) {
+                world.addEventLog(`${other.name} was defeated by ${entity.name}!`);
+                world.removeEntity(other.id);
+                entity.killCount = (entity.killCount || 0) + 1;
+              }
+            } else {
+              // Conflict is costly for both parties
+              other.energy -= 5;
+              entity.energy -= 5;
+              
+              world.addEventLog(`${entity.name} and ${other.name} had a skirmish`);
+            }
+          }
+        }
+        
+        neutralInteraction(entity, other, world) {
+          const interactionType = Math.random();
+          
+          if (interactionType < 0.5) {
+            // Simple acknowledgment
+            return;
+          } else if (interactionType < 0.8) {
+            // Cautious observation
+            entity.observedEntities = entity.observedEntities || new Set();
+            entity.observedEntities.add(other.id);
+          } else {
+            // Attempted communication
+            if (entity.intelligence > 0.6 && other.intelligence > 0.6) {
+              // Both intelligent enough to communicate
+              const success = Math.random() < 0.5;
+              
+              if (success) {
+                world.addEventLog(`${entity.name} established communication with ${other.name}`);
+                
+                // Small chance to become allies
+                if (Math.random() < 0.2) {
+                  this.allies.add(other.id);
+                  
+                  const otherSocial = other.behaviors.find(b => b.type === 'social');
+                  if (otherSocial) {
+                    otherSocial.allies.add(entity.id);
+                  }
+                }
+              }
+            }
+          }
+        }
+        
+        shareInformation(entity, world) {
+          // Share information with allies about resources, dangers, etc.
+          Array.from(this.allies).forEach(allyId => {
+            const ally = world.entities.get(allyId);
+            
+            if (ally && Math.random() < 0.3) {
+              // Share information about enemies
+              Array.from(this.enemies).some(enemyId => {
+                const enemy = world.entities.get(enemyId);
+                
+                if (enemy) {
+                  const allySocial = ally.behaviors.find(b => b.type === 'social');
+                  if (allySocial) {
+                    allySocial.enemies.add(enemy.id);
+                  }
+                  return true;
+                }
+                return false;
+              });
+            }
+          });
+        }
+      }
+
+      // ---------------------------
+      // Entity Class
+      // ---------------------------
+      class Entity {
+        constructor(id, type, x, y, params = {}) {
+          this.id = id;
+          this.type = type;
+          this.name = `${type}-${id.substring(0, 4)}`;
+          this.x = x;
+          this.y = y;
+          this.energy = params.energy || 100;
+          this.maxEnergy = params.maxEnergy || 100;
+          this.age = 0;
+          this.lifespan = params.lifespan || 1000;
+          this.radius = params.radius || 5;
+          this.color = params.color || '#ffffff';
+          this.behaviors = [];
+          this.target = null;
+          this.threatNearby = null;
+          this.power = params.power || 1;
+          this.intelligence = params.intelligence || 0;
+          this.evasion = params.evasion || 0;
+          this.killCount = 0;
+          this.canClimb = params.canClimb || false;
+          this.canSwim = params.canSwim || false;
+        }
+        
+        update(world) {
+          // Reset temporary states
+          this.threatNearby = null;
+          
+          // Execute all behaviors
+          this.behaviors.forEach(behavior => behavior.execute(this, world));
+          
+          // Apply natural energy loss
+          this.energy -= 0.2 * (world.isNight ? 1.5 : 1);
+          
+          // Increase age
+          this.age++;
+          
+          // Check for death conditions
+          if (this.energy <= 0 || this.age >= this.lifespan) {
+            if (this.energy <= 0) {
+              world.addEventLog(`${this.name} died from starvation.`);
+            } else if (this.age >= this.lifespan) {
+              world.addEventLog(`${this.name} died from old age.`);
+            }
+            world.removeEntity(this.id);
+            return false;
+          }
+          
+          // Apply effects
+          if (this.buffedUntil && world.currentStep >= this.buffedUntil) {
+            this.buffedUntil = null;
+            this.buffAmount = 0;
+          }
+          
+          if (this.protection && this.protectionUntil && world.currentStep >= this.protectionUntil) {
+            this.protection = false;
+          }
+          
+          return true;
+        }
+        
+        draw(ctx, world) {
+          ctx.fillStyle = this.color;
+          
+          // Draw entity
+          ctx.beginPath();
+          ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
+          ctx.fill();
+          
+          // Draw buffed state
+          if (this.buffedUntil && world.currentStep < this.buffedUntil) {
+            ctx.strokeStyle = '#ffffff';
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            ctx.arc(this.x, this.y, this.radius + 3, 0, Math.PI * 2);
+            ctx.stroke();
+          }
+          
+          // Draw protection shield
+          if (this.protection) {
+            ctx.strokeStyle = '#4fc3f7';
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            ctx.arc(this.x, this.y, this.radius + 6, 0, Math.PI * 2);
+            ctx.stroke();
+          }
+          
+          // Draw energy level as bar above entity
+          const energyPercentage = this.energy / this.maxEnergy;
+          const barWidth = this.radius * 2;
+          const barHeight = 3;
+          const barX = this.x - this.radius;
+          const barY = this.y - this.radius - 5;
+          
+          ctx.fillStyle = energyPercentage < 0.3 ? '#f44336' : (energyPercentage < 0.6 ? '#ffc107' : '#4caf50');
+          ctx.fillRect(barX, barY, barWidth * energyPercentage, barHeight);
+          
+          ctx.strokeStyle = '#ffffff';
+          ctx.lineWidth = 0.5;
+          ctx.strokeRect(barX, barY, barWidth, barHeight);
+        }
+      }
+
+      // ---------------------------
+      // World Class
+      // ---------------------------
+      class World {
+        constructor(canvas, width, height) {
+          this.canvas = canvas;
+          this.ctx = canvas.getContext('2d');
+          this.width = width;
+          this.height = height;
+          this.entities = new Map();
+          this.structures = [];
+          this.effects = [];
+          this.nextEntityId = 1;
+          this.currentStep = 0;
+          this.eventLog = [];
+          
+          // Set up grid
+          this.gridCols = 20;
+          this.gridRows = 15;
+          this.cellWidth = width / this.gridCols;
+          this.cellHeight = height / this.gridRows;
+          this.grid = [];
+          
+          // Time and seasons
+          this.day = 1;
+          this.year = 1;
+          this.isNight = false;
+          this.dayLength = 20;
+          this.season = 'spring';
+          this.seasonLength = 90;
+          
+          this.initializeGrid();
+          this.addEventLog('World initialized');
+        }
+        
+        initializeGrid() {
+          // Create terrain grid
+          for (let row = 0; row < this.gridRows; row++) {
+            this.grid[row] = [];
+            for (let col = 0; col < this.gridCols; col++) {
+              // Default to plains
+              this.grid[row][col] = {
+                terrain: 'plains',
+                color: '#f9d56e',
+                plantEnergy: 50,
+                maxPlantEnergy: 100,
+                regrowthRate: 1
+              };
+            }
+          }
+          
+          // Generate terrain features
+          this.generateTerrain();
+        }
+        
+        generateTerrain() {
+          // Add forests
+          this.generateTerrainFeature('forest', '#8bc34a', 0.3, 4, {
+            maxPlantEnergy: 100,
+            regrowthRate: 2
+          });
+          
+          // Add mountains
+          this.generateTerrainFeature('mountains', '#78909c', 0.2, 3, {
+            maxPlantEnergy: 40,
+            regrowthRate: 0.5
+          });
+          
+          // Add lakes
+          this.generateTerrainFeature('lakes', '#2196f3', 0.15, 2, {
+            maxPlantEnergy: 70,
+            regrowthRate: 1.5
+          });
+          
+          // Add magic groves (special biome)
+          this.generateTerrainFeature('magicGrove', '#b39ddb', 0.1, 1, {
+            maxPlantEnergy: 120,
+            regrowthRate: 3
+          });
+        }
+        
+        generateTerrainFeature(type, color, coverage, clusterSize, properties) {
+          const targetCells = Math.floor(this.gridRows * this.gridCols * coverage);
+          let placedCells = 0;
+          
+          while (placedCells < targetCells) {
+            // Pick a random starting point
+            const startRow = Math.floor(Math.random() * this.gridRows);
+            const startCol = Math.floor(Math.random() * this.gridCols);
+            
+            // Generate a cluster
+            const clusterRadius = Math.floor(Math.random() * clusterSize) + 1;
+            
+            for (let r = -clusterRadius; r <= clusterRadius; r++) {
+              for (let c = -clusterRadius; c <= clusterRadius; c++) {
+                const row = startRow + r;
+                const col = startCol + c;
+                
+                // Check bounds and distance from center
+                if (row >= 0 && row < this.gridRows && col >= 0 && col < this.gridCols &&
+                    Math.sqrt(r*r + c*c) <= clusterRadius) {
+                  
+                  // Probabilistic placement based on distance from center
+                  const distance = Math.sqrt(r*r + c*c);
+                  const placementChance = 1 - (distance / clusterRadius);
+                  
+                  if (Math.random() < placementChance) {
+                    const cell = this.grid[row][col];
+                    
+                    // Skip if cell is already this terrain or is a special biome
+                    if (cell.terrain === type || cell.terrain === 'magicGrove') {
+                      continue;
+                    }
+                    
+                    // Set terrain properties
+                    cell.terrain = type;
+                    cell.color = color;
+                    cell.plantEnergy = properties.maxPlantEnergy / 2;
+                    cell.maxPlantEnergy = properties.maxPlantEnergy;
+                    cell.regrowthRate = properties.regrowthRate;
+                    
+                    placedCells++;
+                    
+                    if (placedCells >= targetCells) {
+                      break;
+                    }
+                  }
+                }
+              }
+              
+              if (placedCells >= targetCells) {
+                break;
+              }
+            }
+          }
+        }
+        
+        createEntity(type, x, y, isOffspring = false) {
+          const id = `${type}-${this.nextEntityId++}`;
+          let entity;
+          
+          switch(type) {
+            case 'dragon':
+              entity = new Entity(id, type, x, y, {
+                energy: 200,
+                maxEnergy: 200,
+                lifespan: 2000,
+                radius: 8,
+                color: '#ff5722',
+                power: 10,
+                intelligence: 0.8,
+                canClimb: true,
+                canSwim: true
+              });
+              
+              // Add dragon behaviors
+              entity.behaviors.push(new MovementBehavior({
+                moveProbability: 0.7,
+                speed: 2,
+                energyCost: 0.3,
+                huntingMode: true,
+                fleeFromPredators: false
+              }));
+              
+              entity.behaviors.push(new HuntingBehavior({
+                radius: 150,
+                targetTypes: ['knight', 'goblin', 'elf', 'griffin'],
+                attackSuccess: 0.8,
+                energyGain: 50,
+                searchCost: 0.2
+              }));
+              
+              entity.behaviors.push(new ReproductionBehavior({
+                energyThreshold: 0.8,
+                reproductionChance: 0.005,
+                findMateRadius: 100,
+                maxOffspring: 1,
+                energyCost: 100,
+                cooldownTime: 500,
+                initialCooldown: 200
+              }));
+              
+              entity.behaviors.push(new MagicBehavior({
+                maxMana: 100,
+                manaRegen: 0.5,
+                manaCost: 30,
+                spellType: 'damage',
+                spellName: 'fire breath',
+                spellPower: 30,
+                spellChance: 0.2,
+                cooldownTime: 15,
+                radius: 100,
+                enemyTypes: ['knight', 'goblin', 'elf', 'griffin', 'wizard']
+              }));
+              break;
+              
+            case 'griffin':
+              entity = new Entity(id, type, x, y, {
+                energy: 150,
+                maxEnergy: 150,
+                lifespan: 1500,
+                radius: 7,
+                color: '#ffc107',
+                power: 7,
+                intelligence: 0.6,
+                canClimb: true,
+                canSwim: false
+              });
+              
+              // Add griffin behaviors
+              entity.behaviors.push(new MovementBehavior({
+                moveProbability: 0.8,
+                speed: 3,
+                energyCost: 0.2,
+                huntingMode: true,
+                fleeFromPredators: false
+              }));
+              
+              entity.behaviors.push(new HuntingBehavior({
+                radius: 120,
+                targetTypes: ['goblin', 'elf'],
+                attackSuccess: 0.7,
+                energyGain: 40,
+                searchCost: 0.2
+              }));
+              
+              entity.behaviors.push(new ReproductionBehavior({
+                energyThreshold: 0.7,
+                reproductionChance: 0.01,
+                findMateRadius: 80,
+                maxOffspring: 2,
+                energyCost: 60,
+                cooldownTime: 300,
+                initialCooldown: 100
+              }));
+              break;
+              
+            case 'goblin':
+              entity = new Entity(id, type, x, y, {
+                energy: 70,
+                maxEnergy: 70,
+                lifespan: 800,
+                radius: 5,
+                color: '#4caf50',
+                power: 3,
+                intelligence: 0.4,
+                evasion: 0.3,
+                canClimb: false,
+                canSwim: false
+              });
+              
+              // Add goblin behaviors
+              entity.behaviors.push(new MovementBehavior({
+                moveProbability: 0.9,
+                speed: 2,
+                energyCost: 0.1,
+                huntingMode: false,
+                fleeFromPredators: true
+              }));
+              
+              entity.behaviors.push(new ForagingBehavior({
+                foragingSkill: 0.6,
+                eatAmount: 10,
+                efficiencyFactor: 0.8,
+                searchCost: 0.1
+              }));
+              
+              entity.behaviors.push(new ReproductionBehavior({
+                energyThreshold: 0.6,
+                reproductionChance: 0.03,
+                findMateRadius: 50,
+                maxOffspring: 3,
+                energyCost: 30,
+                cooldownTime: 150,
+                initialCooldown: 50
+              }));
+              
+              entity.behaviors.push(new CraftingBehavior({
+                craftChance: 0.1,
+                craftingSkill: 0.5,
+                energyCost: 0.5,
+                cooldownTime: 20,
+                projects: [
+                  {name: 'Simple Trap', requiredWork: 10, effect: 'trap', quality: 1},
+                  {name: 'Crude Shelter', requiredWork: 20, effect: 'shelter', quality: 1}
+                ]
+              }));
+              
+              entity.behaviors.push(new SocialBehavior({
+                interactionRadius: 40,
+                cooldownTime: 10,
+                allyTypes: ['goblin'],
+                enemyTypes: ['knight', 'elf', 'wizard']
+              }));
+              break;
+              
+            case 'wizard':
+              entity = new Entity(id, type, x, y, {
+                energy: 90,
+                maxEnergy: 90,
+                lifespan: 1200,
+                radius: 6,
+                color: '#9c27b0',
+                power: 5,
+                intelligence: 0.9,
+                canClimb: false,
+                canSwim: false
+              });
+              
+              // Add wizard behaviors
+              entity.behaviors.push(new MovementBehavior({
+                moveProbability: 0.6,
+                speed: 1,
+                energyCost: 0.1,
+                huntingMode: false,
+                fleeFromPredators: true
+              }));
+              
+              entity.behaviors.push(new ForagingBehavior({
+                foragingSkill: 0.5,
+                eatAmount: 8,
+                efficiencyFactor: 0.9,
+                searchCost: 0.1
+              }));
+              
+              entity.behaviors.push(new MagicBehavior({
+                maxMana: 150,
+                manaRegen: 1,
+                manaCost: 20,
+                spellType: 'protection',
+                spellName: 'arcane shield',
+                spellPower: 15,
+                spellChance: 0.3,
+                cooldownTime: 10,
+                radius: 80,
+                allyTypes: ['wizard', 'knight', 'elf'],
+                protectionDuration: 100
+              }));
+              
+              entity.behaviors.push(new ReproductionBehavior({
+                energyThreshold: 0.7,
+                reproductionChance: 0.01,
+                findMateRadius: 60,
+                maxOffspring: 1,
+                energyCost: 40,
+                cooldownTime: 300,
+                initialCooldown: 150
+              }));
+              
+              entity.behaviors.push(new SocialBehavior({
+                interactionRadius: 60,
+                cooldownTime: 5,
+                allyTypes: ['wizard', 'knight', 'elf'],
+                enemyTypes: ['goblin', 'dragon']
+              }));
+              break;
+              
+            case 'knight':
+              entity = new Entity(id, type, x, y, {
+                energy: 120,
+                maxEnergy: 120,
+                lifespan: 1000,
+                radius: 6,
+                color: '#f44336',
+                power: 8,
+                intelligence: 0.6,
+                canClimb: false,
+                canSwim: false
+              });
+              
+              // Add knight behaviors
+              entity.behaviors.push(new MovementBehavior({
+                moveProbability: 0.7,
+                speed: 1.5,
+                energyCost: 0.2,
+                huntingMode: true,
+                fleeFromPredators: false
+              }));
+              
+              entity.behaviors.push(new HuntingBehavior({
+                radius: 100,
+                targetTypes: ['goblin', 'dragon'],
+                attackSuccess: 0.6,
+                energyGain: 30,
+                searchCost: 0.2
+              }));
+              
+              entity.behaviors.push(new ForagingBehavior({
+                foragingSkill: 0.3,
+                eatAmount: 5,
+                efficiencyFactor: 0.7,
+                searchCost: 0.1
+              }));
+              
+              entity.behaviors.push(new ReproductionBehavior({
+                energyThreshold: 0.7,
+                reproductionChance: 0.02,
+                findMateRadius: 70,
+                maxOffspring: 2,
+                energyCost: 50,
+                cooldownTime: 250,
+                initialCooldown: 100
+              }));
+              
+              entity.behaviors.push(new CraftingBehavior({
+                craftChance: 0.15,
+                craftingSkill: 0.7,
+                energyCost: 0.3,
+                cooldownTime: 15,
+                projects: [
+                  {name: 'Sword', requiredWork: 15, effect: 'tool', quality: 2},
+                  {name: 'Shield', requiredWork: 15, effect: 'tool', quality: 1},
+                  {name: 'Fortress', requiredWork: 40, effect: 'shelter', quality: 3}
+                ]
+              }));
+              
+              entity.behaviors.push(new SocialBehavior({
+                interactionRadius: 50,
+                cooldownTime: 10,
+                allyTypes: ['knight', 'wizard', 'elf'],
+                enemyTypes: ['goblin', 'dragon']
+              }));
+              break;
+              
+            case 'elf':
+              entity = new Entity(id, type, x, y, {
+                energy: 80,
+                maxEnergy: 80,
+                lifespan: 1600,
+                radius: 5,
+                color: '#3f51b5',
+                power: 4,
+                intelligence: 0.7,
+                evasion: 0.4,
+                canClimb: true,
+                canSwim: true
+              });
+              
+              // Add elf behaviors
+              entity.behaviors.push(new MovementBehavior({
+                moveProbability: 0.8,
+                speed: 2,
+                energyCost: 0.1,
+                huntingMode: false,
+                fleeFromPredators: true
+              }));
+              
+              entity.behaviors.push(new ForagingBehavior({
+                foragingSkill: 0.8,
+                eatAmount: 10,
+                efficiencyFactor: 1.2,
+                searchCost: 0.1
+              }));
+              
+              entity.behaviors.push(new MagicBehavior({
+                maxMana: 100,
+                manaRegen: 0.8,
+                manaCost: 15,
+                spellType: 'environment',
+                spellName: 'nature's blessing',
+                spellPower: 10,
+                spellChance: 0.2,
+                cooldownTime: 20,
+                radius: 60
+              }));
+              
+              entity.behaviors.push(new ReproductionBehavior({
+                energyThreshold: 0.6,
+                reproductionChance: 0.015,
+                findMateRadius: 80,
+                maxOffspring: 2,
+                energyCost: 30,
+                cooldownTime: 200,
+                initialCooldown: 80
+              }));
+              
+              entity.behaviors.push(new SocialBehavior({
+                interactionRadius: 70,
+                cooldownTime: 8,
+                allyTypes: ['elf', 'fairy', 'wizard'],
+                enemyTypes: ['goblin']
+              }));
+              break;
+              
+            case 'fairy':
+				entity = new Entity(id, type, x,y, {
+					energy: 50,
+					maxEnergy: 50,
+					lifespan: 500,
+					radius: 3,
+					color: '#e91e63',
+					power: 2,
+					intelligence: 0.8,
+					evasion: 0.6,
+					canClimb: true,
+					canSwim: true
+				});
+			  
+				// Add fairy behaviors
+				entity.behaviors.push(new MovementBehavior({
+					moveProbability: 0.9,
+					speed: 2.5,
+					energyCost: 0.05,
+					huntingMode: false,
+					fleeFromPredators: true
+				}));
+			  
+				entity.behaviors.push(new ForagingBehavior({
+					foragingSkill: 0.7,
+					eatAmount: 5,
+					efficiencyFactor: 1.0,
+					searchCost: 0.05
+				}));
+				
+				entity.behaviors.push(new MagicBehavior({
+					maxMana: 80,
+					manaRegen: 1.2,
+					manaCost: 10,
+					spellType: 'healing',
+					spellName: 'fairy dust',
+					spellPower: 15,
+					spellChance: 0.4,
+					cooldownTime: 5,
+					radius: 40,
+					allyTypes: ['fairy', 'elf', 'wizard']
+				}));
+				
+				entity.behaviors.push(new ReproductionBehavior({
+					energyThreshold: 0.6,
+					reproductionChance: 0.02,
+					findMateRadius: 60,
+					maxOffspring: 3,
+					energyCost: 20,
+					cooldownTime: 100,
+					initialCooldown: 40
+				}));
+				break;
+				
+			}
+			
+		  if (isOffspring) {
+		  	this.addEventLog(`A new ${type} was born (${id})`);
+		  } else {
+		  	this.addEventLog(`A new ${type} appeared in the world (${id})`);
+		  }
+		  
+		  this.entities.set(id, entity);
+		  return entity;
+		}
+				
+		addEntity(entity) {
+		  this.entities.set(entity.id, entity);
+		}
+
+		removeEntity(id) {
+		  this.entities.delete(id);
+		}
+
+		update() {
+		  this.currentStep++;
+		  
+		  // Update time and season
+		  if (this.currentStep % this.dayLength === 0) {
+			this.isNight = !this.isNight;
+			if (!this.isNight) {
+			  this.day++;
+			  this.addEventLog(`Day ${this.day} of Year ${this.year} (${this.season})`);
+			}
+		  }
+		  
+		  if (this.day > this.seasonLength) {
+			this.day = 1;
+			
+			// Change season
+			switch (this.season) {
+			  case 'spring': this.season = 'summer'; break;
+			  case 'summer': this.season = 'autumn'; break;
+			  case 'autumn': this.season = 'winter'; break;
+			  case 'winter': this.season = 'spring'; this.year++; break;
+			}
+			
+			this.addEventLog(`The season has changed to ${this.season}`);
+			if (this.season === 'spring') {
+			  this.addEventLog(`A new year has begun! Year ${this.year}`);
+			}
+		  }
+		  
+		  // Update entities
+		  for (const entity of this.entities.values()) {
+			entity.update(this);
+		  }
+		  
+		  // Update terrain (plant regrowth)
+		  this.updateTerrain();
+		  
+		  // Update effects
+		  this.updateEffects();
+		  
+		  // Limit event log size
+		  if (this.eventLog.length > 100) {
+			this.eventLog = this.eventLog.slice(-100);
+		  }
+		}
+		
+		updateTerrain() {
+		  for (let row = 0; row < this.gridRows; row++) {
+			for (let col = 0; col < this.gridCols; col++) {
+			  const cell = this.grid[row][col];
+			  
+			  // Apply seasonal effects on regrowth
+			  let seasonalMultiplier = 1;
+			  switch (this.season) {
+				case 'spring': seasonalMultiplier = 1.5; break;
+				case 'summer': seasonalMultiplier = 1.2; break;
+				case 'autumn': seasonalMultiplier = 0.8; break;
+				case 'winter': seasonalMultiplier = 0.5; break;
+			  }
+			  
+			  // Apply day/night effects
+			  const timeMultiplier = this.isNight ? 0.5 : 1;
+			  
+			  // Regrow plants
+			  if (cell.plantEnergy < cell.maxPlantEnergy) {
+				cell.plantEnergy += cell.regrowthRate * seasonalMultiplier * timeMultiplier;
+				if (cell.plantEnergy > cell.maxPlantEnergy) {
+				  cell.plantEnergy = cell.maxPlantEnergy;
+				}
+			  }
+			}
+		  }
+		}
+		
+		updateEffects() {
+		  this.effects = this.effects.filter(effect => {
+			effect.duration--;
+			return effect.duration > 0;
+		  });
+		}
+		
+		addEffect(type, x, y, duration, params = {}) {
+		  this.effects.push({
+			type,
+			x,
+			y,
+			duration,
+			...params
+		  });
+		}
+				
+		getEntitiesInRadius(x, y, radius, types = null) {
+		  const entitiesInRadius = [];
+		  
+		  for (const entity of this.entities.values()) {
+			const distance = Math.sqrt(Math.pow(entity.x - x, 2) + Math.pow(entity.y - y, 2));
+			
+			if (distance <= radius && (types === null || types.includes(entity.type))) {
+			  entitiesInRadius.push({
+				entity,
+				distance
+			  });
+			}
+		  }
+		  
+		  return entitiesInRadius;
+		}
+
+		getTerrainAtPosition(x, y) {
+		  const col = Math.floor(x / this.cellWidth);
+		  const row = Math.floor(y / this.cellHeight);
+		  
+		  if (row >= 0 && row < this.gridRows && col >= 0 && col < this.gridCols) {
+			return this.grid[row][col];
+		  }
+		  
+		  return null;
+		}
+
+		addEventLog(message) {
+		  const timestamp = `[Day ${this.day}, Year ${this.year}]`;
+		  this.eventLog.push(`${timestamp} ${message}`);
+		}
+
+		draw() {
+		  this.ctx.clearRect(0, 0, this.width, this.height);
+		  
+		  // Draw terrain grid
+		  this.drawTerrain();
+		  
+		  // Draw effects
+		  this.drawEffects();
+		  
+		  // Draw entities
+		  for (const entity of this.entities.values()) {
+			entity.draw(this.ctx, this);
+		  }
+		  
+		  // Draw time indicator
+		  this.drawTimeIndicator();
+		}
+
+		drawTerrain() {
+		  for (let row = 0; row < this.gridRows; row++) {
+			for (let col = 0; col < this.gridCols; col++) {
+			  const cell = this.grid[row][col];
+			  const x = col * this.cellWidth;
+			  const y = row * this.cellHeight;
+			  
+			  // Draw cell with energy-based opacity
+			  const energyRatio = cell.plantEnergy / cell.maxPlantEnergy;
+			  
+			  let color = cell.color;
+			  
+			  // Apply seasonal effects
+			  switch (this.season) {
+				case 'winter':
+				  // Add blue tint in winter
+				  if (cell.terrain !== 'lakes') {
+					color = this.blendColors(color, '#b3e5fc', 0.3);
+				  }
+				  break;
+				case 'autumn':
+				  // Add orange/red tint in autumn
+				  if (cell.terrain === 'forest') {
+					color = this.blendColors(color, '#ff9800', 0.4);
+				  }
+				  break;
+			  }
+			  
+			  // Apply night/day effects
+			  if (this.isNight) {
+				color = this.darkenColor(color, 0.7);
+			  }
+			  
+			  this.ctx.fillStyle = color;
+			  this.ctx.fillRect(x, y, this.cellWidth, this.cellHeight);
+			  
+			  // Add plantEnergy indicator
+			  if (cell.terrain !== 'lakes' && cell.terrain !== 'mountains') {
+				this.ctx.fillStyle = `rgba(0, 100, 0, ${energyRatio * 0.5})`;
+				this.ctx.fillRect(x, y, this.cellWidth, this.cellHeight);
+			  }
+			}
+		  }
+		}
+
+		blendColors(color1, color2, ratio) {
+		  // Simple color blending function
+		  const r1 = parseInt(color1.slice(1, 3), 16);
+		  const g1 = parseInt(color1.slice(3, 5), 16);
+		  const b1 = parseInt(color1.slice(5, 7), 16);
+		  
+		  const r2 = parseInt(color2.slice(1, 3), 16);
+		  const g2 = parseInt(color2.slice(3, 5), 16);
+		  const b2 = parseInt(color2.slice(5, 7), 16);
+		  
+		  const r = Math.round(r1 * (1 - ratio) + r2 * ratio);
+		  const g = Math.round(g1 * (1 - ratio) + g2 * ratio);
+		  const b = Math.round(b1 * (1 - ratio) + b2 * ratio);
+		  
+		  return `#${r.toString(16).padStart(2, '0')}${g.toString(16).padStart(2, '0')}${b.toString(16).padStart(2, '0')}`;
+		}
+
+		darkenColor(color, factor) {
+		  // Darken a color by the given factor
+		  const r = parseInt(color.slice(1, 3), 16);
+		  const g = parseInt(color.slice(3, 5), 16);
+		  const b = parseInt(color.slice(5, 7), 16);
+		  
+		  const r2 = Math.round(r * factor);
+		  const g2 = Math.round(g * factor);
+		  const b2 = Math.round(b * factor);
+		  
+		  return `#${r2.toString(16).padStart(2, '0')}${g2.toString(16).padStart(2, '0')}${b2.toString(16).padStart(2, '0')}`;
+		}
+
+		drawEffects() {
+		  for (const effect of this.effects) {
+			switch (effect.type) {
+			  case 'spell':
+				this.ctx.beginPath();
+				this.ctx.arc(effect.x, effect.y, effect.radius * (1 - effect.duration / effect.maxDuration), 0, Math.PI * 2);
+				this.ctx.fillStyle = `rgba(${effect.color}, ${effect.duration / effect.maxDuration})`;
+				this.ctx.fill();
+				break;
+				
+			  case 'healing':
+				this.ctx.beginPath();
+				this.ctx.arc(effect.x, effect.y, 10 * (1 - effect.duration / effect.maxDuration), 0, Math.PI * 2);
+				this.ctx.fillStyle = `rgba(0, 255, 0, ${effect.duration / effect.maxDuration})`;
+				this.ctx.fill();
+				break;
+				
+			  case 'combat':
+				this.ctx.beginPath();
+				this.ctx.arc(effect.x, effect.y, 5, 0, Math.PI * 2);
+				this.ctx.fillStyle = `rgba(255, 0, 0, ${effect.duration / effect.maxDuration})`;
+				this.ctx.fill();
+				break;
+			}
+		  }
+		}
+
+		drawTimeIndicator() {
+		  const dayProgress = (this.currentStep % this.dayLength) / this.dayLength;
+		  const centerX = this.width - 40;
+		  const centerY = 40;
+		  const radius = 20;
+		  
+		  // Draw time circle
+		  this.ctx.beginPath();
+		  this.ctx.arc(centerX, centerY, radius, 0, Math.PI * 2);
+		  this.ctx.fillStyle = this.isNight ? '#263238' : '#64b5f6';
+		  this.ctx.fill();
+		  this.ctx.strokeStyle = '#ffffff';
+		  this.ctx.lineWidth = 2;
+		  this.ctx.stroke();
+		  
+		  // Draw indicator hand
+		  const angle = dayProgress * Math.PI * 2 - Math.PI / 2;
+		  const handX = centerX + Math.cos(angle) * radius * 0.8;
+		  const handY = centerY + Math.sin(angle) * radius * 0.8;
+		  
+		  this.ctx.beginPath();
+		  this.ctx.moveTo(centerX, centerY);
+		  this.ctx.lineTo(handX, handY);
+		  this.ctx.strokeStyle = '#ffffff';
+		  this.ctx.lineWidth = 2;
+		  this.ctx.stroke();
+		  
+		  // Draw season indicator
+		  let seasonColor;
+		  switch (this.season) {
+			case 'spring': seasonColor = '#a5d6a7'; break;
+			case 'summer': seasonColor = '#ffb74d'; break;
+			case 'autumn': seasonColor = '#ef9a9a'; break;
+			case 'winter': seasonColor = '#b3e5fc'; break;
+		  }
+		  
+		  this.ctx.fillStyle = seasonColor;
+		  this.ctx.beginPath();
+		  this.ctx.arc(centerX, centerY + radius + 10, 5, 0, Math.PI * 2);
+		  this.ctx.fill();
+		  
+		  // Draw day/year counter
+		  this.ctx.fillStyle = '#ffffff';
+		  this.ctx.font = '12px Arial';
+		  this.ctx.fillText(`Day ${this.day}`, centerX - 20, centerY + radius + 25);
+		  this.ctx.fillText(`Year ${this.year}`, centerX - 20, centerY + radius + 40);
+		}
+		}
+	}		
+	
+</script>
+</body>
+</html>
