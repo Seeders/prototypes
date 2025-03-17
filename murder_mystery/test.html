@@ -1,0 +1,31 @@
+<html>
+<title>Test</title>
+<body>
+
+
+</body>
+<script>
+const url = 'http://127.0.0.1:7860/sdapi/v1/txt2img';
+const payload = {
+    "prompt": "A dimly lit crime scene with bloodstains.  There is a rusty key on a table.  There is a letter on the floor.",
+    "steps": 50
+};
+
+fetch(url, {
+    method: 'POST',
+    headers: {
+        'Content-Type': 'application/json'
+    },
+    body: JSON.stringify(payload)
+})
+.then(response => response.json())
+.then(data => {
+    const base64Image = data['images'][0];
+    const imageSrc = 'data:image/png;base64,' + base64Image;
+    const img = document.createElement('img');
+    img.src = imageSrc;
+    document.body.appendChild(img);
+})
+.catch(error => console.error('Error:', error));
+</script>
+</html>

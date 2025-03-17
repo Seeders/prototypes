@@ -1,0 +1,8 @@
+ Volume in drive C is OS
+ Volume Serial Number is E2C8-C3E0
+
+ Directory of C:\AI\stable-diffusion-webui\venv\Scripts
+
+03/04/2025  04:53 PM           274,712 python.exe
+               1 File(s)        274,712 bytes
+               0 Dir(s)  3,268,528,259,072 bytes free
