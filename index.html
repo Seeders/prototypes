@@ -1,0 +1,2069 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Bloodline Bastion</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            background-color: #111;
+            color: #ddd;
+            font-family: 'Arial', sans-serif;
+            overflow: hidden;
+        }
+        
+        #gameContainer {
+            position: relative;
+            width: 100vw;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        canvas { 
+            border: 2px solid #500;
+            box-shadow: 0 0 20px rgba(200, 0, 0, 0.5);
+            background-color: #222;
+        }
+        
+        #uiContainer {
+            width: 800px;
+            display: flex;
+            justify-content: space-between;
+            gap: 1rem;
+            padding: 10px 0;
+        }
+        
+        #towerMenu {
+            display: flex;
+            gap: 10px;
+        }
+        
+        .tower-option {
+            padding: 5px 10px;
+            background: rgba(80, 0, 0, 0.7);
+            border: 1px solid #800;
+            color: #fff;
+            cursor: pointer;
+            transition: all 0.2s;
+            border-radius: 5px;
+        }
+        
+        .tower-option:hover { 
+            background: rgba(120, 0, 0, 0.9);
+            transform: translateY(-2px);
+        }
+        
+        #stats {
+            display: flex;
+            gap: 15px;
+        }
+        
+        .stat {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+        
+        .stat-icon {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+        }
+        
+        #upgradeMenu { 
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(20, 0, 0, 0.95);
+            color: #fff;
+            padding: 20px;
+            border-radius: 10px;
+            border: 2px solid #800;
+            display: none;
+            z-index: 10;
+            width: 400px;
+            box-shadow: 0 0 30px rgba(255, 0, 0, 0.3);
+        }
+        
+        #upgradeMenu h2 {
+            text-align: center;
+            color: #ff5555;
+            margin-top: 0;
+            border-bottom: 1px solid #500;
+            padding-bottom: 10px;
+        }
+        
+        .upgrade-option { 
+            margin: 15px 0;
+            padding: 15px;
+            background: #400;
+            cursor: pointer;
+            border-radius: 5px;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+        }
+        
+        .upgrade-option:hover { 
+            background: #600;
+            transform: translateX(5px);
+        }
+        
+        .upgrade-icon {
+            width: 40px;
+            height: 40px;
+            margin-right: 15px;
+            background: #700;
+            border-radius: 5px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+        }
+        
+        .upgrade-desc {
+            flex-grow: 1;
+        }
+        
+        .upgrade-title {
+            font-weight: bold;
+            margin-bottom: 5px;
+            color: #ff8888;
+        }
+        
+        #overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            display: none;
+            z-index: 5;
+        }
+        
+        #waveInfo {
+            position: absolute;
+            top: 10px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(50, 0, 0, 0.7);
+            padding: 5px 15px;
+            border-radius: 15px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .progress-bar {
+            width: 200px;
+            height: 10px;
+            background: #333;
+            border-radius: 5px;
+            overflow: hidden;
+        }
+        
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(to right, #800, #f00);
+            width: 0%;
+        }
+        
+        #tooltip {
+            position: absolute;
+            background: rgba(0, 0, 0, 0.8);
+            color: white;
+            padding: 10px;
+            border-radius: 5px;
+            display: none;
+            z-index: 100;
+            border: 1px solid #800;
+            pointer-events: none;
+            max-width: 250px;
+        }
+        
+        #gameOverMenu, #victoryMenu {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(20, 0, 0, 0.95);
+            color: white;
+            padding: 30px;
+            text-align: center;
+            border-radius: 10px;
+            border: 2px solid #800;
+            z-index: 20;
+            display: none;
+        }
+        
+        #gameOverMenu h2, #victoryMenu h2 {
+            color: #ff5555;
+            font-size: 24px;
+        }
+        
+        .menu-button {
+            margin-top: 20px;
+            padding: 10px 20px;
+            background: #700;
+            border: none;
+            color: white;
+            cursor: pointer;
+            border-radius: 5px;
+            transition: all 0.2s;
+        }
+        
+        .menu-button:hover {
+            background: #900;
+            transform: scale(1.05);
+        }
+    </style>
+</head>
+<body>
+    <div id="gameContainer">
+        <div id="waveInfo">
+            <span>Wave: <span id="waveDisplay">1</span></span>
+            <div class="progress-bar">
+                <div class="progress-fill" id="waveProgress"></div>
+            </div>
+            <button id="startGameBtn">Start Game</button>
+        </div>
+        
+        <canvas id="gameCanvas" width="800" height="600"></canvas>
+        
+        <div id="uiContainer">
+            <div id="towerMenu">
+                <div class="tower-option" data-type="batSwarm">Bat Swarm (20)</div>
+                <div class="tower-option" data-type="miner">Miner (50)</div>
+                <div class="tower-option" data-type="supplyDepot">Supply Depot (30)</div>
+                <div class="tower-option" data-type="shadowTurret">Shadow Turret (35)</div>                
+                <div class="tower-option" data-type="soulPyre">Soul Pyre (45)</div>
+                <div class="tower-option" data-type="necromancer">Necromancer (50)</div>                
+                <div class="tower-option" data-type="mistShrine">Mist Shrine (60)</div>
+            </div>
+            
+            <div id="stats">
+                <div class="stat">
+                    <div class="stat-icon" style="background-color: #9c9141;"></div>
+                    <span>Gold: <span id="shardsDisplay">50</span></span>
+                </div>
+                <div class="stat">
+                    <div class="stat-icon" style="background-color: #55f;"></div>
+                    <span>Essence: <span id="essenceDisplay">0</span>/<span id="essenceNeededDisplay">100</span></span>
+                </div>
+                <div class="stat">
+                    <div class="stat-icon" style="background-color: #55f;"></div>
+                    <span>Population: <span id="populationDisplay">0</span>/<span id="maxPopulationDisplay">5</span></span>
+                </div>
+                <div class="stat">
+                    <div class="stat-icon" style="background-color: #5f5;"></div>
+                    <span>Core: <span id="hpDisplay">100</span></span>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div id="overlay"></div>
+    
+    <div id="upgradeMenu">
+        <h2>Level Up! Choose an Upgrade:</h2>
+        <div id="upgradeOptions"></div>
+    </div>
+    
+    <div id="tooltip"></div>
+    
+    <div id="gameOverMenu">
+        <h2>Blood Core Destroyed!</h2>
+        <p>You survived <span id="gameOverWave">0</span> waves</p>
+        <button class="menu-button" onclick="resetGame()">Try Again</button>
+    </div>
+    
+    <div id="victoryMenu">
+        <h2>Victory!</h2>
+        <p>You've successfully defended your Blood Core through all waves!</p>
+        <button class="menu-button" onclick="resetGame()">Play Again</button>
+    </div>
+    
+<script>
+
+const CONFIG = {
+    GRID_SIZE: 40,
+    CANVAS_WIDTH: 800,
+    CANVAS_HEIGHT: 600,
+    get ROWS() { return this.CANVAS_HEIGHT / this.GRID_SIZE },
+    get COLS() { return this.CANVAS_WIDTH / this.GRID_SIZE }
+};
+
+function calculateStats(stats, defaultStats, calcArray) {
+
+    if( calcArray && calcArray.length > 0 ) {
+        let additiveStats = {};
+        let multiplicitiveStats = {};
+        for(let key in stats) {
+            additiveStats[key] = [];
+            multiplicitiveStats[key] = [];
+        }
+        for(let effect of calcArray) {
+            effect.apply(stats, additiveStats, multiplicitiveStats);
+        }
+        let addedEffects = {};
+        for(let key in additiveStats){
+            for(let val of additiveStats[key]){ 
+                if(addedEffects[key]){
+                    addedEffects[key] += val - 1;
+                } else {
+                    addedEffects[key] = val - 1;
+                }
+            }
+        }
+
+        for(let key in addedEffects) {
+            if( stats[key] ) {
+                stats[key] *= ( 1 + addedEffects[key] );
+            }
+        }
+
+        let multipliedUpgrades = {};        
+        for(let key in multiplicitiveStats){
+            for(let val of multiplicitiveStats[key]){ 
+                if(stats[key]){
+                    stats[key] *= val;
+                }
+            }
+        }
+    }
+}
+
+class MapManager {
+    generateMap() {
+        const tileMap = Array(CONFIG.ROWS).fill().map(() =>
+            Array(CONFIG.COLS).fill().map(() => ({ type: 'grass', tower: null, buildable: true }))
+        );
+        const path = this.generatePath();
+        path.forEach(p => {
+            if (p.x >= 0 && p.x < CONFIG.COLS && p.y >= 0 && p.y < CONFIG.ROWS) {
+                tileMap[p.y][p.x].type = 'path';
+                tileMap[p.y][p.x].buildable = false;
+            }
+        });
+        tileMap[path[path.length - 1].y][path[path.length - 1].x].type = 'base';
+        return { tileMap, path };
+    }
+
+    generatePath() {        
+        let startX = 0;
+        let startY = parseInt(CONFIG.ROWS / 2);
+        let endX = CONFIG.COLS - 1;
+        let endY = startY; 
+        let yMin = 0;
+        let yMax = CONFIG.ROWS - 1;
+        // Initialize the path with the start point
+        let currentX = startX;
+        let currentY = startY;
+        const path = [{ x: currentX, y: currentY }];
+
+        // Track the current direction (right, up, or down)
+        let currentDirection = "right"; // Start by moving right
+
+        // Generate the path
+        while (currentX != endX || currentY != endY) {
+            // Define possible moves based on the current direction
+            let moves = [];
+            if (currentDirection === "right") {
+                // If moving right, prioritize continuing right or turning up/down
+                moves = [
+                    { dx: 1, dy: 0 }, // Right
+                    { dx: 0, dy: 1 }, // Up
+                    { dx: 0, dy: -1 }, // Down
+                ];
+
+                //only move toward exit when on last column.
+                if( currentX == endX && currentY > endY ) {
+                    moves.splice(1, 1); 
+                } else if( currentX == endX && currentY < endY ) {
+                    moves.splice(2, 1);
+                } else if (currentX == startX ) {
+                    moves.splice(1, 2);//always go right first
+                }
+            } else if (currentDirection === "up" || currentDirection === "down") {
+                // If moving up or down, prioritize continuing in that direction or turning right
+                moves = [
+                    { dx: 1, dy: 0 }, // Right
+                    { dx: 0, dy: currentDirection === "up" ? 1 : -1 }, // Continue up/down
+                ];
+            }
+
+            // Filter valid moves (stay within grid bounds and avoid backtracking)
+            const validMoves = moves.filter(({ dx, dy }) => {
+                const nextX = currentX + dx;
+                const nextY = currentY + dy;
+                return (
+                    nextX >= startX &&
+                    nextX <= endX &&
+                    nextY >= yMin &&
+                    nextY <= yMax &&
+                    !path.some(point => point.x === nextX && point.y === nextY) // Avoid revisiting points
+                );
+            });
+            if (validMoves.length > 0) {
+                // Randomly select a valid move
+                const randomMove = validMoves[Math.floor(Math.random() * validMoves.length)];
+
+                // Update the current direction
+                if (randomMove.dx === 1) {
+                    currentDirection = "right"; // Moving right
+                } else if (randomMove.dy === 1) {
+                    currentDirection = "up"; // Moving up
+                } else if (randomMove.dy === -1) {
+                    currentDirection = "down"; // Moving down
+                }
+
+                // Update the current position
+                currentX += randomMove.dx;
+                currentY += randomMove.dy;
+
+                // Add the new point to the path
+                path.push({ x: currentX, y: currentY });
+            } else {
+                // No valid moves left (should not happen if grid is properly sized)
+                break;
+            }
+        }
+
+        return path;
+    }
+
+}
+class GameState {
+    constructor() {
+        this.towers = [];
+        this.enemies = [];
+        this.reset();
+    }
+
+    reset() {
+        this.bloodShards = 200;
+        this.essence = 0;
+        this.level = 1;
+        this.essenceToNextLevel = 100;
+        this.bloodCoreHP = 100;
+        this.towers = [];
+        this.enemies = [];
+        this.summons = [];
+        this.projectiles = [];
+        this.wave = 1;
+        this.maxWaves = 10;
+        this.waveTimer = 0;
+        this.waveDelay = 100;
+        this.enemiesInWave = 10;
+        this.enemiesSpawned = 0;
+        this.spawnRate = 60;
+        this.spawnCounter = 0;
+        this.isLevelingUp = false;
+        this.isPaused = false;
+        this.selectedTowerType = null;
+        this.timeScale = 1;
+        this.stats = {
+            maxBloodCoreHP: 100,
+            bloodShardMultiplier: 1,            
+            towerCostMod: 1,
+            damageMultiplier: 1,
+            healingMultiplier: 1,
+            essenceMultiplier: 1,
+            towerDamageReduction: 1,
+            population: 0,
+            maxPopulation: 5
+        }
+        this.defaultStats = {...this.stats};
+        this.gameOver = false;
+        this.victory = false;
+        this.activeUpgrades = {};
+    }
+
+    addTower(tower) {
+        this.towers.push(tower);
+    }
+    addEnemy(enemy) {
+        this.enemies.push(enemy);
+    }    
+    addSummon(summon) {
+        this.summons.push(summon);
+    }
+    removeSummon(summon) {
+        let index = this.summons.indexOf(summon);
+        if( index >= 0 ) {
+            this.summons.splice(index, 1);
+        }
+    }
+    hasTowerType(type) {
+        return this.towers.some(tower => tower.type === type);
+    }
+
+    getTowers() {
+        return [...this.towers]; // Return a copy to prevent direct manipulation
+    }
+    getSummons() {
+        return [...this.summons]; // Return a copy to prevent direct manipulation
+    }
+    getEnemies() {
+        return [...this.enemies]; // Return a copy to prevent direct manipulation
+    }
+}
+
+class UIManager { 
+    constructor() {
+        this.upgradeMenu = document.getElementById('upgradeMenu');
+        this.upgradeOptionsDiv = document.getElementById('upgradeOptions');
+        this.overlay = document.getElementById('overlay');
+        this.tooltip = document.getElementById('tooltip');
+        this.gameOverMenu = document.getElementById('gameOverMenu');
+        this.victoryMenu = document.getElementById('victoryMenu');
+
+        // Stats displays
+        this.shardsDisplay = document.getElementById('shardsDisplay');
+        this.essenceDisplay = document.getElementById('essenceDisplay');
+        this.essenceNeededDisplay = document.getElementById('essenceNeededDisplay');
+        this.populationDisplay = document.getElementById('populationDisplay');
+        this.maxPopulationDisplay = document.getElementById('maxPopulationDisplay');
+        this.hpDisplay = document.getElementById('hpDisplay');
+        this.waveDisplay = document.getElementById('waveDisplay');
+        this.waveProgress = document.getElementById('waveProgress');
+        this.gameOverWave = document.getElementById('gameOverWave');
+    }
+
+    reset() {
+        this.gameOverMenu.style.display = 'none';
+        this.victoryMenu.style.display = 'none';
+        this.overlay.style.display = 'none';
+        this.waveDisplay.textContent = '1';
+        this.waveProgress.style.width = '0%';
+    }
+
+    updateWaveDisplay(waveNumber) {
+        this.waveDisplay.textContent = waveNumber;
+    }
+}
+class Effect { 
+    constructor(config, applyFn, amount) {
+        this.id = config.id;
+        this.title = config.title;
+        this.desc = config.desc;
+        this.lifeTime = config.lifeTime;
+        this.applyFn = applyFn;
+        this.amount = amount;    
+    }
+
+    update() {
+        this.lifeTime--;
+        if( this.lifeTime <= 0) return false;
+        return true;        
+    }
+
+    apply(s, add, mul) {
+        this.applyFn(s, add, mul, this.amount);
+    }
+}
+class Upgrade { 
+    constructor(id, title, desc, icon, appliesTo, condition, apply, onAcquire) {
+        this.id = id;
+        this.title = title;
+        this.desc = desc;
+        this.icon = icon;
+        this.appliesTo = appliesTo;
+        this.conditionFn = condition;
+        this.applyFn = apply;
+        this.onAcquire = onAcquire;        
+    }
+
+    canApply(gameState) {
+        return this.conditionFn(gameState);
+    }
+
+    apply(s, add, mul) {
+        this.applyFn(s, add, mul);
+    }
+}
+class ImageManager {
+    constructor() {
+        this.images = {};
+    }
+
+    loadImages(prefix, config) {
+        for (const [type, cfg] of Object.entries(config)) {
+            this.images[`${prefix}_${type}`] = this.createPlaceholder(cfg);
+            // Later: this.images[type] = this.loadRealImage(cfg.src);
+        }
+    }
+
+    createPlaceholder(config) {
+        return this.createImage(config); // Reuse existing function
+    }
+
+    getImage(prefix, type) {
+        return this.images[`${prefix}_${type}`];
+    }
+        
+    createImage(config) {
+        const canvas = document.createElement('canvas');
+        canvas.width = config.size;
+        canvas.height = config.size;
+        const ctx = canvas.getContext('2d');
+        
+        ctx.fillStyle = config.color;
+        if (config.isCircle) {
+            ctx.beginPath();
+            ctx.arc(config.size/2, config.size/2, config.size/2, 0, Math.PI * 2);
+            ctx.fill();
+        } else {
+            ctx.fillRect(0, 0, config.size, config.size);
+        }
+        
+        return canvas;
+    }
+}
+class ExplosionManager {
+    constructor() {
+        this.explosions = [];
+    }
+
+    add(x, y, radius) {
+        this.explosions.push({ x, y, radius, currentRadius: 0, maxRadius: radius, alpha: 1 });
+    }
+
+    update() {
+        this.explosions = this.explosions.filter(exp => {
+            exp.currentRadius += exp.maxRadius * 0.1;
+            exp.alpha -= 0.05;
+            return exp.alpha > 0;
+        });
+    }
+}
+
+class Tower {
+    constructor(state, x, y, type, stats, image) {
+        this.drawOffset =  -image.width / 2;
+        this.position = { x: x * CONFIG.GRID_SIZE + CONFIG.GRID_SIZE / 2, y: y * CONFIG.GRID_SIZE + CONFIG.GRID_SIZE / 2 };
+        this.x = x;
+        this.y = y;
+        this.type = type;
+        this.level = 1;
+        this.targetEnemy = null;
+        this.projectiles = [];
+        this.placed = false;
+        
+        this.stats = {...stats};
+        this.defaultStats = {...stats};                
+
+        this.cooldown = 0;
+        this.state = state;
+        this.image = image;
+        this.lifeSpan = this.stats.lifeSpan;
+        this.activeEffects = {};   
+    }
+
+    update(game) {
+        this.stats = {...this.defaultStats};
+    
+        this.applyUpgrades();
+        this.applyEffects();
+
+        if (this.cooldown > 0) this.cooldown--;
+                
+        // Find target if none
+        if (!this.targetEnemy || this.targetEnemy.isDead || Math.hypot(this.targetEnemy.position.x - this.position.x, this.targetEnemy.position.y - this.position.y) > this.stats.range) {
+            this.findTarget();
+        }
+        
+        // Attack if ready and has target
+        if (this.cooldown <= 0 && this.targetEnemy) {
+            this.attack();
+        }
+
+        if( this.cooldown <= 0 && this.stats.mineAmt > 0 ){
+            this.gather(game);
+        }
+        
+        if( this.lifeSpan > 0 ) {
+            this.lifeSpan--;
+        }
+    }
+    
+    applyEffects() {
+        let effectArr = [];
+        for(let effectId in this.activeEffects) {
+            if(this.activeEffects[effectId].update()){
+                effectArr.push(this.activeEffects[effectId]);
+            } else {
+                this.activeEffects[effectId] = undefined;
+            }
+        }        
+        
+        calculateStats(this.stats, this.defaultStats, effectArr);
+    }
+    applyUpgrades() {
+        calculateStats(this.stats, this.defaultStats, this.state.activeUpgrades[this.type]);        
+    }
+
+    findTarget() {
+        this.targetEnemy = null;
+        let furthestEnemy = null;
+        let furthestDistance = -1;
+        const nearbyEnemies = game.spatialGrid.getNearbyEntities(
+            this.position.x, 
+            this.position.y, 
+            this.stats.range
+        );
+        for (let enemy of nearbyEnemies) {
+            if (enemy.isDead) continue;          
+
+            // Target furthest enemy along path (closest to core)
+            if (enemy.pathIndex > furthestDistance) {
+                furthestDistance = enemy.pathIndex;
+                furthestEnemy = enemy;
+            }
+            
+        }
+        
+        this.targetEnemy = furthestEnemy;
+    }
+
+    gather(game) {
+        game.state.bloodShards += this.stats.mineAmt;
+        this.cooldown = this.stats.attackSpeed;
+    }
+
+    attack() {
+        if (!this.targetEnemy) return; 
+        this.launchProjectile();
+        this.cooldown = this.stats.attackSpeed;
+    }
+    
+    launchProjectile() {
+        let damage = this.stats.damage * this.state.stats.damageMultiplier;
+        
+        // Critical hit calculation
+        const isCritical = Math.random() < this.stats.critChance;
+        if (isCritical) {
+            damage *= this.stats.critMultiplier;
+        }
+        
+        const projectile = new Projectile(this.stats.projectile, this.position.x, this.position.y, this, this.targetEnemy, {            
+            speed: 5,
+            damage: damage,
+            isCritical: isCritical,
+            piercing: this.stats.piercing || 0,
+            splashRadius: this.stats.splashRadius || 0
+        });
+        
+        this.state.projectiles.push(projectile);
+    }
+    
+    upgrade(stat, amount) {
+        switch(stat) {
+            case 'damage':
+                this.stats.damage *= amount;
+                break;
+            case 'attackSpeed':
+                this.stats.attackSpeed *= amount;
+                break;
+            case 'range':
+                this.stats.range *= amount;
+                break;
+            case 'critChance':
+                this.stats.critChance += amount;
+                break;
+            case 'critMultiplier':
+                this.stats.critMultiplier += amount;
+                break;
+            case 'leech':
+                this.stats.leech += amount;
+                break;
+            case 'piercing':
+                this.stats.piercing += amount;
+                break;
+            case 'splashRadius':
+                this.stats.splashRadius *= amount;
+                break;
+            case 'summonChance':
+                this.stats.summonChance += amount;
+                break;
+        }
+    }
+}
+class Enemy {
+    constructor(state, type, stats, image) {
+        this.state = state;
+        this.type = type;
+        this.stats = {...stats};
+        this.image = image;
+        
+
+        this.pathIndex = 0;
+        this.progress = 0;
+        this.drawOffset = -this.image.width / 2;
+        this.x = this.state.path[0].x;
+        this.y = this.state.path[0].y;
+        this.position = { x: this.x * CONFIG.GRID_SIZE + CONFIG.GRID_SIZE / 2, y: this.y * CONFIG.GRID_SIZE + CONFIG.GRID_SIZE / 2 };
+        this.isDead = false;
+        
+        // Difficulty scaling
+        this.hp = stats.hp * (state.wave * .5);
+        this.stats.maxHp = this.hp;
+        this.defaultStats = {...this.stats};
+        
+        this.canvas = document.getElementById("gameCanvas");
+        this.ctx = this.canvas.getContext("2D");
+        this.activeEffects = {};
+    }
+
+    update(game) {
+        if (this.hp <= 0){
+            this.isDead = true;
+            this.state.essence += this.stats.essence * this.state.stats.essenceMultiplier;
+        }
+        if (this.isDead) return false;                 
+        this.stats = {...this.defaultStats};
+    
+        this.applyEffects();
+
+        if (this.pathIndex < this.state.path.length - 1) {
+            const target = this.state.path[this.pathIndex + 1];
+            const dx = target.x * CONFIG.GRID_SIZE + (CONFIG.GRID_SIZE / 2) - this.position.x;
+            const dy = target.y * CONFIG.GRID_SIZE + (CONFIG.GRID_SIZE / 2) - this.position.y;
+            const dist = Math.hypot(dx, dy);
+
+            if (dist > this.stats.speed) {
+                this.position.x += (dx / dist) * this.stats.speed;
+                this.position.y += (dy / dist) * this.stats.speed;
+            } else {
+                this.pathIndex++;
+            }
+            this.x = parseInt(this.position.x / CONFIG.GRID_SIZE);
+            this.y = parseInt(this.position.y / CONFIG.GRID_SIZE);
+        } else {
+            this.state.bloodCoreHP -= 10;
+            this.isDead = true;
+            return false;
+        }
+        game.spatialGrid.insert(this);
+        return true;
+    }
+
+    addEffect(effectConfig, effectFn, effectAmt) {        
+        this.activeEffects[effectConfig.id] = new Effect( effectConfig, effectFn, effectAmt );
+    }
+
+    applyEffects() {
+        let effectArr = [];
+        for(let effectId in this.activeEffects) {
+            if(this.activeEffects[effectId] && this.activeEffects[effectId].update()){
+                effectArr.push(this.activeEffects[effectId]);
+            } else {
+                this.activeEffects[effectId] = undefined;
+            }
+        }        
+        
+        calculateStats(this.stats, this.defaultStats, effectArr);
+    }
+
+}
+
+
+class SpatialGrid {
+    constructor(worldWidth, worldHeight, cellSize) {
+        this.cellSize = cellSize;
+        this.cols = Math.ceil(worldWidth / cellSize);
+        this.rows = Math.ceil(worldHeight / cellSize);
+        this.grid = new Array(this.cols * this.rows).fill().map(() => []);
+        
+        // Track which cell each entity is in
+        this.entityCells = new Map(); // Map of entity -> cell index
+    }
+    
+    getIndex(x, y) {
+        // Clamp coordinates to world boundaries
+        const clampedX = Math.max(0, Math.min(x, this.cols * this.cellSize - 1));
+        const clampedY = Math.max(0, Math.min(y, this.rows * this.cellSize - 1));
+        
+        const col = Math.floor(clampedX / this.cellSize);
+        const row = Math.floor(clampedY / this.cellSize);
+        return row * this.cols + col;
+    }
+
+    insert(entity) {
+        const newIndex = this.getIndex(entity.position.x, entity.position.y);
+        const oldIndex = this.entityCells.get(entity);
+        
+        // If entity moved to a new cell
+        if (oldIndex !== newIndex) {
+            // Remove from old cell if it exists
+            if (oldIndex !== undefined) {
+                const oldCell = this.grid[oldIndex];
+                const entityIndex = oldCell.indexOf(entity);
+                if (entityIndex !== -1) {
+                    oldCell.splice(entityIndex, 1);
+                }
+            }
+            
+            // Add to new cell
+            if (newIndex >= 0 && newIndex < this.grid.length) {
+                this.grid[newIndex].push(entity);
+                this.entityCells.set(entity, newIndex);
+            }
+        }
+    }
+    
+    remove(entity) {
+        const index = this.entityCells.get(entity);
+        if (index !== undefined) {
+            const cell = this.grid[index];
+            const entityIndex = cell.indexOf(entity);
+            if (entityIndex !== -1) {
+                cell.splice(entityIndex, 1);
+            }
+            this.entityCells.delete(entity);
+        }
+    }
+    
+    getNearbyEntities(x, y, radius) {
+        const nearby = [];
+        
+        // Get cells that could contain entities within radius
+        const startCol = Math.max(0, Math.floor((x - radius) / this.cellSize));
+        const endCol = Math.min(this.cols - 1, Math.floor((x + radius) / this.cellSize));
+        const startRow = Math.max(0, Math.floor((y - radius) / this.cellSize));
+        const endRow = Math.min(this.rows - 1, Math.floor((y + radius) / this.cellSize));
+        
+        // Collect potential candidates from relevant cells
+        for (let row = startRow; row <= endRow; row++) {
+            for (let col = startCol; col <= endCol; col++) {
+                const index = row * this.cols + col;
+                if (index >= 0 && index < this.grid.length) {
+                    this.grid[index].forEach(entity => nearby.push(entity));
+                }
+            }
+        }
+        
+        return nearby;
+    }
+    
+    clear() {
+        this.grid = this.grid.map(() => []);
+        this.entityCells.clear();
+    }
+    
+    // Optional: Only clear but maintain all entity positions
+    // Useful for when reusing the same grid across updates
+    resetKeepingEntities() {
+        const allEntities = [];
+        this.entityCells.forEach((_, entity) => {
+            allEntities.push(entity);
+        });
+        
+        this.clear();
+        
+        allEntities.forEach(entity => {
+            this.insert(entity);
+        });
+    }
+}
+
+class Projectile {
+    constructor(type, x, y, owner, target, stats) {
+        this.type = type;
+        this.position = { x: x, y: y };
+        this.owner = owner;
+        this.target = target;
+        this.stats = stats;
+        this.piercedEnemies = [];
+    }
+
+    update(game) {
+        
+        // Remove if target is gone
+        if (!this.target || this.target.isDead) {
+            return false;
+        }
+        
+        // Move towards target
+        const dx = this.target.position.x - this.position.x;
+        const dy = this.target.position.y - this.position.y;
+        const distSq = dx * dx + dy * dy;
+        
+        // Hit detection
+        if (distSq < 15 * 15 ) {
+            if (this.stats.splashRadius > 0) {
+                const nearbyEnemies = game.spatialGrid.getNearbyEntities(
+                    this.position.x, 
+                    this.position.y, 
+                    this.stats.splashRadius
+                );
+                
+                // Process only relevant enemies
+                for (const enemy of nearbyEnemies) {
+                    if (enemy.isDead) continue;
+                    
+                    const dx = enemy.position.x - this.target.position.x;
+                    const dy = enemy.position.y - this.target.position.y;
+                    const distSq1 = dx * dx + dy * dy;
+                    
+                    // Compare with squared splash radius for efficiency
+                    const splashRadiusSq = this.stats.splashRadius * this.stats.splashRadius;
+                    if (distSq1 <= splashRadiusSq) {
+                        // Calculate actual distance only when needed
+                        const splashDist = Math.sqrt(distSq1);
+                        enemy.hp -= (this.stats.damage * (1 - (splashDist / this.stats.splashRadius) * 0.5));                     
+
+                        if( this.owner.stats.slowEffect ) {
+                            enemy.addEffect(effectsConfig.slow, effects.slow, this.owner.stats.slowEffect);
+                        }
+                    }
+                }
+                game.explosionManager.add(this.position.x, this.position.y, this.stats.splashRadius);
+            } else {
+                // Apply damage
+                this.target.hp -= this.stats.damage;
+
+                if( this.owner.stats.slowEffect ) {
+                    this.target.addEffect(effectsConfig.slow, effects.slow, this.owner.stats.slowEffect );
+                }
+            }
+
+            //summon skeleton
+            if (this.owner.stats.summonChance > 0 && 
+                this.target.hp <= 0 && 
+                Math.random() < this.owner.stats.summonChance - 1) {
+                    game.createSummon(this.target.x, this.target.y, 'skeleton');
+            }
+
+            // Apply tower special effects
+            if (this.owner.stats.leech > 0) {
+                const healing = this.stats.damage * this.owner.stats.leech * game.state.stats.healingMultiplier;
+                game.state.bloodCoreHP = Math.min(game.state.stats.maxBloodCoreHP, game.state.bloodCoreHP + healing);
+            }
+            if (this.owner.stats.thief && this.owner.stats.thief != 0) {
+                const stealAmt = this.stats.damage * this.owner.stats.thief * game.state.stats.bloodShardMultiplier;
+                game.state.bloodShards += stealAmt;
+            }
+            // Piercing logic
+            if (this.stats.piercing > 0 && this.piercedEnemies.length < this.stats.piercing) {
+                this.piercedEnemies.push(this.target);
+                const nearbyEnemies = game.spatialGrid.getNearbyEntities(
+                    this.position.x, 
+                    this.position.y, 
+                    this.stats.range
+                );
+                // Find a new target
+                let newTarget = null;
+                for (let enemy of nearbyEnemies) {
+                    if (!enemy.isDead && !this.piercedEnemies.includes(enemy)) {
+                        const dx = enemy.position.x - this.position.x;
+                        const dy = enemy.position.y - this.position.y;
+                        const distSq2 = dx * dx + dy * dy;
+                        if (distSq2 < this.owner.stats.range * this.owner.stats.range) {
+                            newTarget = enemy;
+                            break;
+                        }
+                    }
+                }
+                
+                if (newTarget) {
+                    this.target = newTarget;   
+                    return true;                 
+                } 
+            }
+            
+            return false;
+        }
+        
+        // Move projectile
+        let dist = Math.sqrt(distSq);
+        const speed = this.stats.speed * game.state.timeScale;
+        this.position.x += (dx / dist) * speed;
+        this.position.y += (dy / dist) * speed;
+        return true;
+    }
+}
+
+const projectilesConfig = {
+    bat: { color: '#000000', size: 10, isCircle: true },
+    bloodBolt: { color: '#800205', size: 10, isCircle: true },
+    necroOrb: { color: '#34d12c', size: 10, isCircle: true },
+    bone: { color: '#dddcc6', size: 5, isCircle: true },
+    shadowSpike: { color: '#8c2f7c', size: 8, isCircle: true },
+    soulFlame: { color: '#fc8332', size: 12, isCircle: true },
+    deathMist: { color: '#0e72bc', size: 15, isCircle: true },
+};
+const towersConfig = {
+    bloodCore: { color: '#aa00ff', size: 30, isCircle: true },
+    batSwarm: { info: 'Fast attack speed with moderate damage. Good for groups of weaker enemies.', color: '#0a091c', size: 30, cost: 25, population: 1, range: 120, damage: 2, attackSpeed: 20, projectile: 'bat', critChance: 0.05, critMultiplier: 1.5 },
+    supplyDepot: { info: 'Provides 5 additional max population.', color: '#3d413e', size: 40, cost: 100, attackSpeed: 1000, projectile: 'bloodBolt', critChance: 0.1, critMultiplier: 2, supply: 5 },
+    miner: { info: 'Mines additional gold every second.', color: '#9c9141', size: 40, cost: 50, population: 1, attackSpeed: 50, critMultiplier: 1, mineAmt: 1 },
+    necromancer: { info: 'Long range with area damage. Can be upgraded to summon skeletons from defeated enemies.', color: '#6600ee', size: 35, cost: 200, population: 4, range: 150, damage: 8, attackSpeed: 30, projectile: 'necroOrb', piercing: 1, critChance: 0.15, critMultiplier: 1.8 },
+    skeleton: { info: 'Raise the dead.', color: '#fcfee7', size: 20, population: 1, range: 80, damage: 5, attackSpeed: 30, projectile: 'bone', critMultiplier: 1, lifeSpan: 500 },
+    shadowTurret: { info: 'A turret in the shadows.', color: '#550055', size: 25, cost: 70, population: 3, range: 100, damage: 10, attackSpeed: 25, projectile: 'shadowSpike', piercing: 2, critChance: 0.1, critMultiplier: 1.7 },
+    soulPyre: { info: 'A burning pile of bodies.', color: '#f2570d', size: 30, cost: 90, population: 3, range: 90, damage: 6, attackSpeed: 35, projectile: 'soulFlame', critChance: 0.05, critMultiplier: 2, splashRadius: 45, burnDamage: 2 },
+    mistShrine: { info: 'Oooh a scary mist monster.', color: '#0a3dc2', size: 35, cost: 100, population: 3, range: 90, damage: 2, attackSpeed: 50, projectile: 'deathMist', critMultiplier: 1, splashRadius: 30, slowEffect: 0.7 },
+};
+const enemiesConfig = {
+    zombie: { color: '#555555', size: 40, hp: 30, speed: 0.8, value: 5, essence: 10, isCircle: true },
+    skeleton: { color: '#c9d5ae', size: 28, hp: 20, speed: 1.2, value: 7, essence: 12, isCircle: true },
+    ghost: { color: '#ffffff', size: 30, hp: 15, speed: 1.5, value: 10, essence: 15, isCircle: true },
+    wraith: { color: '#000000', size: 32, hp: 25, speed: 1.8, value: 12, essence: 18, dodgeChance: 0.2, isCircle: true },
+    bloodBeast: { color: '#990000', size: 40, hp: 50, speed: 0.6, value: 15, essence: 20, regen: 0.5, isCircle: true },
+    banshee: { color: '#b01c84', size: 28, hp: 20, speed: 1.4, value: 8, essence: 14, screamDamage: 5, isCircle: true },
+};
+const upgradesConfig = {
+    // Bat Swarm Upgrades
+    batFrenzy: { desc: '+25% Attack Speed', value: .75 },
+    batSwarm: { desc: '+15% Damage and +10% Range', damage: 1.15, range: 1.1 },
+    vampiricBats: { desc: 'Heal 0.5% Core HP per hit', leech: 0.005 },
+
+    // Necromancer Upgrades
+    necroSummon: { desc: '10% chance to raise a skeleton when killing an enemy', summonChance: 1.1 },
+    necroMastery: { desc: '+20% Range and projectiles pierce one additional enemy', range: 1.2, piercing: 1 },
+
+    // Shadow Turret Upgrades
+    shadowPierce: { desc: 'Projectiles pierce 2 additional enemies', piercing: 2 },
+    shadowReach: { desc: '+30% Range', range: 1.3 },
+    shadowCrit: { desc: '+10% Critical Chance', critChance: 0.1 },
+
+    // Soul Pyre Upgrades
+    pyreBurn: { desc: '+50% Burn Damage', burnDamage: 1 },
+    pyreBlaze: { desc: '+20% Damage and +10% Attack Speed', damage: 1.2, attackSpeed: 1.1 },
+    pyreSoul: { desc: '+10% splash radius', splashRadius: 1.1 },
+
+    // Mist Shrine Upgrades
+    mistSlow: { desc: 'Slow effect increased by 20%', slowEffect: 0.8 },
+    mistSpread: { desc: '+25% Range and +1 Piercing', range: 1.25, piercing: 1 },
+
+    // Global Upgrades
+    bloodEff: { desc: 'Towers cost 15% less Blood Shards', value: 0.85 },
+    bloodCore: { desc: 'Increase max Core HP by 20% and heal 30 HP', maxHpMultiplier: 1.2, healAmount: 30 },
+    bloodHarvest: { desc: 'Gain 25% more Blood Shards from enemies', value: 1.25 },
+    essenceExtraction: { desc: 'Gain 25% more Essence from enemies', value: 1.25 },
+    bloodFrenzy: { desc: 'All towers deal 20% more damage', damageMultiplier: 1.2 },
+    bloodRegeneration: { desc: 'All healing effects are 25% more effective', healingMultiplier: 1.25 },
+    essenceOverflow: { desc: 'Gain 10% more Essence when above 50% Core HP', value: 1.1 },
+    darkResilience: { desc: 'Towers take 20% less damage from enemy abilities', towerDamageReduction: 0.8 }
+};
+
+const effectsConfig = {
+    slow: { id: 'slow', title: 'Slow', desc: 'Target is slowed', stat: 'speed', lifeTime: 100 }
+}
+
+const effects = {
+    slow: (stats, additiveStats, multiplicitiveStats, slowAmount) => {
+        stats[effectsConfig.slow.stat] *= slowAmount;
+    }
+}
+
+const upgrades = [
+    // Bat Swarm Upgrades
+    new Upgrade(
+        'batFrenzy',
+        'Bat Frenzy',
+        'Bat Swarm: ' + upgradesConfig.batFrenzy.desc,
+        '🦇',
+        'batSwarm',
+        (state) => state.hasTowerType('batSwarm'),
+        (stats, additiveStats, multiplicitiveStats) => {
+            multiplicitiveStats['attackSpeed'].push(upgradesConfig.batFrenzy.value);
+        }
+    ),
+    new Upgrade(
+        'batSwarm',
+        'Swarm Intelligence',
+        'Bat Swarm: ' + upgradesConfig.batSwarm.desc,
+        '🦇',
+        'batSwarm',
+        (state) => state.hasTowerType('batSwarm'),
+        (stats, additiveStats, multiplicitiveStats) => {            
+            multiplicitiveStats['damage'].push(upgradesConfig.batSwarm.damage);
+            multiplicitiveStats['range'].push(upgradesConfig.batSwarm.range);        
+        }
+    ),
+
+    // Necromancer Upgrades
+    new Upgrade(
+        'necroSummon',
+        'Raise Dead',
+        'Necromancer: ' + upgradesConfig.necroSummon.desc,
+        '💀',
+        'necromancer',
+        (state) => state.hasTowerType('necromancer'),
+        (stats, additiveStats, multiplicitiveStats) => {
+            stats.summonChance = 1;
+            additiveStats['summonChance'].push(upgradesConfig.necroSummon.summonChance);
+        }
+    ),
+
+     // Shadow Turret Upgrades
+    new Upgrade(
+        'shadowReach',
+        'Extended Darkness',
+        'Shadow Turret: ' + upgradesConfig.shadowReach.desc,
+        '📏',
+        'shadowTurret',
+        (state) => state.hasTowerType('shadowTurret'),
+        (stats, additiveStats, multiplicitiveStats) => {
+            additiveStats['range'].push(upgradesConfig.shadowReach.range);
+        }
+    ),
+
+    // Soul Pyre Upgrades
+    new Upgrade(
+        'pyreSoul',
+        'Radiant Soul',
+        'Soul Pyre: ' + upgradesConfig.pyreSoul.desc,
+        '💉',
+        'soulPyre',
+        (state) => state.hasTowerType('soulPyre'),
+        (stats, additiveStats, multiplicitiveStats) => {
+            additiveStats['splashRadius'].push(upgradesConfig.pyreSoul.splashRadius);
+        }
+    ),
+
+    // Mist Shrine Upgrades
+    new Upgrade(
+        'mistSlow',
+        'Chilling Mist',
+        'Mist Shrine: ' + upgradesConfig.mistSlow.desc,
+        '❄️',
+        'mistShrine',
+        (state) => state.hasTowerType('mistShrine'),
+        (stats, additiveStats, multiplicitiveStats) => {
+            multiplicitiveStats['slowEffect'].push(upgradesConfig.mistSlow.slowEffect);
+        }
+    ),
+    // Global Upgrades
+    new Upgrade(
+        'bloodCore',
+        'Blood Core Reinforcement',
+        upgradesConfig.bloodCore.desc,
+        '🛡️',
+        'global',
+        (state) => true,
+        (stats) => {
+            stats.maxBloodCoreHP *= upgradesConfig.bloodCore.maxHpMultiplier;
+        },
+        (state) => {
+            state.bloodCoreHP = Math.min(state.stats.maxBloodCoreHP, state.bloodCoreHP + upgradesConfig.bloodCore.healAmount);
+            console.log('acquired');
+        }
+    ),
+    new Upgrade(
+        'essenceExtraction',
+        'Essence Extraction',
+        upgradesConfig.essenceExtraction.desc,
+        '🔮',
+        'global',
+        (state) => true,
+        (stats) => {
+            stats.essenceMultiplier *= upgradesConfig.essenceExtraction.value;
+        }
+    ),
+    new Upgrade(
+        'bloodFrenzy',
+        'Blood Frenzy',
+        upgradesConfig.bloodFrenzy.desc,
+        '⚔️',
+        'global',
+        (state) => true,
+        (stats, additiveStats, multiplicitiveStats) => {
+            additiveStats['damageMultiplier'].push(upgradesConfig.bloodFrenzy.damageMultiplier);
+        }
+    ),
+    new Upgrade(
+        'essenceOverflow',
+        'Essence Overflow',
+        upgradesConfig.essenceOverflow.desc,
+        '🔮',
+        'global',
+        (state) => state.bloodCoreHP > state.stats.maxBloodCoreHP / 2,
+        (stats) => {
+            stats.essenceMultiplier *= upgradesConfig.essenceOverflow.value;
+        }
+    ),
+
+];
+
+
+const enemyConstructors = {
+    'zombie': class zombieEnemy extends Enemy {
+        constructor(state, image) {
+            super(state, 'zombie', enemiesConfig.zombie, image );
+        }
+    },
+    'skeleton': class skeletonEnemy extends Enemy {
+        constructor(state, image) {
+            super(state, 'skeleton', enemiesConfig.skeleton, image );
+        }
+    },
+    'ghost': class ghostEnemy extends Enemy {
+        constructor(state, image) {
+            super(state, 'ghost', enemiesConfig.ghost, image);
+        }
+    },
+    'wraith': class WraithEnemy extends Enemy {
+        constructor(state, image) {
+            super(state, 'wraith', enemiesConfig.wraith, image);
+        }
+    },
+    'bloodBeast': class BloodBeastEnemy extends Enemy {
+        constructor(state, image) {
+            super(state, 'bloodBeast', enemiesConfig.bloodBeast, image);
+        }
+    },
+    'banshee': class BansheeEnemy extends Enemy {
+        constructor(state, image) {
+            super(state, 'banshee', enemiesConfig.banshee, image);
+        }
+    }
+};
+const towerConstructors = {
+    'batSwarm': class BatSwarmTower extends Tower {
+        constructor(state, x, y, image) {
+            super(state, x, y, 'batSwarm', towersConfig.batSwarm, image );
+        }
+    },
+    'miner': class MinerTower extends Tower {
+        constructor(state, x, y, image) {
+            super(state, x, y, 'miner', towersConfig.miner, image );
+        }
+    },
+    'supplyDepot': class SupplyDepotTower extends Tower {
+        constructor(state, x, y, image) {
+            super(state, x, y, 'supplyDepot', towersConfig.supplyDepot, image );
+        }
+    },
+    'necromancer': class NecromancerTower extends Tower {
+        constructor(state, x, y, image) {
+            super(state, x, y, 'necromancer', towersConfig.necromancer, image );
+        }
+    },
+    'skeleton': class SkeletonTower extends Tower {
+        constructor(state, x, y, image) {
+            super(state, x, y, 'skeleton', towersConfig.skeleton, image );
+        }
+    },
+    'shadowTurret': class ShadowTurretTower extends Tower {
+        constructor(state, x, y, image) {
+            super(state, x, y, 'shadowTurret', towersConfig.shadowTurret, image);
+        }
+    },
+    'soulPyre': class SoulPyreTower extends Tower {
+        constructor(state, x, y, image) {
+            super(state, x, y, 'soulPyre', towersConfig.soulPyre, image);
+        }
+    },
+    'mistShrine': class MistShrineTower extends Tower {
+        constructor(state, x, y, image) {
+            super(state, x, y, 'mistShrine', towersConfig.mistShrine, image);
+        }
+    }
+};
+
+
+class Renderer {
+    constructor(canvas) {        
+        this.imageManager = new ImageManager();
+        this.imageManager.loadImages('tower', towersConfig);
+        this.imageManager.loadImages('enemy', enemiesConfig);
+        this.imageManager.loadImages('projectile', projectilesConfig);
+        this.ctx = canvas.getContext('2d');
+        this.selectedTowerType = null;
+        this.hoverCell = { x: -1, y: -1 };
+        this.showRange = false;
+    }
+
+    render(state, map, explosions) {
+        this.ctx.clearRect(0, 0, CONFIG.CANVAS_WIDTH, CONFIG.CANVAS_HEIGHT);
+        this.drawMap(map.tileMap, map.path);
+        this.drawPreview(state);
+        state.towers.forEach(t => this.drawTower(t));
+        state.summons.forEach(s => this.drawTower(s));
+        state.enemies.forEach(e => this.drawEnemy(e));
+        state.projectiles.forEach(p => this.drawProjectile(p));
+        this.drawExplosions(explosions);
+    }
+
+    drawMap(tileMap, path) {
+        this.ctx.fillStyle = '#2b2b3d';
+        this.ctx.fillRect(0, 0, CONFIG.CANVAS_WIDTH, CONFIG.CANVAS_HEIGHT);
+
+        for (let y = 0; y < CONFIG.ROWS; y++) {
+            for (let x = 0; x < CONFIG.COLS; x++) {
+                const tile = tileMap[y][x];
+                this.ctx.fillStyle = tile.type === 'grass' ? '#3a5a40' : tile.type === 'path' ? '#a98467' : '#4cc9f0';
+                this.ctx.fillRect(x * CONFIG.GRID_SIZE, y * CONFIG.GRID_SIZE, CONFIG.GRID_SIZE, CONFIG.GRID_SIZE);
+                this.ctx.strokeStyle = 'rgba(0, 0, 0, 0.1)';
+                this.ctx.strokeRect(x * CONFIG.GRID_SIZE, y * CONFIG.GRID_SIZE, CONFIG.GRID_SIZE, CONFIG.GRID_SIZE);
+            }
+        }
+
+        this.ctx.strokeStyle = '#ffd166';
+        this.ctx.lineWidth = 2;
+        this.ctx.beginPath();
+        this.ctx.moveTo(path[0].x * CONFIG.GRID_SIZE + CONFIG.GRID_SIZE / 2, path[0].y * CONFIG.GRID_SIZE + CONFIG.GRID_SIZE / 2);
+        path.slice(1).forEach(p => this.ctx.lineTo(p.x * CONFIG.GRID_SIZE + CONFIG.GRID_SIZE / 2, p.y * CONFIG.GRID_SIZE + CONFIG.GRID_SIZE / 2));
+        this.ctx.stroke();
+    }
+
+    drawTower(t) {
+        // Draw range indicator if tower is being placed
+        if (t.state.selectedTowerType === t.type && !t.placed) {
+            this.ctx.beginPath();
+            this.ctx.arc(t.position.x, t.position.y, t.stats.range, 0, Math.PI * 2);
+            this.ctx.strokeStyle = 'rgba(255, 255, 255, 0.3)';
+            this.ctx.stroke();
+        }
+        
+        // Draw the tower
+        this.ctx.drawImage(t.image, t.position.x + t.drawOffset, t.position.y + t.drawOffset);
+        
+        // Draw level indicator if > 1
+        if (t.level > 1) {
+            this.ctx.fillStyle = 'white';
+            this.ctx.font = '12px Arial';
+            this.ctx.textAlign = 'center';
+            this.ctx.fillText(t.level, t.position.x, t.position.y - 5 );
+        }
+        // Draw range indicator if hovering
+        if (t.showRange) {
+            this.ctx.beginPath();
+            this.ctx.arc(t.position.x, t.position.y, t.stats.range, 0, Math.PI * 2);
+            this.ctx.strokeStyle = 'rgba(255, 255, 255, 0.3)';
+            this.ctx.stroke();
+        }
+    }
+
+    drawEnemy(e) {
+        this.ctx.drawImage(e.image, e.position.x + e.drawOffset, e.position.y + e.drawOffset);
+        
+        // Health bar
+        const healthPercentage = e.hp / e.stats.maxHp;
+        const barWidth = 30;
+        
+        this.ctx.fillStyle = 'rgba(0, 0, 0, 0.5)';
+        this.ctx.fillRect(e.position.x - barWidth/2, e.position.y - 20, barWidth, 5);
+        
+        this.ctx.fillStyle = healthPercentage > 0.5 ? 'green' : healthPercentage > 0.25 ? 'yellow' : 'red';
+        this.ctx.fillRect(e.position.x - barWidth/2, e.position.y - 20, barWidth * healthPercentage, 5);
+    }
+
+    drawProjectile(p) {
+        const img = this.imageManager.getImage('projectile', p.type);
+        
+        // Draw with rotation towards target
+        if (p.target) {
+            const dx = p.target.x - p.position.x;
+            const dy = p.target.y - p.position.y;
+            const angle = Math.atan2(dy, dx);
+            
+            this.ctx.save();
+            this.ctx.translate(p.position.x, p.position.y);
+            this.ctx.rotate(angle);
+            this.ctx.drawImage(img, -img.width/2, -img.height/2);
+            this.ctx.restore();
+        } else {
+            this.ctx.drawImage(img, p.position.x - img.width/2, p.position.y - img.height/2);
+        }
+        
+        // Visual indicator for critical hits
+        if (p.isCritical) {
+            this.ctx.beginPath();
+            this.ctx.arc(p.position.x, p.position.y, 8, 0, Math.PI * 2);
+            this.ctx.strokeStyle = 'yellow';
+            this.ctx.stroke();
+        }
+    }
+
+    drawPreview(state) {
+        if (state.previewTower) {
+            this.drawTower(state.previewTower);
+        } 
+    }
+
+    drawExplosions(explosions) {
+        explosions.forEach(exp => {
+            this.ctx.beginPath();
+            this.ctx.arc(exp.x, exp.y, exp.currentRadius, 0, Math.PI * 2);
+            this.ctx.fillStyle = `rgba(255, 200, 0, ${exp.alpha * 0.5})`;
+            this.ctx.fill();
+
+            this.ctx.beginPath();
+            this.ctx.arc(exp.x, exp.y, exp.currentRadius * 0.7, 0, Math.PI * 2);
+            this.ctx.fillStyle = `rgba(255, 100, 0, ${exp.alpha})`;
+            this.ctx.fill();
+        });
+    }
+}
+
+
+class Game {
+    constructor() {
+        this.state = new GameState();
+        this.mapManager = new MapManager();
+        this.uiManager = new UIManager();
+        this.explosionManager = new ExplosionManager();
+        this.spatialGrid = new SpatialGrid(CONFIG.CANVAS_WIDTH, CONFIG.CANVAS_HEIGHT, CONFIG.GRID_SIZE * 3);
+        
+        this.canvas = document.getElementById("gameCanvas");
+        this.ctx = this.canvas.getContext("2d");
+        this.renderer = new Renderer(this.canvas);
+
+        this.setupTowerPlacement();
+        this.updateStats();
+    }
+
+    showUpgradeMenu() {
+        if (this.state.isLevelingUp) return; // Prevent re-triggering
+        
+        this.state.isLevelingUp = true;
+        this.state.isPaused = true;
+        
+        this.uiManager.upgradeMenu.style.display = 'block';
+        this.uiManager.overlay.style.display = 'block';
+        this.uiManager.upgradeOptionsDiv.innerHTML = '';
+        
+        // Filter upgrades based on conditions
+        const availableUpgrades = upgrades.filter(upgrade => upgrade.canApply(this.state));
+        
+
+        
+        // Choose 3 random upgrades
+        const options = [];
+        while (options.length < 3 && availableUpgrades.length > 0) {
+            const index = Math.floor(Math.random() * availableUpgrades.length);
+            options.push(availableUpgrades[index]);
+            availableUpgrades.splice(index, 1);
+        }
+        
+        // Create upgrade options
+        options.forEach(upgrade => {
+            const div = document.createElement('div');
+            div.className = 'upgrade-option';
+            div.innerHTML = `
+                <div class="upgrade-icon">${upgrade.icon}</div>
+                <div class="upgrade-desc">
+                    <div class="upgrade-title">${upgrade.title}</div>
+                    ${upgrade.desc}
+                </div>
+            `;
+            div.onclick = () => this.selectUpgrade(upgrade);
+            this.uiManager.upgradeOptionsDiv.appendChild(div);
+        });
+    }
+
+    selectUpgrade(upgrade) {       
+        // Add to active upgrades list if not already
+        if (!this.state.activeUpgrades[upgrade.appliesTo]) {
+            this.state.activeUpgrades[upgrade.appliesTo] = [upgrade];
+        } else {
+            this.state.activeUpgrades[upgrade.appliesTo].push(upgrade);
+        }
+
+        this.applyUpgrades();
+        if(upgrade.onAcquire) {
+            upgrade.onAcquire(this.state);
+        }
+        
+        upgradeMenu.style.display = 'none';
+        overlay.style.display = 'none';
+        
+        this.state.essence -= this.state.essenceToNextLevel;
+        this.state.level++;
+        this.state.essenceToNextLevel = Math.floor(this.state.essenceToNextLevel * 1.4);        
+        
+        this.state.isLevelingUp = false;
+        this.state.isPaused = false;
+    }
+
+    // Drawing the path
+    drawPath() {
+        this.ctx.strokeStyle = 'rgba(100, 0, 0, 0.5)';
+        this.ctx.lineWidth = 30;
+        this.ctx.beginPath();
+        this.ctx.moveTo(this.state.path[0].x, this.state.path[0].y);
+        
+        for (let i = 1; i < this.state.path.length; i++) {
+            this.ctx.lineTo(this.state.path[i].x, this.state.path[i].y);
+        }
+        
+        this.ctx.stroke();
+        
+        // Draw path borders
+        this.ctx.strokeStyle = 'rgba(150, 0, 0, 0.7)';
+        this.ctx.lineWidth = 2;
+        
+        this.ctx.beginPath();
+        this.ctx.moveTo(this.state.path[0].x, this.state.path[0].y - 15);
+        for (let i = 1; i < this.state.path.length; i++) {
+            this.ctx.lineTo(this.state.path[i].x, this.state.path[i].y - 15);
+        }
+        this.ctx.stroke();
+        
+        this.ctx.beginPath();
+        this.ctx.moveTo(this.state.path[0].x, this.state.path[0].y + 15);
+        for (let i = 1; i < this.state.path.length; i++) {
+            this.ctx.lineTo(this.state.path[i].x, this.state.this.state.path[i].y + 15);
+        }
+        this.ctx.stroke();
+    }
+
+    // Summon a friendly skeleton (necromancer ability)
+    summonSkeleton(x, y) {      
+        this.createSummon(x, y, 'skeleton');
+    }
+
+    // Wave management
+    updateWave() {
+        // Spawn enemies
+        if (this.state.enemiesSpawned < this.state.enemiesInWave) {
+            this.state.spawnCounter++;
+            
+            if (this.state.spawnCounter >= this.state.spawnRate) {
+                this.createEnemy();
+                this.state.enemiesSpawned++;
+                this.state.spawnCounter = 0;
+                
+                // Update wave progress
+                waveProgress.style.width = (this.state.enemiesSpawned / this.state.enemiesInWave * 100) + '%';
+            }
+        } 
+        // Move to next wave if all enemies defeated
+        else if (this.state.enemies.length === 0 && this.state.enemiesSpawned >= this.state.enemiesInWave) {
+            this.state.waveTimer++;
+            
+            if (this.state.waveTimer >= this.state.waveDelay) {
+                this.startNextWave();
+            }
+        }
+    }
+
+    startNextWave() {
+        this.state.wave++;
+        waveDisplay.textContent = this.state.wave;
+        
+        // Check for victory
+        if (this.state.wave > this.state.maxWaves) {
+            this.gameVictory();
+            return;
+        }
+        
+        this.state.enemiesInWave = 10 * (this.state.wave * 2);
+        this.state.enemiesSpawned = 0;
+        this.state.spawnRate = Math.max(10, 60 - (this.state.wave * 3));
+        this.state.spawnCounter = 0;
+        this.state.waveTimer = 0;
+        
+        // Reset wave progress bar
+        waveProgress.style.width = '0%';
+    }
+
+    applyUpgrades() {
+        this.state.stats = {...this.state.defaultStats};
+        calculateStats(this.state.stats, this.state.defaultStats, this.state.activeUpgrades['global']);    
+    }
+    // Stats updating
+    updateStats() {
+        this.uiManager.shardsDisplay.textContent = Math.floor(this.state.bloodShards);
+        this.uiManager.essenceDisplay.textContent = Math.floor(this.state.essence);
+        this.uiManager.essenceNeededDisplay.textContent = Math.floor(this.state.essenceToNextLevel);
+        this.uiManager.hpDisplay.textContent = Math.floor(this.state.bloodCoreHP);
+        this.uiManager.populationDisplay.textContent = Math.floor(this.state.stats.population);
+        this.uiManager.maxPopulationDisplay.textContent = Math.floor(this.state.stats.maxPopulation);
+        // Update tower costs
+        document.querySelectorAll('.tower-option').forEach(option => {
+            const type = option.getAttribute('data-type');
+            let cost = towersConfig[type].cost;
+            
+            const finalCost = Math.floor(cost * this.state.stats.towerCostMod);
+            option.textContent = `${type} (${finalCost})`;
+        });
+    }
+
+    // Tower placement system
+    setupTowerPlacement() {
+        const towerButtons = document.querySelectorAll('.tower-option');
+        towerButtons.forEach(button => {
+            button.addEventListener('click', () => {
+                const type = button.getAttribute('data-type');
+                let cost = towersConfig[type].cost;
+                const finalCost = Math.floor(cost * this.state.stats.towerCostMod);
+                
+                let populationCost = towersConfig[type].population || 0;
+                if (this.state.bloodShards >= finalCost && this.state.stats.population + populationCost <= this.state.stats.maxPopulation) {
+                    this.state.selectedTowerType = type;
+                }
+            });
+            
+            // Show tooltip with info
+            button.addEventListener('mouseover', (e) => {
+                const type = button.getAttribute('data-type');
+                let info = towersConfig[type].info;
+                
+                this.showTooltip(e.clientX, e.clientY, info);
+            });
+            
+            button.addEventListener('mouseout', () => {
+                this.hideTooltip();
+            });
+        });
+        
+        this.canvas.addEventListener('mousemove', (e) => {
+            if (!this.state.selectedTowerType) return;
+            
+            const rect = this.canvas.getBoundingClientRect();
+            const x = e.clientX - rect.left;
+            const y = e.clientY - rect.top;
+            
+            // Create temporary tower for preview
+            this.state.previewTower = this.createTower(x, y, this.state.selectedTowerType, true);
+            
+            // Check if position is valid
+            const isValidPosition = this.checkValidTowerPosition(x, y);
+            this.canvas.style.cursor = isValidPosition ? 'pointer' : 'not-allowed';
+
+            if (this.state.selectedTowerType) return;
+            
+            // Check if hovering over a tower
+            let hoveredTower = null;
+            for (const tower of this.state.towers) {
+                const dist = Math.hypot(tower.x - x, tower.y - y);
+                if (dist < 20) {
+                    hoveredTower = tower;
+                    break;
+                }
+            }
+            
+            if (hoveredTower) {
+                // Show tower stats
+                let info = `${hoveredTower.type} (Level ${hoveredTower.level})\n`;
+                
+                info += `Damage: ${Math.round(hoveredTower.stats.damage * this.state.stats.damageMultiplier * 10) / 10}\n`;
+                info += `Attack Speed: ${Math.round(1000 / hoveredTower.stats.attackSpeed)} per sec\n`;
+                info += `Range: ${hoveredTower.stats.range}\n`;
+                info += `Crit Chance: ${Math.round(hoveredTower.stats.critChance * 100)}%\n`;
+                
+                if (hoveredTower.stats.leech > 0) {
+                    info += `Life Leech: ${Math.round(hoveredTower.stats.leech * 100 * this.state.stats.healingMultiplier) / 100} HP per hit\n`;
+                }
+                
+                if (hoveredTower.stats.piercing > 0) {
+                    info += `Piercing: ${hoveredTower.stats.piercing} enemies\n`;
+                }
+                
+                if (hoveredTower.stats.summonChance > 0) {
+                    info += `Summon Chance: ${Math.round(hoveredTower.stats.summonChance * 100)}%\n`;
+                }
+                
+                this.showTooltip(e.clientX, e.clientY, info);
+                
+                // Show range indicator
+                hoveredTower.showRange = true;
+            } else {
+                this.hideTooltip();
+                this.state.towers.forEach(t => t.showRange = false);
+            }
+        });
+
+        this.canvas.addEventListener('mouseout', () => {
+            this.hideTooltip();
+        });
+        this.canvas.addEventListener('click', (e) => {
+            if (!this.state.selectedTowerType) return;
+            
+            const rect = this.canvas.getBoundingClientRect();
+            const x = e.clientX - rect.left;
+            const y = e.clientY - rect.top;
+            
+            if (this.checkValidTowerPosition(x, y)) {
+                // Create the tower
+                let cost = towersConfig[this.state.selectedTowerType].cost;
+                let populationCost = towersConfig[this.state.selectedTowerType].population || 0;
+                
+                const finalCost = Math.floor(cost * this.state.stats.towerCostMod);
+                
+                if (this.state.bloodShards >= finalCost && this.state.stats.population + populationCost <= this.state.stats.maxPopulation) {
+                    const tower =  this.createTower(x, y, this.state.selectedTowerType);
+                    tower.placed = true;
+                    this.state.bloodShards -= finalCost;
+                    this.state.previewTower = null;
+                    // Clear selection
+                    this.state.selectedTowerType = null;
+                    this.canvas.style.cursor = 'default';
+                }
+            }
+        });
+        
+        // Cancel tower placement with right click
+        this.canvas.addEventListener('contextmenu', (e) => {
+            e.preventDefault();
+            if (this.state.selectedTowerType) {
+                this.state.selectedTowerType = null;
+                this.canvas.style.cursor = 'default';
+            }
+        });
+    }
+
+    checkValidTowerPosition(x, y) {
+        // Check if too close to path
+        for (let i = 0; i < this.state.path.length - 1; i++) {
+            const p1 = this.state.path[i];
+            const p2 = this.state.path[i + 1];
+            
+            // Calculate distance from point to line segment
+            const distance = this.distToSegment(x, y, p1.x, p1.y, p2.x, p2.y);
+            if (distance < 30) return false;
+        }
+        
+        // Check if too close to other towers
+        for (const tower of this.state.towers) {
+            const dist = Math.hypot(tower.x - x, tower.y - y);
+            if (dist < 40) return false;
+        }
+        
+        // Check if too close to blood core
+        const coreX = 750;
+        const coreY = 300;
+        const distToCore = Math.hypot(coreX - x, coreY - y);
+        if (distToCore < 70) return false;
+        
+        return true;
+    }
+
+    // Calculate distance from point to line segment (for path collision)
+    distToSegment(x, y, x1, y1, x2, y2) {
+        const A = x - x1;
+        const B = y - y1;
+        const C = x2 - x1;
+        const D = y2 - y1;
+        
+        const dot = A * C + B * D;
+        const len_sq = C * C + D * D;
+        let param = -1;
+        
+        if (len_sq !== 0) param = dot / len_sq;
+        
+        let xx, yy;
+        
+        if (param < 0) {
+            xx = x1;
+            yy = y1;
+        } else if (param > 1) {
+            xx = x2;
+            yy = y2;
+        } else {
+            xx = x1 + param * C;
+            yy = y1 + param * D;
+        }
+        
+        const dx = x - xx;
+        const dy = y - yy;
+        
+        return Math.sqrt(dx * dx + dy * dy);
+    }
+
+    // Game-over and reset functions
+    gameOver() {
+        this.state.gameOver = true;
+        this.state.isPaused = true;
+        gameOverWave.textContent = this.state.wave;
+        gameOverMenu.style.display = 'block';
+        overlay.style.display = 'block';
+    }
+
+    gameVictory() {
+        this.state.victory = true;
+        this.state.isPaused = true;
+        victoryMenu.style.display = 'block';
+        overlay.style.display = 'block';
+    }
+
+    // Tooltip system
+    showTooltip(x, y, text) {
+        tooltip.style.display = 'block';
+        tooltip.style.left = (x + 10) + 'px';
+        tooltip.style.top = (y + 10) + 'px';
+        tooltip.textContent = text;
+    }
+
+    hideTooltip() {
+        tooltip.style.display = 'none';
+    }
+
+    // Game Loop
+    update() {
+        if (this.state.gameOver || this.state.victory || this.state.isLevelingUp) return;
+        
+        this.spatialGrid.clear();
+        this.applyUpgrades();
+        // Update wave status
+        this.updateWave();
+        
+        // Update entities
+        this.state.enemies = this.state.enemies.filter(e => e.update(this));   
+        this.state.towers.forEach((tower) => { 
+            if(tower.stats.population) {
+                this.state.stats.population += tower.stats.population;
+            } else if(tower.stats.supply) {
+                this.state.stats.maxPopulation += tower.stats.supply;
+            }
+            tower.update(this);
+        });
+        this.state.projectiles = this.state.projectiles.filter(p => p.update(this));
+        
+        this.explosionManager.update();
+
+        // Update summons if any
+        if (this.state.summons) {
+            this.state.summons.forEach((summon) => {                
+                summon.update();
+                if( summon.lifeSpan <= 0 ) {
+                    this.removeSummon(summon);
+                }
+            });
+        }
+        
+        // Level Up check
+        if (this.state.essence >= this.state.essenceToNextLevel && !this.state.isLevelingUp) {
+            this.showUpgradeMenu();
+        }
+        
+        // Game over check
+        if (this.state.bloodCoreHP <= 0 && !this.state.gameOver) {
+            this.gameOver();
+        }      
+    }
+
+    // Draw function
+    draw() {
+                
+        // Draw Blood Core
+        const coreImg = this.renderer.imageManager.getImage('tower', 'bloodCore');
+        this.ctx.drawImage(coreImg, 750 - coreImg.width/2, 300 - coreImg.height/2);
+        
+        // Core health bar
+        const healthPercentage = this.state.bloodCoreHP / this.state.stats.maxBloodCoreHP;
+        this.ctx.fillStyle = 'rgba(0, 0, 0, 0.5)';
+        this.ctx.fillRect(700, 230, 100, 10);
+        this.ctx.fillStyle = healthPercentage > 0.6 ? 'green' : healthPercentage > 0.3 ? 'yellow' : 'red';
+        this.ctx.fillRect(700, 230, 100 * healthPercentage, 10);
+        
+        // Draw wave timer
+        if (this.state.enemies.length === 0 && this.state.enemiesSpawned >= this.state.enemiesInWave && !this.state.victory) {
+            const countdown = Math.ceil((this.state.waveDelay - this.state.waveTimer) / 60);
+            this.ctx.fillStyle = 'white';
+            this.ctx.font = '20px Arial';
+            this.ctx.textAlign = 'center';
+            this.ctx.fillText(`Next Wave in ${countdown}...`, this.canvas.width / 2, 50);
+        }
+    }
+
+    // Main Loop
+    gameLoop() {
+        if (!this.state.isPaused) {
+            this.update();
+        } else {
+            this.state.stats.population = this.state.defaultStats.population;;
+            this.state.stats.maxPopulation = this.state.defaultStats.maxPopulation;
+            this.state.towers.forEach((tower) => { 
+                if(tower.stats.population) {
+                    this.state.stats.population += tower.stats.population;
+                } else if(tower.stats.supply) {
+                    this.state.stats.maxPopulation += tower.stats.supply;
+                }
+            });
+        }
+
+        this.updateStats();  
+        this.renderer.render(this.state, { tileMap: this.state.tileMap, path: this.state.path }, this.explosionManager.explosions );
+        this.draw();
+    }
+
+    // Initialize the game
+    init() {
+        const { tileMap, path } = this.mapManager.generateMap();
+        this.state.tileMap = tileMap;
+        this.state.path = path;
+        this.reset();            
+        game.gameInterval = setInterval(() => { game.gameLoop(); }, 10);
+        this.state.isPaused = true;
+    }
+    reset() { 
+        this.state.reset();
+        this.uiManager.reset();
+    }
+    createTower(x, y, type, isPreview) {
+        const TowerClass = towerConstructors[type];
+        if (TowerClass) {
+            const tower = new TowerClass(this.state, parseInt(x / CONFIG.GRID_SIZE), parseInt(y / CONFIG.GRID_SIZE), this.renderer.imageManager.getImage('tower', type));
+            if(!isPreview) {
+                this.state.addTower(tower);
+            }            
+            return tower;
+        }
+        throw new Error(`Unknown tower type: ${type}`);
+    }
+    removeSummon(summon) {
+        this.state.removeSummon(summon);
+    }
+    createSummon(x, y, type, isPreview) {
+        const TowerClass = towerConstructors[type];
+        if (TowerClass) {
+            const tower = new TowerClass(this.state, x, y, this.renderer.imageManager.getImage('tower', type));
+            if(!isPreview) {
+                this.state.addSummon(tower);
+            }
+            return tower;
+        }
+        throw new Error(`Unknown tower type: ${type}`);
+    }
+    createEnemy() {        
+        let types = ['zombie', 'skeleton', 'ghost', 'wraith', 'bloodBeast', 'banshee'];
+        let type = types[Math.floor(Math.random() * types.length)];
+    
+        const EnemyClass = enemyConstructors[type];
+        if (EnemyClass) {
+            const enemy = new EnemyClass(this.state, this.renderer.imageManager.getImage('enemy', type));
+            this.state.addEnemy(enemy);
+            return enemy;
+        }
+        throw new Error(`Unknown enemy type: ${type}`);
+    }
+    applyUpgrade(upgradeId) {
+        const upgrade = upgrades.find(u => u.id === upgradeId);
+        if (upgrade && upgrade.canApply(this.state)) {
+            upgrade.apply(this.state);
+            this.uiManager.updateUpgrades(); // Hypothetical UI update
+        }
+    }
+}
+
+const game = new Game();  
+function main() {  
+    game.init();
+    document.getElementById('startGameBtn').addEventListener('click', (e) => {    
+        game.state.isPaused = false;
+        e.target.setAttribute('style','display:none;');
+    });
+}
+
+function resetGame() {
+    game.reset();
+}
+
+window.onload = main; // Or attach to a start button
+</script>
+	
+	
+</body>
+
+</html>
