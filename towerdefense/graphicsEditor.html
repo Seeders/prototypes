@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Simple Drawing Program</title>
+    <style>
+        #drawing-container body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        #drawing-container .canvas-container {
+            border: 1px solid #ccc;
+            margin-bottom: 20px;
+        }
+        #drawing-container .controls {
+            display: flex;
+            margin-bottom: 20px;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+        #drawing-container button {
+            padding: 8px 16px;
+            cursor: pointer;
+        }
+        #drawing-container .color-picker {
+            width: 40px;
+            height: 40px;
+            padding: 0;
+            border: none;
+        }
+        #drawing-container pre {
+            background-color: #f5f5f5;
+            padding: 10px;
+            overflow: auto;
+            max-height: 200px;
+            border-radius: 4px;
+        }
+        #drawing-container textarea {
+            width: 100%;
+            height: 100px;
+            margin-bottom: 10px;
+            font-family: monospace;
+        }
+        #drawing-container .import-container {
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div id="drawing-container">
+        <h1>Simple Drawing Program</h1>
+        
+        <div class="canvas-container">
+            <canvas id="drawingCanvas" width="800" height="400"></canvas>
+        </div>
+        
+        <div class="controls">
+            <button id="circleBtn">Circle</button>
+            <button id="squareBtn">Square</button>
+            <button id="clearBtn">Clear</button>
+            <input type="color" id="colorPicker" class="color-picker" value="#000000">
+            <span>Size: </span>
+            <input type="range" id="sizeSlider" min="10" max="100" value="30">
+            <span id="sizeValue">30</span>
+        </div>
+        
+        <h3>JSON Representation:</h3>
+        <pre id="jsonOutput">{}</pre>
+        
+        <div class="import-container">
+            <h3>Import Drawing:</h3>
+            <textarea id="jsonInput" placeholder="Paste JSON drawing data here..."></textarea>
+            <button id="importBtn">Import</button>
+        </div>
+    </div>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const canvas = document.getElementById('drawingCanvas');
+            const ctx = canvas.getContext('2d');
+            const jsonOutput = document.getElementById('jsonOutput');
+            const jsonInput = document.getElementById('jsonInput');
+            const importBtn = document.getElementById('importBtn');
+            const circleBtn = document.getElementById('circleBtn');
+            const squareBtn = document.getElementById('squareBtn');
+            const clearBtn = document.getElementById('clearBtn');
+            const colorPicker = document.getElementById('colorPicker');
+            const sizeSlider = document.getElementById('sizeSlider');
+            const sizeValue = document.getElementById('sizeValue');
+            
+            let currentShape = 'circle';
+            let currentColor = '#000000';
+            let currentSize = 30;
+            let shapes = [];
+            
+            // Initialize canvas with white background
+            ctx.fillStyle = 'white';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            
+            // Event listeners for controls
+            circleBtn.addEventListener('click', () => currentShape = 'circle');
+            squareBtn.addEventListener('click', () => currentShape = 'square');
+            clearBtn.addEventListener('click', clearCanvas);
+            colorPicker.addEventListener('input', (e) => currentColor = e.target.value);
+            sizeSlider.addEventListener('input', (e) => {
+                currentSize = parseInt(e.target.value);
+                sizeValue.textContent = currentSize;
+            });
+            
+            // Import button event listener
+            importBtn.addEventListener('click', function() {
+                try {
+                    const importedData = JSON.parse(jsonInput.value);
+                    drawFromJSON(importedData);
+                } catch (error) {
+                    alert('Invalid JSON format. Please check your input.');
+                    console.error('Import error:', error);
+                }
+            });
+            
+            // Canvas click event
+            canvas.addEventListener('click', function(e) {
+                const rect = canvas.getBoundingClientRect();
+                const x = e.clientX - rect.left;
+                const y = e.clientY - rect.top;
+                
+                addShape(x, y);
+            });
+            
+            function addShape(x, y) {
+                const shape = {
+                    type: currentShape,
+                    x: x,
+                    y: y,
+                    size: currentSize,
+                    color: currentColor
+                };
+                
+                shapes.push(shape);
+                drawShape(shape);
+                updateJSON();
+            }
+            
+            function drawShape(shape) {
+                ctx.fillStyle = shape.color;
+                
+                if (shape.type === 'circle') {
+                    ctx.beginPath();
+                    ctx.arc(shape.x, shape.y, shape.size / 2, 0, Math.PI * 2);
+                    ctx.fill();
+                } else if (shape.type === 'square') {
+                    ctx.fillRect(
+                        shape.x - shape.size / 2,
+                        shape.y - shape.size / 2,
+                        shape.size,
+                        shape.size
+                    );
+                }
+            }
+            
+            function clearCanvas() {
+                ctx.fillStyle = 'white';
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+                shapes = [];
+                updateJSON();
+            }
+            
+            function updateJSON() {
+                const drawingData = {
+                    canvasWidth: canvas.width,
+                    canvasHeight: canvas.height,
+                    shapes: shapes
+                };
+                
+                jsonOutput.textContent = JSON.stringify(drawingData, null, 2);
+            }
+            
+            function drawFromJSON(jsonData) {
+                // Clear the canvas first
+                ctx.fillStyle = 'white';
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+                
+                // Resize canvas if needed
+                if (jsonData.canvasWidth && jsonData.canvasHeight) {
+                    canvas.width = jsonData.canvasWidth;
+                    canvas.height = jsonData.canvasHeight;
+                }
+                
+                // Draw all shapes
+                shapes = jsonData.shapes || [];
+                shapes.forEach(drawShape);
+                
+                // Update JSON display
+                updateJSON();
+            }
+            
+            // Expose the drawFromJSON function globally
+            window.drawFromJSON = drawFromJSON;
+            
+            // Initialize JSON display
+            updateJSON();
+        });
+    </script>
+</body>
+</html>

@@ -67,7 +67,12 @@
             flex: 1;
             overflow-y: auto;
         }
-        
+        .preview-canvas-container {
+            position: relative;
+            width: 100%;
+            height: 100%;
+        }
+
         .preview {
             background-color: #252525;
             border-radius: 8px;
@@ -77,10 +82,35 @@
         }
         
         #preview-canvas {
-            background-color: #333;
+            background-color: transparent;
             border-radius: 4px;
         }
-        
+        .drawing-controls {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            display: flex;
+            gap: 5px;
+            background: rgba(0, 0, 0, 0.7);
+            padding: 5px;
+            border-radius: 4px;
+        }
+
+        .drawing-controls button {
+            padding: 4px 8px;
+            font-size: 0.8em;
+        }
+
+        .drawing-controls .color-picker {
+            width: 24px;
+            height: 24px;
+            padding: 0;
+            border: none;
+        }
+
+        .drawing-controls .size-slider {
+            width: 80px;
+        }
         .form-group {
             margin-bottom: 15px;
         }
@@ -319,9 +349,17 @@
             <div class="preview">
                 <h2>Tower Preview</h2>
                 <div id="grid-display">Grid: 0, 0</div>
-                <canvas id="preview-canvas" width="600" height="240"></canvas>
+                <div class="preview-canvas-container">
+                    <canvas id="preview-canvas" width="600" height="240"></canvas>
+                    <div class="drawing-controls">
+                        <button id="circleBtn">Circle</button>
+                        <button id="squareBtn">Square</button>
+                        <button id="clearDrawingBtn">Clear</button>
+                        <input type="color" id="colorPicker" class="color-picker" value="#000000">
+                        <input type="range" id="sizeSlider" min="5" max="64" value="32" class="size-slider">
+                    </div>
+                </div>
             </div>
-            
             <div class="editor" id="editor">
                 <div class="instructions">
                     Select a tower from the sidebar or create a new one to start editing.
@@ -381,6 +419,7 @@
     </div>
     
     <script>
+    (function() {
         /**
          * Tower Defense Config Editor
          * A tool for creating and editing configurations for tower defense games
@@ -390,7 +429,18 @@
         const CONFIG = {
             GRID_SIZE: 40,
             DEFAULT_TOWER_SIZE: 30,
-            DEFAULT_TOWER_COLOR: '#ffffff'
+            DEFAULT_TOWER_COLOR: '#ffffff',
+            DEFAULT_RENDER: {
+                canvasWidth: 64,
+                canvasHeight: 64,
+                shapes: [{
+                    type: 'circle',
+                    x: 32,
+                    y: 32,
+                    size: 32,
+                    color: '#000000'
+                }]
+            }
         };
                 
         // Application state changes
@@ -508,7 +558,18 @@
             newObjectModal: document.getElementById('new-object-modal'),
             newObjectIdInput: document.getElementById('new-object-id'),
             newObjectNameInput: document.getElementById('new-object-name'),
-            tabs: document.querySelectorAll('.tab')
+            tabs: document.querySelectorAll('.tab'),
+            circleBtn: document.getElementById('circleBtn'),
+            squareBtn: document.getElementById('squareBtn'),
+            clearDrawingBtn: document.getElementById('clearDrawingBtn'),
+            colorPicker: document.getElementById('colorPicker'),
+            sizeSlider: document.getElementById('sizeSlider')
+        };
+        let drawingState = {
+            currentShape: 'circle',
+            currentColor: '#000000',
+            currentSize: 32,
+            isDrawing: false
         };
         function getSingularType(typeId) {
             const typeDef = state.objectTypeDefinitions.find(t => t.id === typeId);
@@ -632,10 +693,12 @@
         /**
          * Render custom properties in the editor
          */
-        function renderCustomProperties(container, tower) {
+        function renderCustomProperties(container, object) {
             container.innerHTML = '';
-            
-            Object.entries(tower).forEach(([key, value]) => {
+            if( !object.render ) {
+                object.render = JSON.parse(JSON.stringify(CONFIG.DEFAULT_RENDER));
+            }
+            Object.entries(object).forEach(([key, value]) => {
                 addCustomProperty(container, key, value);
             });
         }
@@ -654,7 +717,15 @@
             keyInput.className = 'property-key';
             
             const valueInput = document.createElement('input');
-            valueInput.type = key === 'color' ? 'color' : 'text';
+            let type = 'text';
+            if( key === 'color' ) {
+                type = 'color';
+            } else if( key === 'render' ) {
+                type = 'textarea';
+                value = JSON.stringify(value);
+                valueInput.setAttribute('id', 'render-value');
+            }
+            valueInput.type = type;
             valueInput.placeholder = 'Value';
             valueInput.value = value;
             valueInput.className = 'property-value';
@@ -694,7 +765,9 @@
                     } else if (value.toLowerCase() === 'false') {
                         value = false;
                     }
-                    
+                    if(keyInput.value == "render") {
+                        value = JSON.parse(value);
+                    }
                     object[keyInput.value] = value;
                 }
             });
@@ -739,16 +812,14 @@
         /**
          * Render the preview canvas
          */
-        function renderPreview() {
+         function renderPreview() {
             ctx.clearRect(0, 0, elements.previewCanvas.width, elements.previewCanvas.height);
             
-            // Draw grid
             drawGrid();
             
             if (state.selectedObject && state.objectTypes[state.selectedType][state.selectedObject]) {
                 const object = state.objectTypes[state.selectedType][state.selectedObject];
                 
-                // Draw range indicator for towers
                 if (state.selectedType === 'towers' && object.range) {
                     ctx.beginPath();
                     ctx.arc(state.objectPosition.x, state.objectPosition.y, object.range, 0, Math.PI * 2);
@@ -756,29 +827,12 @@
                     ctx.stroke();
                 }
                 
-                // Draw object
                 drawObject(object, state.objectPosition);
                 
-                // Draw object ID
                 ctx.fillStyle = 'white';
                 ctx.font = '12px Arial';
                 ctx.textAlign = 'center';
-                const size = object.size || CONFIG.DEFAULT_TOWER_SIZE;
-                ctx.fillText(state.selectedObject, state.objectPosition.x, state.objectPosition.y + size / 2 + 15);
-                
-                // Draw additional info based on object type
-                let infoY = state.objectPosition.y + size / 2 + 30;
-                
-                if (state.selectedType === 'enemies' && object.health) {
-                    ctx.fillText(`HP: ${object.health}`, state.objectPosition.x, infoY);
-                    infoY += 15;
-                    
-                    if (object.speed) {
-                        ctx.fillText(`Speed: ${object.speed}`, state.objectPosition.x, infoY);
-                    }
-                } else if (state.selectedType === 'projectiles' && object.speed) {
-                    ctx.fillText(`Speed: ${object.speed}`, state.objectPosition.x, infoY);
-                }
+                ctx.fillText(state.selectedObject, state.objectPosition.x, state.objectPosition.y + 40);
             }
         }
         
@@ -809,18 +863,74 @@
          * Draw a tower at the specified position
          */
         function drawObject(object, position) {
-            ctx.fillStyle = object.color || CONFIG.DEFAULT_TOWER_COLOR;
-            const size = object.size || CONFIG.DEFAULT_TOWER_SIZE;
+            const renderData = object.render || CONFIG.DEFAULT_RENDER;
             
-            if (object.isCircle) {
-                ctx.beginPath();
-                ctx.arc(position.x, position.y, size / 2, 0, Math.PI * 2);
-                ctx.fill();
-            } else {
-                ctx.fillRect(position.x - size / 2, position.y - size / 2, size, size);
+            // Clear the area where the object will be drawn
+            ctx.clearRect(position.x - 32, position.y - 32, 64, 64);
+            
+            (renderData.shapes || []).forEach(shape => {
+                ctx.save(); // Save current state
+                ctx.translate(position.x + shape.x - renderData.canvasWidth/2, position.y + shape.y - renderData.canvasHeight/2); // Move origin to shape center
+                ctx.rotate((shape.rotation || 0) * Math.PI / 180); // Rotate canvas
+
+                ctx.fillStyle = shape.color;
+
+                if (shape.type === 'circle') {
+                    ctx.beginPath();
+                    ctx.arc(0, 0, shape.size / 2, 0, Math.PI * 2);
+                    ctx.fill();
+                } 
+                else if (shape.type === 'square') {
+                    ctx.fillRect(-shape.size / 2, -shape.size / 2, shape.size, shape.size);
+                } 
+                else if (shape.type === 'rect') {
+                    ctx.fillRect(-shape.width / 2, -shape.height / 2, shape.width, shape.height);
+                } 
+                else if (shape.type === 'triangle') {
+                    ctx.beginPath();
+                    ctx.moveTo(0, -shape.size / 2);
+                    ctx.lineTo(-shape.size / 2, shape.size / 2);
+                    ctx.lineTo(shape.size / 2, shape.size / 2);
+                    ctx.closePath();
+                    ctx.fill();
+                }
+
+                ctx.restore(); // Restore original state
+            });
+        }
+        function addShapeToRender(x, y) {
+            if (!state.selectedObject) return;
+            
+            const object = state.objectTypes[state.selectedType][state.selectedObject];
+            const render = object.render || JSON.parse(JSON.stringify(CONFIG.DEFAULT_RENDER));
+            
+            // Convert canvas coordinates to render coordinates (64x64 space)
+            const renderX = Math.round(x - (state.objectPosition.x - 32));
+            const renderY = Math.round(y - (state.objectPosition.y - 32));
+            
+            if (renderX >= 0 && renderX <= 64 && renderY >= 0 && renderY <= 64) {
+                const shape = {
+                    type: drawingState.currentShape,
+                    x: renderX,
+                    y: renderY,
+                    size: drawingState.currentSize,
+                    color: drawingState.currentColor
+                };
+                
+                render.shapes.push(shape);
+                object.render = render;
+                document.getElementById("render-value").value = JSON.stringify(render);
+                renderPreview();
             }
         }
-        
+
+        function clearRender() {
+            if (!state.selectedObject) return;
+            
+            const object = state.objectTypes[state.selectedType][state.selectedObject];
+            object.render = { canvasWidth: 64, canvasHeight: 64, shapes: [] };
+            renderPreview();
+        }
         /**
          * Generate JavaScript code for the current configuration
          */
@@ -835,6 +945,8 @@
                     .map(([key, value]) => {
                         if (typeof value === 'string') {
                             return `${key}: '${value}'`;
+                        } if(typeof value === 'object' ) {
+                            return `${key}: ${JSON.stringify(value)}`;
                         } else {
                             return `${key}: ${value}`;
                         }
@@ -903,7 +1015,8 @@
             let defaultProps = {
                 info: name || id,
                 color: CONFIG.DEFAULT_TOWER_COLOR,
-                size: CONFIG.DEFAULT_TOWER_SIZE
+                size: CONFIG.DEFAULT_TOWER_SIZE,
+                render: JSON.parse(JSON.stringify(CONFIG.DEFAULT_RENDER))
             };
             
             state.objectTypes[state.selectedType][id] = defaultProps;
@@ -964,6 +1077,20 @@
                     tab.classList.add('active');
                     document.getElementById(`${tab.dataset.tab}-tab`).classList.add('active');
                 });
+            });
+            elements.circleBtn.addEventListener('click', () => drawingState.currentShape = 'circle');
+            elements.squareBtn.addEventListener('click', () => drawingState.currentShape = 'square');
+            elements.clearDrawingBtn.addEventListener('click', clearRender);
+            elements.colorPicker.addEventListener('input', (e) => drawingState.currentColor = e.target.value);
+            elements.sizeSlider.addEventListener('input', (e) => drawingState.currentSize = parseInt(e.target.value));
+            
+            elements.previewCanvas.addEventListener('click', function(e) {
+                if (!state.isDragging && state.selectedObject) {
+                    const rect = elements.previewCanvas.getBoundingClientRect();
+                    const x = e.clientX - rect.left;
+                    const y = e.clientY - rect.top;
+                    addShapeToRender(x, y);
+                }
             });
         }
         
@@ -1240,6 +1367,7 @@
         
         // Initialize the application
         init();
+    })();
     </script>
 </body>
 </html>
