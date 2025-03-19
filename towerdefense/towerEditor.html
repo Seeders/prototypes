@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Tower Defense Config Editor</title>
+      
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -67,10 +68,20 @@
             flex: 1;
             overflow-y: auto;
         }
+        #three-js-container {
+            position: absolute;
+            width: 256px; 
+            height: 256px;
+            margin: auto;
+            left: 0;
+            right: 0;
+            top: 0;
+            bottom: 0;
+        }
         .preview-canvas-container {
             position: relative;
-            width: 100%;
-            height: 100%;
+            width: 600px;
+            height: 240px;
         }
 
         .preview {
@@ -85,7 +96,7 @@
             background-color: transparent;
             border-radius: 4px;
         }
-        .drawing-controls {
+        .camera-controls {
             position: absolute;
             top: 10px;
             right: 10px;
@@ -96,19 +107,19 @@
             border-radius: 4px;
         }
 
-        .drawing-controls button {
+        .camera-controls button {
             padding: 4px 8px;
             font-size: 0.8em;
         }
 
-        .drawing-controls .color-picker {
+        .camera-controls .color-picker {
             width: 24px;
             height: 24px;
             padding: 0;
             border: none;
         }
 
-        .drawing-controls .size-slider {
+        .camera-controls .size-slider {
             width: 80px;
         }
         .form-group {
@@ -350,13 +361,11 @@
                 <h2>Tower Preview</h2>
                 <div id="grid-display">Grid: 0, 0</div>
                 <div class="preview-canvas-container">
+                    <div id="three-js-container"></div>
                     <canvas id="preview-canvas" width="600" height="240"></canvas>
-                    <div class="drawing-controls">
-                        <button id="circleBtn">Circle</button>
-                        <button id="squareBtn">Square</button>
-                        <button id="clearDrawingBtn">Clear</button>
-                        <input type="color" id="colorPicker" class="color-picker" value="#000000">
-                        <input type="range" id="sizeSlider" min="5" max="64" value="32" class="size-slider">
+                    <div class="camera-controls">
+                        <button id="rotateLeftBtn">rotate left</button>
+                        <button id="rotateRightBtn">rotate right</button>                        
                     </div>
                 </div>
             </div>
@@ -418,7 +427,11 @@
         </div>
     </div>
     
-    <script>
+    <script type="module">
+    import * as THREE from './three.module.min.js';
+    
+    import { OrbitControls } from './three.orbitControls.js';
+
     (function() {
         /**
          * Tower Defense Config Editor
@@ -442,7 +455,18 @@
                 }]
             }
         };
-                
+        let threeJsCamera = null;
+        let currentCameraLocation = 0;
+        
+        const cameraDistance = 96;
+        let cameraLocations = [ 
+            { x: cameraDistance, y: cameraDistance, z: cameraDistance },
+            { x: cameraDistance, y: cameraDistance, z: -cameraDistance },
+            { x: -cameraDistance, y: cameraDistance, z: -cameraDistance },
+            { x: -cameraDistance, y: cameraDistance, z: cameraDistance }
+        ];
+
+        const threeJsContext = setupThreeJsRenderer('three-js-container');
         // Application state changes
         const state = {
             objectTypes: {
@@ -559,8 +583,8 @@
             newObjectIdInput: document.getElementById('new-object-id'),
             newObjectNameInput: document.getElementById('new-object-name'),
             tabs: document.querySelectorAll('.tab'),
-            circleBtn: document.getElementById('circleBtn'),
-            squareBtn: document.getElementById('squareBtn'),
+            rotateLeftBtn: document.getElementById('rotateLeftBtn'),
+            rotateRightBtn: document.getElementById('rotateRightBtn'),
             clearDrawingBtn: document.getElementById('clearDrawingBtn'),
             colorPicker: document.getElementById('colorPicker'),
             sizeSlider: document.getElementById('sizeSlider')
@@ -858,6 +882,51 @@
                 ctx.stroke();
             }
         }
+        function setupThreeJsRenderer(containerId) {
+            // Get container element
+            const container = document.getElementById(containerId);
+
+            // Set up the renderer
+            const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+            renderer.setClearColor(0x000000, 0); // Transparent background
+            renderer.setSize(256, 256);
+            container.appendChild(renderer.domElement);
+
+            // Define scene
+            const scene = new THREE.Scene();
+
+            // 📌 Create an Orthographic Camera for isometric view
+            const aspect = 1; // Square aspect ratio
+            const frustumSize = 48;
+            threeJsCamera = new THREE.OrthographicCamera(
+                -frustumSize * aspect, frustumSize * aspect, // Left, Right
+                frustumSize, -frustumSize, // Top, Bottom
+                0.1, 1000 // Near, Far
+            );
+
+            // 🔥 Set the camera position to an isometric angle
+            rotateCamera(0);            
+            
+           // const directionalLight = new THREE.DirectionalLight(0xffffff, 1);
+           // directionalLight.position.set(1, 1, 1);
+          //  scene.add(directionalLight);
+
+            // 📌 Set up OrbitControls to work in isometric mode
+            const controls = new OrbitControls(threeJsCamera, renderer.domElement);
+            controls.enableDamping = true;
+            controls.enableRotate = false; // Disable rotation to maintain isometric view
+            controls.update();
+
+            // Render loop
+            function animate() {
+                requestAnimationFrame(animate);
+                controls.update();
+                renderer.render(scene, threeJsCamera);
+            }
+            animate();
+
+            return { scene, threeJsCamera, renderer };
+        }
         
         /**
          * Draw a tower at the specified position
@@ -865,39 +934,74 @@
         function drawObject(object, position) {
             const renderData = object.render || CONFIG.DEFAULT_RENDER;
             
-            // Clear the area where the object will be drawn
-            ctx.clearRect(position.x - 32, position.y - 32, 64, 64);
+            renderShapes(renderData, threeJsContext);
+        }
+
+        function renderShapes(renderData, ctx3D) {
+            const { scene } = ctx3D;
             
-            (renderData.shapes || []).forEach(shape => {
-                ctx.save(); // Save current state
-                ctx.translate(position.x + shape.x - renderData.canvasWidth/2, position.y + shape.y - renderData.canvasHeight/2); // Move origin to shape center
-                ctx.rotate((shape.rotation || 0) * Math.PI / 180); // Rotate canvas
-
-                ctx.fillStyle = shape.color;
-
-                if (shape.type === 'circle') {
-                    ctx.beginPath();
-                    ctx.arc(0, 0, shape.size / 2, 0, Math.PI * 2);
-                    ctx.fill();
-                } 
-                else if (shape.type === 'square') {
-                    ctx.fillRect(-shape.size / 2, -shape.size / 2, shape.size, shape.size);
-                } 
-                else if (shape.type === 'rect') {
-                    ctx.fillRect(-shape.width / 2, -shape.height / 2, shape.width, shape.height);
-                } 
-                else if (shape.type === 'triangle') {
-                    ctx.beginPath();
-                    ctx.moveTo(0, -shape.size / 2);
-                    ctx.lineTo(-shape.size / 2, shape.size / 2);
-                    ctx.lineTo(shape.size / 2, shape.size / 2);
-                    ctx.closePath();
-                    ctx.fill();
+            // Clear existing shapes
+            while(scene.children.length > 0){
+                const obj = scene.children[0];
+                scene.remove(obj);
+                if(obj.geometry) obj.geometry.dispose();
+                if(obj.material) {
+                    if(obj.material.map) obj.material.map.dispose(); //dispose textures
+                    obj.material.dispose();
                 }
-
-                ctx.restore(); // Restore original state
+            }
+            // Add lights
+            const ambientLight = new THREE.AmbientLight(0xffffff, 5);
+            scene.add(ambientLight);
+            // Render new shapes
+            (renderData.shapes || []).forEach(shape => {
+                let geometry;
+                let material = new THREE.MeshStandardMaterial({ 
+                    color: new THREE.Color(shape.color),
+                    roughness: 0.7,
+                    metalness: 0.2
+                });
+                
+                // Create geometry based on shape type
+                if (shape.type === 'sphere') {
+                    geometry = new THREE.SphereGeometry(shape.size / 2, 32, 32);
+                }
+                else if (shape.type === 'cube') {
+                    geometry = new THREE.BoxGeometry(shape.size, shape.size, shape.size);
+                }
+                else if (shape.type === 'box') {
+                    geometry = new THREE.BoxGeometry(shape.width, shape.height, shape.depth || shape.width);
+                }
+                else if (shape.type === 'cylinder') {
+                    geometry = new THREE.CylinderGeometry(shape.size / 2, shape.size / 2, shape.height, 32);
+                }
+                else if (shape.type === 'cone') {
+                    geometry = new THREE.ConeGeometry(shape.size / 2, shape.height, 32);
+                }
+                else if (shape.type === 'torus') {
+                    geometry = new THREE.TorusGeometry(shape.size / 2, shape.tubeSize || shape.size / 6, 16, 100);
+                }
+                else if (shape.type === 'tetrahedron') {
+                    geometry = new THREE.TetrahedronGeometry(shape.size / 2);
+                }
+                
+                if (geometry) {
+                    const mesh = new THREE.Mesh(geometry, material);
+                    mesh.userData.isShape = true;
+                    
+                    // Position and rotation
+                    mesh.position.set(shape.x || 0, shape.y || 0, shape.z || 0);
+                    
+                    // Handle rotation (convert from degrees to radians)
+                    if (shape.rotationX) mesh.rotation.x = shape.rotationX * Math.PI / 180;
+                    if (shape.rotationY) mesh.rotation.y = shape.rotationY * Math.PI / 180;
+                    if (shape.rotationZ) mesh.rotation.z = shape.rotationZ * Math.PI / 180;
+                    
+                    scene.add(mesh);
+                }
             });
         }
+
         function addShapeToRender(x, y) {
             if (!state.selectedObject) return;
             
@@ -1078,11 +1182,8 @@
                     document.getElementById(`${tab.dataset.tab}-tab`).classList.add('active');
                 });
             });
-            elements.circleBtn.addEventListener('click', () => drawingState.currentShape = 'circle');
-            elements.squareBtn.addEventListener('click', () => drawingState.currentShape = 'square');
-            elements.clearDrawingBtn.addEventListener('click', clearRender);
-            elements.colorPicker.addEventListener('input', (e) => drawingState.currentColor = e.target.value);
-            elements.sizeSlider.addEventListener('input', (e) => drawingState.currentSize = parseInt(e.target.value));
+            elements.rotateLeftBtn.addEventListener('click', () => rotateCamera(-1));
+            elements.rotateRightBtn.addEventListener('click', () => rotateCamera(1));
             
             elements.previewCanvas.addEventListener('click', function(e) {
                 if (!state.isDragging && state.selectedObject) {
@@ -1094,6 +1195,13 @@
             });
         }
         
+        function rotateCamera(dir) {
+            currentCameraLocation += dir;
+            if( currentCameraLocation == cameraLocations.length ) currentCameraLocation = 0;
+            if( currentCameraLocation < 0 ) currentCameraLocation = cameraLocations.length - 1;
+            threeJsCamera.position.set(cameraLocations[currentCameraLocation].x, cameraLocations[currentCameraLocation].y, cameraLocations[currentCameraLocation].z);
+            threeJsCamera.lookAt(0, 0, 0);
+        }
         /**
          * Handle mousedown on the preview canvas
          */

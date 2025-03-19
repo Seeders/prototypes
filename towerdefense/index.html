@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Tower Defense</title>
+
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Crimson+Pro:wght@400;600;700&family=Cinzel:wght@500;700&display=swap" rel="stylesheet">
@@ -404,6 +405,7 @@ canvas {
     </style>
 </head>
 <body>
+<div id="appContainer">
     <div id="gameContainer">
         <div id="waveInfo">
             <span>Wave: <span id="waveDisplay">1</span></span>
@@ -439,7 +441,7 @@ canvas {
             <div class="tower-option" data-type="shoot">Shoot (25)</div>
         </div>
         
-        <button id="startGameBtn">Start Game</button>
+        <button id="startGameBtn" style="display:none">Start Game</button>
     </div>
     
     <div id="overlay"></div>
@@ -454,1845 +456,2115 @@ canvas {
     <div id="gameOverMenu">
         <h2>Home Destroyed!</h2>
         <p>You survived <span id="gameOverWave">0</span> waves</p>
-        <button class="menu-button" onclick="resetGame()">Try Again</button>
+        <button class="menu-button"">Try Again</button>
     </div>
     
     <div id="victoryMenu">
         <h2>Victory!</h2>
         <p>You've successfully defended your Home through all waves!</p>
-        <button class="menu-button" onclick="resetGame()">Play Again</button>
+        <button class="menu-button">Play Again</button>
     </div>
-<script>
+</div>
+<script type="module">
+        
+    import * as THREE from './three.module.min.js';
+        
+    const CONFIG = {
+        GRID_SIZE: 48,
+        CANVAS_WIDTH: 768,
+        CANVAS_HEIGHT: 384,
+        get ROWS() { return parseInt((this.CANVAS_HEIGHT * 2) / this.GRID_SIZE) },
+        get COLS() { return parseInt(this.CANVAS_WIDTH / this.GRID_SIZE) }
+    };
 
-const CONFIG = {
-    GRID_SIZE: 48,
-    CANVAS_WIDTH: 768,
-    CANVAS_HEIGHT: 576,
-    get ROWS() { return parseInt(this.CANVAS_HEIGHT / this.GRID_SIZE) },
-    get COLS() { return parseInt(this.CANVAS_WIDTH / this.GRID_SIZE) }
-};
+    function calculateStats(stats, calcArray) {
 
-function calculateStats(stats, calcArray) {
+        if( calcArray && calcArray.length > 0 ) {
+            let additiveStats = {};
+            let multiplicitiveStats = {};
+            for(let key in stats) {
+                additiveStats[key] = [];
+                multiplicitiveStats[key] = [];
+            }
+            for(let effect of calcArray) {
+                effect.apply(stats, additiveStats, multiplicitiveStats);
+            }
+            let addedEffects = {};
+            for(let key in additiveStats){
+                for(let val of additiveStats[key]){ 
+                    if(addedEffects[key]){
+                        addedEffects[key] += val - 1;
+                    } else {
+                        addedEffects[key] = val - 1;
+                    }
+                }
+            }
 
-    if( calcArray && calcArray.length > 0 ) {
-        let additiveStats = {};
-        let multiplicitiveStats = {};
-        for(let key in stats) {
-            additiveStats[key] = [];
-            multiplicitiveStats[key] = [];
+            for(let key in addedEffects) {
+                if( stats[key] ) {
+                    stats[key] *= ( 1 + addedEffects[key] );
+                }
+            }
+
+            let multipliedUpgrades = {};        
+            for(let key in multiplicitiveStats){
+                for(let val of multiplicitiveStats[key]){ 
+                    if(stats[key]){
+                        stats[key] *= val;
+                    }
+                }
+            }
         }
-        for(let effect of calcArray) {
-            effect.apply(stats, additiveStats, multiplicitiveStats);
+    }
+    class CoordinateTranslator {
+        constructor(config) {
+            this.tileWidth = config.GRID_SIZE;
+            this.tileHeight = config.GRID_SIZE * 0.5;
+            this.canvasWidth = config.CANVAS_WIDTH;
+            this.canvasHeight = config.CANVAS_HEIGHT;
         }
-        let addedEffects = {};
-        for(let key in additiveStats){
-            for(let val of additiveStats[key]){ 
-                if(addedEffects[key]){
-                    addedEffects[key] += val - 1;
+
+        // Pixel (top-down) to Grid
+        pixelToGrid(pixelX, pixelY) {
+            return {
+                x: pixelX / this.tileWidth,
+                y: pixelY / this.tileWidth
+            };
+        }
+
+        // Grid to Isometric (exactly matches drawMap)
+        gridToIso(gridX, gridY) {
+            const isoX = (gridX - gridY) * (this.tileWidth / 2) + this.canvasWidth / 2;
+            const isoY = (gridX + gridY) * (this.tileHeight / 2);
+            return { x: isoX, y: isoY };
+        }
+
+        // Pixel (top-down) to Isometric
+        pixelToIso(pixelX, pixelY) {
+            const grid = this.pixelToGrid(pixelX, pixelY);
+            return this.gridToIso(grid.x, grid.y);
+        }
+
+        isoToGrid(isoX, isoY) {
+            const adjustedX = isoX - this.canvasWidth / 2;
+            const adjustedY = isoY;
+            const gridX = (adjustedX / (this.tileWidth / 2) + adjustedY / (this.tileHeight / 2)) / 2;
+            const gridY = (adjustedY / (this.tileHeight / 2) - adjustedX / (this.tileWidth / 2)) / 2;
+            return { x: gridX, y: gridY };
+        }
+
+        isoToPixel(isoX, isoY) {
+            const grid = this.isoToGrid(isoX, isoY);
+            return {
+                x: grid.x * this.tileWidth,
+                y: grid.y * this.tileWidth// Double y to match top-down pixel space
+            };
+        }
+
+        // Snap grid coordinates to nearest integer
+        snapToGrid(gridX, gridY) {
+            return { x: Math.floor(gridX), y: Math.floor(gridY) };
+        }
+    }
+
+    class GameState {
+        constructor() {
+            this.entities = [];
+            this.reset();
+        }
+
+        reset() {            
+            this.bloodShards = 200;
+            this.essence = 0;
+            this.level = 1;
+            this.essenceToNextLevel = 100;
+            this.bloodCoreHP = 100;
+            this.entities = [];
+            this.mousePosition = { x: 0, y: 0, isoX: 0, isoY: 0, gridX: 0, gridY: 0 };
+            this.enemies = [];
+            this.towers = [];
+            this.projectiles = [];
+            this.summons = [];
+            this.others = [];
+
+            this.wave = 1;
+            this.maxWaves = 10;
+            this.waveTimer = 0;
+            this.waveDelay = 300;
+            this.enemiesInWave = 10;
+            this.enemiesSpawned = 110;
+            this.spawnRate = 60;
+            this.spawnCounter = 0;
+            this.isLevelingUp = false;
+            this.isPaused = false;
+            this.selectedTowerType = null;
+            this.timeScale = 1;
+            this.stats = {
+                maxBloodCoreHP: 100,
+                bloodShardMultiplier: 1,            
+                towerCostMod: 1,
+                damageMultiplier: 1,
+                healingMultiplier: 1,
+                essenceMultiplier: 1,
+                towerDamageReduction: 1,
+                population: 0,
+                maxPopulation: 5
+            }
+            this.defaultStats = {...this.stats};
+            this.gameOver = false;
+            this.victory = false;
+            this.activeUpgrades = {};
+        }
+
+        addEntity(entity) {
+            this.entities.push(entity);
+        }
+        removeEntity(entity) {
+        
+            let index = this.entities.indexOf(entity);
+            if( index >= 0 ) {
+                this.entities.splice(index, 1);
+            }
+        }
+        hasTowerType(type) {
+            return this.towers.some((tower) => {
+                return tower.type === type;
+            });
+        }
+    }
+
+    class MapManager {
+        generateMap() {
+            const tileMap = Array(CONFIG.ROWS).fill().map(() =>
+                Array(CONFIG.COLS).fill().map(() => ({ type: 'grass', tower: null, buildable: true }))
+            );
+            const path = this.generatePath();
+            path.forEach(p => {
+                if (p.x >= 0 && p.x < CONFIG.COLS && p.y >= 0 && p.y < CONFIG.ROWS) {
+                    tileMap[p.y][p.x].type = 'path';
+                    tileMap[p.y][p.x].buildable = false;
+                }
+            });
+            tileMap[path[path.length - 1].y][path[path.length - 1].x].type = 'base';
+            return { tileMap, path };
+        }
+
+        generatePath() {        
+            let startX = 0;
+            let startY = parseInt(CONFIG.ROWS / 2);
+            let endX = CONFIG.COLS - 1;
+            let endY = startY; 
+            let yMin = 0;
+            let yMax = CONFIG.ROWS - 1;
+            // Initialize the path with the start point
+            let currentX = startX;
+            let currentY = startY;
+            const path = [{ x: currentX, y: currentY }];
+
+            // Track the current direction (right, up, or down)
+            let currentDirection = "right"; // Start by moving right
+
+            // Generate the path
+            while (currentX != endX || currentY != endY) {
+                // Define possible moves based on the current direction
+                let moves = [];
+                if (currentDirection === "right") {
+                    // If moving right, prioritize continuing right or turning up/down
+                    moves = [
+                        { dx: 1, dy: 0 }, // Right
+                        { dx: 0, dy: 1 }, // Up
+                        { dx: 0, dy: -1 }, // Down
+                    ];
+
+                    //only move toward exit when on last column.
+                    if( currentX == endX && currentY > endY ) {
+                        moves.splice(1, 1); 
+                    } else if( currentX == endX && currentY < endY ) {
+                        moves.splice(2, 1);
+                    } else if (currentX == startX ) {
+                        moves.splice(1, 2);//always go right first
+                    }
+                } else if (currentDirection === "up" || currentDirection === "down") {
+                    // If moving up or down, prioritize continuing in that direction or turning right
+                    moves = [
+                        { dx: 1, dy: 0 }, // Right
+                        { dx: 0, dy: currentDirection === "up" ? 1 : -1 }, // Continue up/down
+                    ];
+                }
+
+                // Filter valid moves (stay within grid bounds and avoid backtracking)
+                const validMoves = moves.filter(({ dx, dy }) => {
+                    const nextX = currentX + dx;
+                    const nextY = currentY + dy;
+                    return (
+                        nextX >= startX &&
+                        nextX <= endX &&
+                        nextY >= yMin &&
+                        nextY <= yMax &&
+                        !path.some(point => point.x === nextX && point.y === nextY) // Avoid revisiting points
+                    );
+                });
+                if (validMoves.length > 0) {
+                    // Randomly select a valid move
+                    const randomMove = validMoves[Math.floor(Math.random() * validMoves.length)];
+
+                    // Update the current direction
+                    if (randomMove.dx === 1) {
+                        currentDirection = "right"; // Moving right
+                    } else if (randomMove.dy === 1) {
+                        currentDirection = "up"; // Moving up
+                    } else if (randomMove.dy === -1) {
+                        currentDirection = "down"; // Moving down
+                    }
+
+                    // Update the current position
+                    currentX += randomMove.dx;
+                    currentY += randomMove.dy;
+
+                    // Add the new point to the path
+                    path.push({ x: currentX, y: currentY });
                 } else {
-                    addedEffects[key] = val - 1;
-                }
-            }
-        }
-
-        for(let key in addedEffects) {
-            if( stats[key] ) {
-                stats[key] *= ( 1 + addedEffects[key] );
-            }
-        }
-
-        let multipliedUpgrades = {};        
-        for(let key in multiplicitiveStats){
-            for(let val of multiplicitiveStats[key]){ 
-                if(stats[key]){
-                    stats[key] *= val;
-                }
-            }
-        }
-    }
-}
-
-class GameState {
-    constructor() {
-        this.entities = [];
-        this.reset();
-    }
-
-    reset() {
-        this.bloodShards = 200;
-        this.essence = 0;
-        this.level = 1;
-        this.essenceToNextLevel = 100;
-        this.bloodCoreHP = 100;
-        this.entities = [];
-
-        this.enemies = [];
-        this.towers = [];
-        this.projectiles = [];
-        this.summons = [];
-        this.others = [];
-
-        this.wave = 1;
-        this.maxWaves = 10;
-        this.waveTimer = 0;
-        this.waveDelay = 300;
-        this.enemiesInWave = 10;
-        this.enemiesSpawned = 110;
-        this.spawnRate = 60;
-        this.spawnCounter = 0;
-        this.isLevelingUp = false;
-        this.isPaused = false;
-        this.selectedTowerType = null;
-        this.timeScale = 1;
-        this.stats = {
-            maxBloodCoreHP: 100,
-            bloodShardMultiplier: 1,            
-            towerCostMod: 1,
-            damageMultiplier: 1,
-            healingMultiplier: 1,
-            essenceMultiplier: 1,
-            towerDamageReduction: 1,
-            population: 0,
-            maxPopulation: 5
-        }
-        this.defaultStats = {...this.stats};
-        this.gameOver = false;
-        this.victory = false;
-        this.activeUpgrades = {};
-    }
-
-    addEntity(entity) {
-        this.entities.push(entity);
-    }
-    removeEntity(entity) {
-       
-        let index = this.entities.indexOf(entity);
-        if( index >= 0 ) {
-            this.entities.splice(index, 1);
-        }
-    }
-    hasTowerType(type) {
-        return this.towers.some((tower) => {
-            return tower.type === type;
-        });
-    }
-}
-
-class MapManager {
-    generateMap() {
-        const tileMap = Array(CONFIG.ROWS).fill().map(() =>
-            Array(CONFIG.COLS).fill().map(() => ({ type: 'grass', tower: null, buildable: true }))
-        );
-        const path = this.generatePath();
-        path.forEach(p => {
-            if (p.x >= 0 && p.x < CONFIG.COLS && p.y >= 0 && p.y < CONFIG.ROWS) {
-                tileMap[p.y][p.x].type = 'path';
-                tileMap[p.y][p.x].buildable = false;
-            }
-        });
-        tileMap[path[path.length - 1].y][path[path.length - 1].x].type = 'base';
-        return { tileMap, path };
-    }
-
-    generatePath() {        
-        let startX = 0;
-        let startY = parseInt(CONFIG.ROWS / 2);
-        let endX = CONFIG.COLS - 1;
-        let endY = startY; 
-        let yMin = 0;
-        let yMax = CONFIG.ROWS - 1;
-        // Initialize the path with the start point
-        let currentX = startX;
-        let currentY = startY;
-        const path = [{ x: currentX, y: currentY }];
-
-        // Track the current direction (right, up, or down)
-        let currentDirection = "right"; // Start by moving right
-
-        // Generate the path
-        while (currentX != endX || currentY != endY) {
-            // Define possible moves based on the current direction
-            let moves = [];
-            if (currentDirection === "right") {
-                // If moving right, prioritize continuing right or turning up/down
-                moves = [
-                    { dx: 1, dy: 0 }, // Right
-                    { dx: 0, dy: 1 }, // Up
-                    { dx: 0, dy: -1 }, // Down
-                ];
-
-                //only move toward exit when on last column.
-                if( currentX == endX && currentY > endY ) {
-                    moves.splice(1, 1); 
-                } else if( currentX == endX && currentY < endY ) {
-                    moves.splice(2, 1);
-                } else if (currentX == startX ) {
-                    moves.splice(1, 2);//always go right first
-                }
-            } else if (currentDirection === "up" || currentDirection === "down") {
-                // If moving up or down, prioritize continuing in that direction or turning right
-                moves = [
-                    { dx: 1, dy: 0 }, // Right
-                    { dx: 0, dy: currentDirection === "up" ? 1 : -1 }, // Continue up/down
-                ];
-            }
-
-            // Filter valid moves (stay within grid bounds and avoid backtracking)
-            const validMoves = moves.filter(({ dx, dy }) => {
-                const nextX = currentX + dx;
-                const nextY = currentY + dy;
-                return (
-                    nextX >= startX &&
-                    nextX <= endX &&
-                    nextY >= yMin &&
-                    nextY <= yMax &&
-                    !path.some(point => point.x === nextX && point.y === nextY) // Avoid revisiting points
-                );
-            });
-            if (validMoves.length > 0) {
-                // Randomly select a valid move
-                const randomMove = validMoves[Math.floor(Math.random() * validMoves.length)];
-
-                // Update the current direction
-                if (randomMove.dx === 1) {
-                    currentDirection = "right"; // Moving right
-                } else if (randomMove.dy === 1) {
-                    currentDirection = "up"; // Moving up
-                } else if (randomMove.dy === -1) {
-                    currentDirection = "down"; // Moving down
-                }
-
-                // Update the current position
-                currentX += randomMove.dx;
-                currentY += randomMove.dy;
-
-                // Add the new point to the path
-                path.push({ x: currentX, y: currentY });
-            } else {
-                // No valid moves left (should not happen if grid is properly sized)
-                break;
-            }
-        }
-
-        return path;
-    }
-
-}
-class UIManager { 
-    constructor() {
-        this.upgradeMenu = document.getElementById('upgradeMenu');
-        this.upgradeOptionsDiv = document.getElementById('upgradeOptions');
-        this.overlay = document.getElementById('overlay');
-        this.tooltip = document.getElementById('tooltip');
-        this.gameOverMenu = document.getElementById('gameOverMenu');
-        this.victoryMenu = document.getElementById('victoryMenu');
-
-        // Stats displays
-        this.shardsDisplay = document.getElementById('shardsDisplay');
-        this.essenceDisplay = document.getElementById('essenceDisplay');
-        this.essenceNeededDisplay = document.getElementById('essenceNeededDisplay');
-        this.populationDisplay = document.getElementById('populationDisplay');
-        this.maxPopulationDisplay = document.getElementById('maxPopulationDisplay');
-        this.hpDisplay = document.getElementById('hpDisplay');
-        this.waveDisplay = document.getElementById('waveDisplay');
-        this.waveProgress = document.getElementById('waveProgress');
-        this.gameOverWave = document.getElementById('gameOverWave');
-        this.towerMenu = document.getElementById('towerMenu');
-    }
-
-    reset() {
-        this.gameOverMenu.style.display = 'none';
-        this.victoryMenu.style.display = 'none';
-        this.overlay.style.display = 'none';
-        this.waveDisplay.textContent = '1';
-        this.waveProgress.style.width = '0%';        
-        let towerMenuOptions = '';
-        for(let type in towersConfig) {
-            if(towersConfig[type].cost > 0){
-                towerMenuOptions += `<div class="tower-option" data-type="${type}">${towersConfig[type].title} (${towersConfig[type].cost})</div>`;
-            }
-        }
-        this.towerMenu.innerHTML = towerMenuOptions;
-
-    }
-
-    updateWaveDisplay(waveNumber) {
-        this.waveDisplay.textContent = waveNumber;
-    }
-}
-class ImageManager {
-    constructor() {
-        this.images = {};
-    }
-
-    loadImages(prefix, config) {
-        for (const [type, cfg] of Object.entries(config)) {
-            this.images[`${prefix}_${type}`] = this.createPlaceholder(cfg);
-            // Later: this.images[type] = this.loadRealImage(cfg.src);
-        }
-    }
-
-    createPlaceholder(config) {
-        return this.createImage(config); // Reuse existing function
-    }
-
-    getImage(prefix, type) {
-        return this.images[`${prefix}_${type}`];
-    }
-        
-    createImage(config) {
-        const canvas = document.createElement('canvas');
-        const ctx = canvas.getContext('2d');
-        
-        
-        if (config.render) {
-            canvas.width = config.render.canvasWidth;
-            canvas.height = config.render.canvasHeight;
-            const centerX = canvas.width / 2;
-            const centerY = canvas.height / 2;
-
-            (config.render.shapes || []).forEach(shape => {
-                ctx.save(); // Save current state
-                ctx.translate(shape.x, shape.y); // Move origin to shape center
-                ctx.rotate((shape.rotation || 0) * Math.PI / 180); // Rotate canvas
-
-                ctx.fillStyle = shape.color;
-
-                if (shape.type === 'circle') {
-                    ctx.beginPath();
-                    ctx.arc(0, 0, shape.size / 2, 0, Math.PI * 2);
-                    ctx.fill();
-                } 
-                else if (shape.type === 'square') {
-                    ctx.fillRect(-shape.size / 2, -shape.size / 2, shape.size, shape.size);
-                } 
-                else if (shape.type === 'rect') {
-                    ctx.fillRect(-shape.width / 2, -shape.height / 2, shape.width, shape.height);
-                } 
-                else if (shape.type === 'triangle') {
-                    ctx.beginPath();
-                    ctx.moveTo(0, -shape.size / 2);
-                    ctx.lineTo(-shape.size / 2, shape.size / 2);
-                    ctx.lineTo(shape.size / 2, shape.size / 2);
-                    ctx.closePath();
-                    ctx.fill();
-                }
-
-                ctx.restore(); // Restore original state
-            });
-        } else {
-            canvas.width = config.size;
-            canvas.height = config.size;
-            ctx.fillStyle = config.color;
-            if (config.isCircle) {
-                ctx.beginPath();
-                ctx.arc(config.size/2, config.size/2, config.size/2, 0, Math.PI * 2);
-                ctx.fill();
-            } else {
-                ctx.fillRect(0, 0, config.size, config.size);
-            }
-        }
-        return canvas;
-    }
-}
-class ExplosionManager {
-    constructor() {
-        this.explosions = [];
-    }
-
-    add(x, y, radius) {
-        this.explosions.push({ x, y, radius, currentRadius: 0, maxRadius: radius, alpha: 1 });
-    }
-
-    update() {
-        this.explosions = this.explosions.filter(exp => {
-            exp.currentRadius += exp.maxRadius * 0.1;
-            exp.alpha -= 0.05;
-            return exp.alpha > 0;
-        });
-    }
-}
-
-class Effect { 
-    constructor(config, applyFn, amount) {
-        this.id = config.id;
-        this.title = config.title;
-        this.desc = config.desc;
-        this.lifeTime = config.lifeTime;
-        this.applyFn = applyFn;
-        this.amount = amount;    
-    }
-
-    update() {
-        this.lifeTime--;
-        if( this.lifeTime <= 0) return false;
-        return true;        
-    }
-
-    apply(s, add, mul) {
-        this.applyFn(s, add, mul, this.amount);
-    }
-}
-class Upgrade { 
-    constructor(id, title, desc, icon, appliesTo, condition, apply, onAcquire) {
-        this.id = id;
-        this.title = title;
-        this.desc = desc;
-        this.icon = icon;
-        this.appliesTo = appliesTo;
-        this.conditionFn = condition;
-        this.applyFn = apply;
-        this.onAcquire = onAcquire;        
-    }
-
-    canApply(gameState) {
-        return this.conditionFn(gameState);
-    }
-
-    apply(s, add, mul) {
-        this.applyFn(s, add, mul);
-    }
-}
-
-class Component {
-    constructor(game, parent) {
-        this.game = game;
-        this.parent = parent;
-    }
-    getComponent(type) {
-        return this.parent.getComponent(type);
-    }
-    update() {}
-    destroy() {}
-}
-
-class Renderer extends Component {
-    constructor(game, parent, image) {
-        super(game, parent);
-        this.ctx = game.ctx;
-        this.image = image;
-    }
-
-    draw() {        
-        this.ctx.drawImage(this.image, this.parent.position.x - this.image.width / 2, this.parent.position.y - this.image.width / 2);
-    }
-}
-
-class Leveler extends Component {
-    constructor(game, parent, level = 1) {
-        super(game, parent);
-        this.level = level;
-    }
-}
-
-class Explosion extends Component {
-    constructor(game, parent, radius) {
-        super(game, parent);
-        this.maxRadius = radius;
-        this.currentRadius = 0;
-        this.alpha = 1;
-    }
-
-    update() {
-        this.currentRadius += this.maxRadius * 0.1;
-        this.alpha -= 0.05;
-        if( this.alpha < 0 ) {
-            this.parent.destroy();
-        }
-    }
-
-    draw() {
-        this.game.ctx.beginPath();
-        this.game.ctx.arc(this.parent.position.x, this.parent.position.y, this.currentRadius, 0, Math.PI * 2);
-        this.game.ctx.fillStyle = `rgba(255, 200, 0, ${this.alpha * 0.5})`;
-        this.game.ctx.fill();
-
-        this.game.ctx.beginPath();
-        this.game.ctx.arc(this.parent.position.x, this.parent.position.y, this.currentRadius * 0.7, 0, Math.PI * 2);
-        this.game.ctx.fillStyle = `rgba(255, 100, 0, ${this.alpha})`;
-        this.game.ctx.fill();
-    
-    }
-}
-
-class LifeSpan extends Component {
-    constructor(game, parent, lifeSpan) {
-        super(game, parent);
-        this.lifeSpan = lifeSpan;
-    }
-    update() {        
-        if( this.lifeSpan > 0 ) {
-            this.lifeSpan--;
-        } else {
-            this.parent.destroy();
-        }
-    }
-}
-
-class Buildable extends Component {
-    constructor(game, parent) {
-        super(game, parent);
-        this.placed = false;
-    }
-}
-
-class PopulationBurden extends Component {
-    constructor(game, parent) {
-        super(game, parent);
-        this.stats = this.parent.getComponent('stats').stats;        
-    }
-    update() {
-        if(this.stats){ 
-            if( this.stats.population ) {
-                this.game.state.stats.population += this.stats.population;
-            } 
-            if( this.stats.supply ) {
-                this.game.state.stats.maxPopulation += this.stats.supply;
-            }
-        }
-    }
-}
-
-class Attacker extends Component {
-    constructor(game, parent) {
-        super(game, parent);     
-        this.stats = this.getComponent('stats').stats;    
-        this.level = 1;
-        this.target = null;
-        this.projectiles = [];  
-        this.cooldown = 0;
-    }
-
-    update() {
-
-        if (this.cooldown > 0) this.cooldown--;
-                
-        // Find target if none
-        if (!this.target || this.target.getComponent('health').hp <= 0 || Math.hypot(this.target.position.x - this.parent.position.x, this.target.position.y - this.parent.position.y) > this.stats.range) {
-            this.findTarget();
-        }
-        
-        // Attack if ready and has target
-        if (this.cooldown <= 0 && this.target) {
-            this.attack();
-        }
-
-        if( this.cooldown <= 0 && this.stats.mineAmt > 0 ){
-            this.gather();
-        }
-        return true;
-    }
-    
-    findTarget() {
-        this.target = null;
-        let furthestEnemy = null;
-        let furthestDistance = -1;
-        const nearbyEnemies = this.game.spatialGrid.getNearbyEntities(
-            this.parent.position.x, 
-            this.parent.position.y, 
-            this.stats.range
-        );
-        for (let enemy of nearbyEnemies) {
-            let enemyHP = enemy.getComponent('health').hp;
-            let followPath = enemy.getComponent('followPath');
-            if (enemyHP <= 0) continue;          
-
-            // Target furthest enemy along path (closest to core)
-            if (followPath.pathIndex > furthestDistance) {
-                furthestDistance = followPath.pathIndex;
-                furthestEnemy = enemy;
-            }
-            
-        }
-        
-        this.target = furthestEnemy;
-    }
-
-    gather() {
-        this.game.state.bloodShards += this.stats.mineAmt;
-        this.cooldown = this.stats.attackSpeed;
-    }
-
-    attack() {
-        if (!this.target) return; 
-        this.launchProjectile();
-        this.cooldown = this.stats.attackSpeed;
-    }
-    
-    launchProjectile() {
-        let damage = this.stats.damage * this.game.state.stats.damageMultiplier;
-        let projectileType = this.stats.projectile;
-        // Critical hit calculation
-        const isCritical = Math.random() < this.stats.critChance;
-        if (isCritical) {
-            damage *= this.stats.critMultiplier;
-        } 
-        
-        this.game.createProjectile(projectileType, this.parent.position.x, this.parent.position.y, this.target, damage, isCritical, this.parent);
-                
-    }
-
-}
-
-class Health extends Component { 
-    constructor( game, parent ) {
-        super(game, parent);        
-        let statsComp = parent.getComponent('stats');
-        this.hp = statsComp.stats.hp;
-        statsComp.addStat('maxHp', this.hp);
-    }
-    update() {        
-        if (this.hp <= 0){            
-            this.parent.destroy();
-        }
-    }
-}
-
-class EssenceBounty extends Component { 
-    constructor( game, parent ) {
-        super(game, parent);        
-        this.statsComp = parent.getComponent('stats');
-    }
-    destroy() {               
-        this.game.state.essence += this.statsComp.stats.essence * this.game.state.stats.essenceMultiplier;        
-    }
-}
-
-class SpacialGridEntity extends Component { 
-    update() {
-        this.game.spatialGrid.insert(this.parent);
-    }
-    destroy() {
-        this.game.spatialGrid.remove(this.parent);
-    }
-}
-
-class Stats extends Component { 
-    constructor( game, parent, type, stats ) {
-        super(game, parent);
-        this.type = type;
-        this.stats = {...stats};
-        this.defaultStats = {...this.stats};
-        this.activeEffects = {};
-    }
-    update() {
-        this.stats = {...this.defaultStats};
-        this.applyEffects();
-        this.applyUpgrades();
-    }
-    addStat(statName, statValue) {
-        this.stats[statName] = statValue;
-        this.defaultStats[statName] = statValue;
-    }
-    addEffect(effectConfig, effectFn, effectAmt) {        
-        this.activeEffects[effectConfig.id] = new Effect( effectConfig, effectFn, effectAmt );
-    }
-    applyEffects() {
-        let effectArr = [];
-        for(let effectId in this.activeEffects) {
-            if(this.activeEffects[effectId] && this.activeEffects[effectId].update()){
-                effectArr.push(this.activeEffects[effectId]);
-            } else {
-                this.activeEffects[effectId] = undefined;
-            }
-        }        
-        
-        calculateStats(this.stats, effectArr);
-    }
-    
-    applyUpgrades() {
-        calculateStats(this.stats, this.game.state.activeUpgrades[this.type]);        
-    }
-}
-
-class FollowPath extends Component {
-    constructor(game, parent, pathIndex = 0) {
-        super(game, parent);
-        this.pathIndex = pathIndex;
-        this.x = this.game.state.path[this.pathIndex].x;
-        this.y = this.game.state.path[this.pathIndex].y;
-        this.parent.position = { x: this.x * CONFIG.GRID_SIZE + CONFIG.GRID_SIZE / 2, y: this.y * CONFIG.GRID_SIZE + CONFIG.GRID_SIZE / 2 };        
-    }
-
-    update() {
-        this.stats = this.getComponent('stats').stats;
-        if (this.pathIndex < this.game.state.path.length - 1) {
-            const target = this.game.state.path[this.pathIndex + 1];
-            const dx = target.x * CONFIG.GRID_SIZE + (CONFIG.GRID_SIZE / 2) - this.parent.position.x;
-            const dy = target.y * CONFIG.GRID_SIZE + (CONFIG.GRID_SIZE / 2) - this.parent.position.y;
-            const dist = Math.hypot(dx, dy);
-
-            if (dist > this.stats.speed) {
-                this.parent.position.x += (dx / dist) * this.stats.speed;
-                this.parent.position.y += (dy / dist) * this.stats.speed;
-            } else {
-                this.pathIndex++;
-            }
-            this.x = parseInt(this.parent.position.x / CONFIG.GRID_SIZE);
-            this.y = parseInt(this.parent.position.y / CONFIG.GRID_SIZE);
-        } else {
-            this.game.state.bloodCoreHP -= 10;
-            this.parent.destroy();
-            return false;
-        }
-    }
-}
-
-class Projectile extends Component {
-    constructor(game, parent, type, owner, target, stats) {
-        super(game, parent);
-        this.type = type;
-        this.owner = owner;
-        this.target = target;
-        this.stats = stats;
-        this.piercedEnemies = [];
-        this.ownerStats = this.owner.getComponent("stats").stats;
-        
-    }
-
-    update() {
-     
-        // Remove if target is gone
-        if (!this.target || this.target.destroyed) {
-            this.parent.destroy();
-        }
-        // Move towards target
-        const dx = this.target.position.x - this.parent.position.x;
-        const dy = this.target.position.y - this.parent.position.y;
-        const distSq = dx * dx + dy * dy;
-        
-        // Hit detection
-        if (distSq < 15 * 15 ) {
-            let targetHealth = this.target.getComponent("health");
-            if (this.stats.splashRadius > 0) {
-                const nearbyEnemies = this.game.spatialGrid.getNearbyEntities(
-                    this.parent.position.x, 
-                    this.parent.position.y, 
-                    this.stats.splashRadius
-                );
-                // Process only relevant enemies
-                for (const enemy of nearbyEnemies) {
-                    if (enemy.isDead) continue;
-                    let enemyHealth = enemy.getComponent("health");
-                    let enemyStats = enemy.getComponent("stats");
-                    const dx = enemy.position.x - this.target.position.x;
-                    const dy = enemy.position.y - this.target.position.y;
-                    const distSq1 = dx * dx + dy * dy;
-                    
-                    // Compare with squared splash radius for efficiency
-                    const splashRadiusSq = this.stats.splashRadius * this.stats.splashRadius;
-                    if (distSq1 <= splashRadiusSq) {
-                        // Calculate actual distance only when needed
-                        const splashDist = Math.sqrt(distSq1);
-                        enemyHealth.hp -= (this.stats.damage * (1 - (splashDist / this.stats.splashRadius) * 0.5));                     
-
-                        if( this.ownerStats.slowEffect ) {
-                            enemyStats.addEffect(effectsConfig.slow, effects.slow, this.ownerStats.slowEffect);
-                        }
-                    }
-                }
-                let explosion = new Entity(this.game, this.parent.position.x, this.parent.position.y);
-                explosion.addRenderer(Explosion, this.stats.splashRadius);
-                this.game.state.addEntity(explosion);
-            } else {
-                // Apply damage
-                targetHealth.hp -= this.stats.damage;
-
-                if( this.ownerStats.slowEffect ) {
-                    this.target.addEffect(effectsConfig.slow, effects.slow, this.ownerStats.slowEffect );
-                }
-            }
-
-            //summon skeleton
-            if (this.ownerStats.summonChance > 0 && 
-                targetHealth.hp <= 0 && 
-                Math.random() < this.ownerStats.summonChance - 1) {
-                    this.game.createSummon(this.target.x, this.target.y, 'skeleton');
-            }
-
-            // Apply tower special effects
-            if (this.ownerStats.leech > 0) {
-                const healing = this.stats.damage * this.ownerStats.leech * this.game.state.stats.healingMultiplier;
-                this.game.state.bloodCoreHP = Math.min(this.game.state.stats.maxBloodCoreHP, this.game.state.bloodCoreHP + healing);
-            }
-            if (this.ownerStats.thief && this.ownerStats.thief != 0) {
-                const stealAmt = this.stats.damage * this.ownerStats.thief * this.game.state.stats.bloodShardMultiplier;
-                this.game.state.bloodShards += stealAmt;
-            }
-            // Piercing logic
-            if (this.stats.piercing > 0 && this.piercedEnemies.length < this.stats.piercing) {
-                this.piercedEnemies.push(this.target);
-                const nearbyEnemies = this.game.spatialGrid.getNearbyEntities(
-                    this.parent.position.x, 
-                    this.parent.position.y, 
-                    this.stats.range
-                );
-                // Find a new target
-                let newTarget = null;
-                for (let enemy of nearbyEnemies) {
-                    if (!enemy.isDead && !this.piercedEnemies.includes(enemy)) {
-                        const dx = enemy.position.x - this.parent.position.x;
-                        const dy = enemy.position.y - this.parent.position.y;
-                        const distSq2 = dx * dx + dy * dy;
-                        if (distSq2 < this.ownerStats.range * this.ownerStats.range) {
-                            newTarget = enemy;
-                            break;
-                        }
-                    }
-                }
-                
-                if (newTarget) {
-                    this.target = newTarget;   
-                    return;                 
-                } 
-            }
-            
-            this.parent.destroy();
-        }
-        
-        // Move projectile
-        let dist = Math.sqrt(distSq);
-        const speed = this.stats.speed * this.game.state.timeScale;
-        this.parent.position.x += (dx / dist) * speed;
-        this.parent.position.y += (dy / dist) * speed;
-    }
-}
-
-class SpatialGrid {
-    constructor(worldWidth, worldHeight, cellSize) {
-        this.cellSize = cellSize;
-        this.cols = Math.ceil(worldWidth / cellSize);
-        this.rows = Math.ceil(worldHeight / cellSize);
-        this.grid = new Array(this.cols * this.rows).fill().map(() => []);
-        
-        // Track which cell each entity is in
-        this.entityCells = new Map(); // Map of entity -> cell index
-    }
-    
-    getIndex(x, y) {
-        // Clamp coordinates to world boundaries
-        const clampedX = Math.max(0, Math.min(x, this.cols * this.cellSize - 1));
-        const clampedY = Math.max(0, Math.min(y, this.rows * this.cellSize - 1));
-        
-        const col = Math.floor(clampedX / this.cellSize);
-        const row = Math.floor(clampedY / this.cellSize);
-        return row * this.cols + col;
-    }
-
-    insert(entity) {
-        const newIndex = this.getIndex(entity.position.x, entity.position.y);
-        const oldIndex = this.entityCells.get(entity);
-        
-        // If entity moved to a new cell
-        if (oldIndex !== newIndex) {
-            // Remove from old cell if it exists
-            if (oldIndex !== undefined) {
-                const oldCell = this.grid[oldIndex];
-                const entityIndex = oldCell.indexOf(entity);
-                if (entityIndex !== -1) {
-                    oldCell.splice(entityIndex, 1);
-                }
-            }
-            
-            // Add to new cell
-            if (newIndex >= 0 && newIndex < this.grid.length) {
-                this.grid[newIndex].push(entity);
-                this.entityCells.set(entity, newIndex);
-            }
-        }
-    }
-    
-    remove(entity) {
-        const index = this.entityCells.get(entity);
-        if (index !== undefined) {
-            const cell = this.grid[index];
-            const entityIndex = cell.indexOf(entity);
-            if (entityIndex !== -1) {
-                cell.splice(entityIndex, 1);
-            }
-            this.entityCells.delete(entity);
-        }
-    }
-    
-    getNearbyEntities(x, y, radius) {
-        const nearby = [];
-        
-        // Get cells that could contain entities within radius
-        const startCol = Math.max(0, Math.floor((x - radius) / this.cellSize));
-        const endCol = Math.min(this.cols - 1, Math.floor((x + radius) / this.cellSize));
-        const startRow = Math.max(0, Math.floor((y - radius) / this.cellSize));
-        const endRow = Math.min(this.rows - 1, Math.floor((y + radius) / this.cellSize));
-        
-        // Collect potential candidates from relevant cells
-        for (let row = startRow; row <= endRow; row++) {
-            for (let col = startCol; col <= endCol; col++) {
-                const index = row * this.cols + col;
-                if (index >= 0 && index < this.grid.length) {
-                    this.grid[index].forEach(entity => nearby.push(entity));
-                }
-            }
-        }
-        
-        return nearby;
-    }
-    
-    clear() {
-        this.grid = this.grid.map(() => []);
-        this.entityCells.clear();
-    }
-    
-    // Optional: Only clear but maintain all entity positions
-    // Useful for when reusing the same grid across updates
-    resetKeepingEntities() {
-        const allEntities = [];
-        this.entityCells.forEach((_, entity) => {
-            allEntities.push(entity);
-        });
-        
-        this.clear();
-        
-        allEntities.forEach(entity => {
-            this.insert(entity);
-        });
-    }
-}
-
-
-class ArrayTracker extends Component {
-    constructor(game, parent, arr) {
-        super(game, parent);
-        this.arr = arr;
-        this.game.state[this.arr].push(this.parent);
-    }
-
-    destroy(){
-        let index = this.game.state[this.arr].indexOf(this.parent);
-        this.game.state[this.arr].splice(index, 1);        
-    }
-}    
- 
-class Entity {
-    constructor(game, x, y) {
-        this.game = game;
-        this.position = { x: x, y: y };
-        this.components = [];
-        this.destroyed = false;        
-        this.id = ++game.entityId;
-    }
-
-    getComponent(name) {
-        return this.components[name.toLowerCase()];
-    }
-    addRenderer(ComponentClass, ...params) {
-        this.renderer = this.addComponent(ComponentClass, ...params);
-        return this.renderer;
-    }
-    addComponent(ComponentClass, ...params) {
-        const component = new ComponentClass(this.game, this, ...params);
-        this.components[ComponentClass.name.toLowerCase()] = component;
-        return component;
-    }
-    removeComponent(component) {
-        let index = this.components.indexOf(component);
-        if( index >= 0 ) {
-            this.components.splice(index, 1);
-        }
-    }
-    update() {   
-  
-        for(let c in this.components) {
-            this.components[c].update();   
-            if(this.destroyed) break;
-        }
-        return !this.destroyed;
-    }
-    draw() {
-        if( this.renderer ) {
-            this.renderer.draw();
-        }
-    }
-    destroy() {
-        this.destroyed = true;
-        for(let c in this.components) {
-            this.components[c].destroy();   
-        }
-    }
-}
-
-const projectilesConfig = {
-    prismShard: { render: {"canvasWidth":64,"canvasHeight":64,"shapes":[{"type":"circle","x":32,"y":32,"size":16,"color":"#ffffff"},{"type":"circle","x":32,"y":28,"size":10,"color":"#e0e0ff"},{"type":"circle","x":32,"y":36,"size":10,"color":"#e0e0ff"}]} },
-    radiantBeam: { render: {"canvasWidth":64,"canvasHeight":64,"shapes":[{"type":"rect","x":32,"y":32,"width":20,"height":6,"color":"#ffd700"},{"type":"rect","x":32,"y":30,"width":12,"height":4,"color":"#fffacd"}]} },
-    celestialOrb: { render: {"canvasWidth":64,"canvasHeight":64,"shapes":[{"type":"circle","x":32,"y":32,"size":16,"color":"#87ceeb"},{"type":"circle","x":32,"y":32,"size":10,"color":"#b0e0e6"},{"type":"circle","x":28,"y":28,"size":6,"color":"#e0ffff"}]} },
-    starFragment: { render: {"canvasWidth":64,"canvasHeight":64,"shapes":[{"type":"square","x":32,"y":32,"size":12,"color":"#f0e68c"},{"type":"circle","x":32,"y":24,"size":8,"color":"#fffacd"},{"type":"circle","x":32,"y":40,"size":8,"color":"#fffacd"}]} },
-    shadowBane: { render: {"canvasWidth":64,"canvasHeight":64,"shapes":[{"type":"circle","x":32,"y":32,"size":14,"color":"#ba55d3"},{"type":"circle","x":32,"y":28,"size":8,"color":"#dda0dd"},{"type":"circle","x":32,"y":36,"size":8,"color":"#dda0dd"}]} },
-    solarFlare: { render: {"canvasWidth":64,"canvasHeight":64,"shapes":[{"type":"circle","x":32,"y":32,"size":16,"color":"#ff4500"},{"type":"circle","x":32,"y":28,"size":12,"color":"#ff8c00"},{"type":"circle","x":32,"y":24,"size":8,"color":"#fffacd"}]} },
-    etherMist: { render: {"canvasWidth":64,"canvasHeight":64,"shapes":[{"type":"circle","x":32,"y":32,"size":20,"color":"#4682b4"},{"type":"circle","x":28,"y":28,"size":12,"color":"#87ceeb"},{"type":"circle","x":36,"y":36,"size":12,"color":"#87ceeb"}]} },
-}; 
-const towersConfig = {
-    keep: { title: 'Citadel', mineAmt: 1, attackSpeed: 50, render: {"canvasWidth":64,"canvasHeight":64,"shapes":[{"type":"circle","x":32,"y":32,"size":54,"color":"#37474F"},{"type":"circle","x":32,"y":32,"size":48,"color":"#455A64"},{"type":"rect","x":32,"y":32,"width":36,"height":36,"color":"#546E7A","rotation":45},{"type":"rect","x":32,"y":32,"width":30,"height":30,"color":"#607D8B","rotation":45},{"type":"rect","x":32,"y":20,"width":24,"height":32,"color":"#263238"},{"type":"rect","x":32,"y":14,"width":18,"height":20,"color":"#37474F"},{"type":"rect","x":32,"y":6,"width":12,"height":8,"color":"#455A64"},{"type":"circle","x":32,"y":32,"size":16,"color":"#1A237E"},{"type":"circle","x":32,"y":32,"size":12,"color":"#303F9F"},{"type":"circle","x":32,"y":32,"size":8,"color":"#3F51B5"},{"type":"rect","x":32,"y":52,"width":20,"height":6,"color":"#263238"},{"type":"triangle","x":26,"y":26,"size":8,"color":"#303F9F","rotation":0},{"type":"triangle","x":38,"y":26,"size":8,"color":"#303F9F","rotation":0},{"type":"triangle","x":26,"y":38,"size":8,"color":"#303F9F","rotation":180},{"type":"triangle","x":38,"y":38,"size":8,"color":"#303F9F","rotation":180},{"type":"circle","x":32,"y":4,"size":6,"color":"#7986CB"}]} },
-    sentry: { title: 'Photon Sentry', info: 'Defensive attack sentry.', cost: 25, population: 1, range: 120, damage: 2, attackSpeed: 20, projectile: 'prismShard', critChance: 0.05, critMultiplier: 1.5, render: {"canvasWidth":64,"canvasHeight":64,"shapes":[{"type":"circle","x":32,"y":32,"size":48,"color":"#444444"},{"type":"circle","x":32,"y":32,"size":30,"color":"#1e90ff"},{"type":"circle","x":32,"y":32,"size":46,"color":"#333333"},{"type":"circle","x":32,"y":32,"size":42,"color":"#444444"},{"type":"circle","x":20,"y":20,"size":8,"color":"#00bfff"},{"type":"circle","x":44,"y":20,"size":8,"color":"#00bfff"},{"type":"circle","x":20,"y":44,"size":8,"color":"#00bfff"},{"type":"circle","x":44,"y":44,"size":8,"color":"#00bfff"},{"type":"rect","x":32,"y":20,"width":10,"height":28,"color":"#555555"},{"type":"circle","x":32,"y":32,"size":16,"color":"#333333"},{"type":"circle","x":32,"y":8,"size":14,"color":"#00bfff"}]} },
-    fusionCore: { title: 'Fusion Core', info: 'Creates additional energy every second.', cost: 50, population: 1, attackSpeed: 50, critMultiplier: 1, mineAmt: 1, render: {"canvasWidth":64,"canvasHeight":64,"shapes":[{"type":"circle","x":32,"y":32,"size":48,"color":"#333344"},{"type":"circle","x":32,"y":32,"size":40,"color":"#222233"},{"type":"circle","x":32,"y":32,"size":30,"color":"#7a19ff"},{"type":"circle","x":32,"y":32,"size":20,"color":"#d11fff"},{"type":"circle","x":32,"y":32,"size":12,"color":"#ff00ff"},{"type":"circle","x":22,"y":22,"size":8,"color":"#00ffff","rotation":45},{"type":"circle","x":42,"y":22,"size":8,"color":"#00ffff","rotation":45},{"type":"circle","x":22,"y":42,"size":8,"color":"#00ffff","rotation":45},{"type":"circle","x":42,"y":42,"size":8,"color":"#00ffff","rotation":45},{"type":"square","x":32,"y":32,"size":36,"color":"rgba(122, 25, 255, 0.2)","rotation":45},{"type":"square","x":32,"y":32,"size":28,"color":"rgba(209, 31, 255, 0.2)","rotation":45},{"type":"triangle","x":32,"y":16,"size":10,"color":"#00ffff","rotation":0},{"type":"triangle","x":32,"y":48,"size":10,"color":"#00ffff","rotation":180},{"type":"triangle","x":16,"y":32,"size":10,"color":"#00ffff","rotation":270},{"type":"triangle","x":48,"y":32,"size":10,"color":"#00ffff","rotation":90}]} },
-    barracks: { title: 'Barracks', info: 'Provides 5 additional max population.', cost: 100, attackSpeed: 1000, critChance: 0.1, critMultiplier: 2, supply: 5, render: {"canvasWidth":64,"canvasHeight":64,"shapes":[{"type":"rect","x":32,"y":32,"width":50,"height":40,"color":"#303F9F"},{"type":"rect","x":32,"y":32,"width":46,"height":36,"color":"#3F51B5"},{"type":"rect","x":32,"y":20,"width":36,"height":10,"color":"#1A237E"},{"type":"rect","x":32,"y":44,"width":36,"height":10,"color":"#1A237E"},{"type":"rect","x":32,"y":32,"width":30,"height":20,"color":"#0D47A1"},{"type":"circle","x":32,"y":32,"size":16,"color":"#03A9F4"},{"type":"circle","x":32,"y":32,"size":10,"color":"#00BCD4"},{"type":"rect","x":32,"y":52,"width":24,"height":6,"color":"#4FC3F7"},{"type":"rect","x":20,"y":30,"width":6,"height":14,"color":"#4FC3F7"},{"type":"rect","x":44,"y":30,"width":6,"height":14,"color":"#4FC3F7"},{"type":"triangle","x":22,"y":22,"size":8,"color":"#00BCD4","rotation":0},{"type":"triangle","x":42,"y":22,"size":8,"color":"#00BCD4","rotation":0},{"type":"square","x":32,"y":32,"size":28,"color":"rgba(33, 150, 243, 0.2)","rotation":45},{"type":"rect","x":32,"y":10,"width":8,"height":4,"color":"#F44336"}]} },
-    fabricator: { title: 'Fabricator', info: 'Can be upgraded to summon drones from defeated enemies.', cost: 200, population: 4, range: 150, damage: 8, attackSpeed: 30, projectile: 'celestialOrb', piercing: 1, critChance: 0.15, critMultiplier: 1.8, render: {"canvasWidth":64,"canvasHeight":64,"shapes":[{"type":"circle","x":32,"y":32,"size":48,"color":"#455A64"},{"type":"circle","x":32,"y":32,"size":40,"color":"#37474F"},{"type":"circle","x":32,"y":32,"size":32,"color":"#263238"},{"type":"circle","x":32,"y":32,"size":24,"color":"#00E676"},{"type":"circle","x":32,"y":32,"size":16,"color":"#00C853"},{"type":"square","x":32,"y":32,"size":32,"color":"rgba(0, 230, 118, 0.2)","rotation":45},{"type":"circle","x":20,"y":20,"size":6,"color":"#18FFFF"},{"type":"circle","x":44,"y":20,"size":6,"color":"#18FFFF"},{"type":"circle","x":20,"y":44,"size":6,"color":"#18FFFF"},{"type":"circle","x":44,"y":44,"size":6,"color":"#18FFFF"},{"type":"rect","x":32,"y":15,"width":20,"height":5,"color":"#607D8B"},{"type":"rect","x":32,"y":49,"width":20,"height":5,"color":"#607D8B"},{"type":"rect","x":15,"y":32,"width":5,"height":20,"color":"#607D8B"},{"type":"rect","x":49,"y":32,"width":5,"height":20,"color":"#607D8B"},{"type":"circle","x":32,"y":32,"size":8,"color":"#B2FF59"},{"type":"circle","x":32,"y":32,"size":4,"color":"#EEFF41"}]} },
-    drone: { title: 'Drone', info: 'Raise the dead.', population: 1, range: 80, damage: 5, attackSpeed: 30, projectile: 'starFragment', critMultiplier: 1, lifeSpan: 500, render: {"canvasWidth":32,"canvasHeight":32,"shapes":[{"type":"circle","x":16,"y":16,"size":14,"color":"#263238"},{"type":"circle","x":16,"y":16,"size":10,"color":"#00E676"},{"type":"circle","x":16,"y":16,"size":6,"color":"#18FFFF"},{"type":"circle","x":16,"y":16,"size":3,"color":"#EEFF41"},{"type":"rect","x":16,"y":8,"width":2,"height":4,"color":"#607D8B"},{"type":"rect","x":16,"y":24,"width":2,"height":4,"color":"#607D8B"},{"type":"rect","x":8,"y":16,"width":4,"height":2,"color":"#607D8B"},{"type":"rect","x":24,"y":16,"width":4,"height":2,"color":"#607D8B"},{"type":"circle","x":16,"y":8,"size":3,"color":"#00C853"},{"type":"circle","x":16,"y":24,"size":3,"color":"#00C853"},{"type":"circle","x":8,"y":16,"size":3,"color":"#00C853"},{"type":"circle","x":24,"y":16,"size":3,"color":"#00C853"}]} },
-    exoTrooper: { title: 'Exo Trooper', info: 'Projectiles chain between enemies.', cost: 70, population: 3, range: 100, damage: 10, attackSpeed: 25, projectile: 'shadowBane', piercing: 2, critChance: 0.1, critMultiplier: 1.7, render: {"canvasWidth":64,"canvasHeight":64,"shapes":[{"type":"circle","x":32,"y":48,"size":36,"color":"#455A64"},{"type":"circle","x":32,"y":48,"size":30,"color":"#607D8B"},{"type":"rect","x":32,"y":32,"width":10,"height":32,"color":"#37474F"},{"type":"circle","x":32,"y":16,"size":16,"color":"#90A4AE"},{"type":"circle","x":32,"y":16,"size":12,"color":"#29B6F6"},{"type":"circle","x":32,"y":16,"size":8,"color":"#40C4FF"},{"type":"triangle","x":24,"y":12,"size":6,"color":"#81D4FA","rotation":270},{"type":"triangle","x":40,"y":12,"size":6,"color":"#81D4FA","rotation":90},{"type":"triangle","x":32,"y":8,"size":6,"color":"#81D4FA","rotation":0},{"type":"triangle","x":32,"y":24,"size":6,"color":"#81D4FA","rotation":180},{"type":"rect","x":32,"y":48,"width":24,"height":6,"color":"#263238"},{"type":"rect","x":32,"y":36,"width":20,"height":4,"color":"#546E7A"},{"type":"rect","x":32,"y":30,"width":16,"height":4,"color":"#546E7A"},{"type":"circle","x":32,"y":16,"size":4,"color":"#E1F5FE"}]} },
-    neutronArc: { title: 'Neutron Arc', info: 'Projectiles explode in an AoE.', cost: 90, population: 3, range: 90, damage: 6, attackSpeed: 35, projectile: 'solarFlare', critChance: 0.05, critMultiplier: 2, splashRadius: 45, burnDamage: 2, render: {"canvasWidth":64,"canvasHeight":64,"shapes":[{"type":"circle","x":32,"y":40,"size":40,"color":"#424242"},{"type":"circle","x":32,"y":40,"size":36,"color":"#616161"},{"type":"rect","x":32,"y":34,"width":24,"height":30,"color":"#37474F"},{"type":"rect","x":32,"y":27,"width":20,"height":18,"color":"#263238"},{"type":"rect","x":24,"y":20,"width":6,"height":16,"color":"#546E7A"},{"type":"rect","x":32,"y":20,"width":6,"height":16,"color":"#546E7A"},{"type":"rect","x":40,"y":20,"width":6,"height":16,"color":"#546E7A"},{"type":"triangle","x":24,"y":12,"size":6,"color":"#C62828","rotation":0},{"type":"triangle","x":32,"y":12,"size":6,"color":"#C62828","rotation":0},{"type":"triangle","x":40,"y":12,"size":6,"color":"#C62828","rotation":0},{"type":"rect","x":24,"y":16,"width":4,"height":2,"color":"#FFCDD2"},{"type":"rect","x":32,"y":16,"width":4,"height":2,"color":"#FFCDD2"},{"type":"rect","x":40,"y":16,"width":4,"height":2,"color":"#FFCDD2"},{"type":"rect","x":32,"y":46,"width":28,"height":8,"color":"#455A64"}]} },
-    chrono: { title: 'Chrono Dampener', info: 'Projectiles explode in AoE and slow.', cost: 100, population: 3, range: 90, damage: 2, attackSpeed: 50, projectile: 'etherMist', critMultiplier: 1, splashRadius: 30, slowEffect: 0.7, render: {"canvasWidth":64,"canvasHeight":64,"shapes":[{"type":"circle","x":32,"y":40,"size":40,"color":"#4A148C"},{"type":"circle","x":32,"y":40,"size":36,"color":"#6A1B9A"},{"type":"circle","x":32,"y":40,"size":26,"color":"#4A148C"},{"type":"circle","x":32,"y":40,"size":22,"color":"#9C27B0"},{"type":"circle","x":32,"y":40,"size":16,"color":"#AA00FF"},{"type":"rect","x":32,"y":24,"width":8,"height":24,"color":"#7B1FA2"},{"type":"circle","x":32,"y":16,"size":14,"color":"#CE93D8"},{"type":"circle","x":32,"y":16,"size":10,"color":"#E1BEE7"},{"type":"square","x":32,"y":16,"size":16,"color":"rgba(206, 147, 216, 0.5)","rotation":45},{"type":"square","x":32,"y":16,"size":20,"color":"rgba(206, 147, 216, 0.3)","rotation":45},{"type":"circle","x":32,"y":40,"size":14,"color":"#4A148C","rotation":45},{"type":"circle","x":25,"y":30,"size":6,"color":"#E040FB"},{"type":"circle","x":39,"y":30,"size":6,"color":"#E040FB"},{"type":"rect","x":32,"y":48,"width":28,"height":6,"color":"#4527A0"}]} },
-};
-const enemiesConfig = {
-    zombie: { color: '#646464', size: 40, hp: 30, speed: 0.8, value: 5, essence: 10, isCircle: true, render: {"canvasWidth":64,"canvasHeight":64,"shapes":[{"type":"circle","x":32,"y":32,"size":34,"color":"#6A1B9A"},{"type":"circle","x":32,"y":32,"size":24,"color":"#9C27B0"},{"type":"circle","x":32,"y":32,"size":16,"color":"#8E24AA"},{"type":"circle","x":32,"y":24,"size":12,"color":"#7B1FA2"},{"type":"circle","x":26,"y":26,"size":10,"color":"#7B1FA2"},{"type":"circle","x":38,"y":26,"size":10,"color":"#7B1FA2"},{"type":"circle","x":26,"y":28,"size":6,"color":"#F50057"},{"type":"circle","x":38,"y":28,"size":6,"color":"#F50057"},{"type":"triangle","x":21,"y":34,"size":10,"color":"#9C27B0","rotation":270},{"type":"triangle","x":43,"y":34,"size":10,"color":"#9C27B0","rotation":90},{"type":"triangle","x":28,"y":48,"size":8,"color":"#9C27B0","rotation":180},{"type":"triangle","x":36,"y":48,"size":8,"color":"#9C27B0","rotation":180}]} },
-    skeleton: { color: '#e5e4cf', size: 28, hp: 20, speed: 1.2, value: 7, essence: 12, isCircle: true, render: {"canvasWidth":64,"canvasHeight":64,"shapes":[{"type":"rect","x":32,"y":32,"width":30,"height":40,"color":"#2E7D32","rotation":0},{"type":"triangle","x":32,"y":14,"size":24,"color":"#388E3C","rotation":0},{"type":"rect","x":20,"y":32,"width":16,"height":6,"color":"#43A047","rotation":0},{"type":"rect","x":44,"y":32,"width":16,"height":6,"color":"#43A047","rotation":0},{"type":"circle","x":24,"y":24,"size":12,"color":"#66BB6A"},{"type":"circle","x":40,"y":24,"size":12,"color":"#66BB6A"},{"type":"circle","x":24,"y":24,"size":8,"color":"#1B5E20"},{"type":"circle","x":40,"y":24,"size":8,"color":"#1B5E20"},{"type":"circle","x":24,"y":24,"size":4,"color":"#76FF03"},{"type":"circle","x":40,"y":24,"size":4,"color":"#76FF03"},{"type":"rect","x":32,"y":40,"width":20,"height":6,"color":"#2E7D32"},{"type":"triangle","x":32,"y":50,"size":16,"color":"#388E3C","rotation":180}]} },
-    ghost: { color: '#f7f7f0', size: 30, hp: 15, speed: 1.5, value: 10, essence: 15, isCircle: true, render: {"canvasWidth":64,"canvasHeight":64,"shapes":[{"type":"circle","x":32,"y":32,"size":30,"color":"#0D47A1"},{"type":"rect","x":32,"y":32,"width":36,"height":20,"color":"#1565C0"},{"type":"triangle","x":14,"y":32,"size":10,"color":"#1976D2","rotation":270},{"type":"triangle","x":50,"y":32,"size":10,"color":"#1976D2","rotation":90},{"type":"circle","x":32,"y":28,"size":14,"color":"#1E88E5"},{"type":"circle","x":32,"y":26,"size":8,"color":"#2196F3"},{"type":"circle","x":24,"y":30,"size":6,"color":"#90CAF9"},{"type":"circle","x":40,"y":30,"size":6,"color":"#90CAF9"},{"type":"circle","x":24,"y":30,"size":3,"color":"#E3F2FD"},{"type":"circle","x":40,"y":30,"size":3,"color":"#E3F2FD"},{"type":"triangle","x":32,"y":40,"size":12,"color":"#1565C0","rotation":180},{"type":"triangle","x":32,"y":44,"size":8,"color":"#0D47A1","rotation":180}]} },
-    wraith: { color: '#2f2f2f', size: 32, hp: 25, speed: 1.8, value: 12, essence: 18, dodgeChance: 0.2, isCircle: true, render: {"canvasWidth":64,"canvasHeight":64,"shapes":[{"type":"rect","x":32,"y":32,"width":34,"height":20,"color":"#B71C1C","rotation":0},{"type":"triangle","x":32,"y":20,"size":28,"color":"#C62828","rotation":0},{"type":"triangle","x":32,"y":44,"size":28,"color":"#C62828","rotation":180},{"type":"circle","x":22,"y":26,"size":10,"color":"#D32F2F"},{"type":"circle","x":42,"y":26,"size":10,"color":"#D32F2F"},{"type":"circle","x":22,"y":26,"size":6,"color":"#FFEB3B"},{"type":"circle","x":42,"y":26,"size":6,"color":"#FFEB3B"},{"type":"rect","x":32,"y":32,"width":12,"height":6,"color":"#D50000"},{"type":"rect","x":14,"y":32,"width":10,"height":4,"color":"#B71C1C","rotation":45},{"type":"rect","x":50,"y":32,"width":10,"height":4,"color":"#B71C1C","rotation":-45},{"type":"rect","x":32,"y":42,"width":18,"height":4,"color":"#EF5350"}]} },
-    bloodBeast: { color: '#c93838', size: 40, hp: 50, speed: 0.6, value: 15, essence: 20, regen: 0.5, isCircle: true, render: {"canvasWidth":64,"canvasHeight":64,"shapes":[{"type":"circle","x":32,"y":32,"size":28,"color":"#4A148C"},{"type":"circle","x":32,"y":32,"size":24,"color":"#6A1B9A"},{"type":"circle","x":32,"y":22,"size":12,"color":"#7B1FA2"},{"type":"circle","x":32,"y":24,"size":8,"color":"#9C27B0"},{"type":"rect","x":20,"y":36,"width":16,"height":4,"color":"#AB47BC","rotation":-30},{"type":"rect","x":44,"y":36,"width":16,"height":4,"color":"#AB47BC","rotation":30},{"type":"rect","x":24,"y":42,"width":14,"height":4,"color":"#AB47BC","rotation":-20},{"type":"rect","x":40,"y":42,"width":14,"height":4,"color":"#AB47BC","rotation":20},{"type":"rect","x":28,"y":46,"width":10,"height":4,"color":"#AB47BC","rotation":-10},{"type":"rect","x":36,"y":46,"width":10,"height":4,"color":"#AB47BC","rotation":10},{"type":"circle","x":26,"y":28,"size":6,"color":"#E1BEE7"},{"type":"circle","x":38,"y":28,"size":6,"color":"#E1BEE7"},{"type":"circle","x":26,"y":28,"size":3,"color":"#4A148C"},{"type":"circle","x":38,"y":28,"size":3,"color":"#4A148C"}]} },
-    banshee: { color: '#b04785', size: 28, hp: 20, speed: 1.4, value: 8, essence: 14, screamDamage: 5, isCircle: true, render: {"canvasWidth":64,"canvasHeight":64,"shapes":[{"type":"square","x":32,"y":32,"size":30,"color":"#004D40","rotation":45},{"type":"circle","x":32,"y":32,"size":20,"color":"#00695C"},{"type":"circle","x":32,"y":32,"size":14,"color":"#00796B"},{"type":"circle","x":32,"y":32,"size":8,"color":"#009688"},{"type":"triangle","x":20,"y":20,"size":10,"color":"#00897B","rotation":315},{"type":"triangle","x":44,"y":20,"size":10,"color":"#00897B","rotation":45},{"type":"triangle","x":20,"y":44,"size":10,"color":"#00897B","rotation":225},{"type":"triangle","x":44,"y":44,"size":10,"color":"#00897B","rotation":135},{"type":"circle","x":26,"y":26,"size":6,"color":"#B2DFDB"},{"type":"circle","x":38,"y":26,"size":6,"color":"#B2DFDB"},{"type":"circle","x":26,"y":26,"size":3,"color":"#E0F2F1"},{"type":"circle","x":38,"y":26,"size":3,"color":"#E0F2F1"},{"type":"rect","x":32,"y":36,"width":10,"height":4,"color":"#004D40"}]} },
-};
-const upgradesConfig = {
-    // Bat Swarm Upgrades
-    sentryFrenzy: { desc: '+25% Attack Speed', value: .75 },
-    sentryIntelligence: { desc: '+15% Damage and +10% Range', damage: 1.15, range: 1.1 },
-    dematerializeSentry: { desc: 'Heal 0.5% Core HP per hit', leech: 0.005 },
-
-    // Necromancer Upgrades
-    necroSummon: { desc: '10% chance to raise a skeleton when killing an enemy', summonChance: 1.1 },
-    necroMastery: { desc: '+20% Range and projectiles pierce one additional enemy', range: 1.2, piercing: 1 },
-
-    // Shadow Turret Upgrades
-    shadowPierce: { desc: 'Projectiles pierce 2 additional enemies', piercing: 2 },
-    shadowReach: { desc: '+30% Range', range: 1.3 },
-    shadowCrit: { desc: '+10% Critical Chance', critChance: 0.1 },
-
-    // Soul Pyre Upgrades
-    pyreBurn: { desc: '+50% Burn Damage', burnDamage: 1 },
-    pyreBlaze: { desc: '+20% Damage and +10% Attack Speed', damage: 1.2, attackSpeed: 1.1 },
-    pyreSoul: { desc: '+10% splash radius', splashRadius: 1.1 },
-
-    // Mist Shrine Upgrades
-    mistSlow: { desc: 'Slow effect increased by 20%', slowEffect: 0.8 },
-    mistSpread: { desc: '+25% Range and +1 Piercing', range: 1.25, piercing: 1 },
-
-    // Global Upgrades
-    bloodEff: { desc: 'Towers cost 15% less Blood Shards', value: 0.85 },
-    bloodCore: { desc: 'Increase max Core HP by 20% and heal 30 HP', maxHpMultiplier: 1.2, healAmount: 30 },
-    bloodHarvest: { desc: 'Gain 25% more Blood Shards from enemies', value: 1.25 },
-    essenceExtraction: { desc: 'Gain 25% more Essence from enemies', value: 1.25 },
-    bloodFrenzy: { desc: 'All towers deal 20% more damage', damageMultiplier: 1.2 },
-    bloodRegeneration: { desc: 'All healing effects are 25% more effective', healingMultiplier: 1.25 },
-    essenceOverflow: { desc: 'Gain 10% more Essence when above 50% Core HP', value: 1.1 },
-    darkResilience: { desc: 'Towers take 20% less damage from enemy abilities', towerDamageReduction: 0.8 }
-};
-const effectsConfig = {
-    slow: { id: 'slow', title: 'Slow', desc: 'Target is slowed', stat: 'speed', lifeTime: 100 }
-}
-
-const effects = {
-    slow: (stats, additiveStats, multiplicitiveStats, slowAmount) => {
-        stats[effectsConfig.slow.stat] *= slowAmount;
-    }
-}
-
-const upgrades = [
-    // Bat Swarm Upgrades
-    new Upgrade(
-        'sentryFrenzy',
-        'Sentry Frenzy',
-        'Sentry Swarm: ' + upgradesConfig.sentryFrenzy.desc,
-        '🦇',
-        'sentry',
-        (state) => true,
-        (stats, additiveStats, multiplicitiveStats) => {
-            multiplicitiveStats['attackSpeed'].push(upgradesConfig.batFrenzy.value);
-        }
-    ),
-    new Upgrade(
-        'sentryIntelligence',
-        'Sentry Intelligence',
-        'Sentry Swarm: ' + upgradesConfig.batSwarm.desc,
-        '🦇',
-        'sentry',
-        (state) => true,
-        (stats, additiveStats, multiplicitiveStats) => {            
-            multiplicitiveStats['damage'].push(upgradesConfig.batSwarm.damage);
-            multiplicitiveStats['range'].push(upgradesConfig.batSwarm.range);        
-        }
-    ),
-
-    // Necromancer Upgrades
-    new Upgrade(
-        'necroSummon',
-        'Raise Dead',
-        'Necromancer: ' + upgradesConfig.necroSummon.desc,
-        '💀',
-        'necromancer',
-        (state) => true,
-        (stats, additiveStats, multiplicitiveStats) => {
-            stats.summonChance = 1;
-            additiveStats['summonChance'].push(upgradesConfig.necroSummon.summonChance);
-        }
-    ),
-
-     // Shadow Turret Upgrades
-    new Upgrade(
-        'shadowReach',
-        'Extended Darkness',
-        'Shadow Turret: ' + upgradesConfig.shadowReach.desc,
-        '📏',
-        'shadowTurret',
-        (state) => true,
-        (stats, additiveStats, multiplicitiveStats) => {
-            additiveStats['range'].push(upgradesConfig.shadowReach.range);
-        }
-    ),
-
-    // Soul Pyre Upgrades
-    new Upgrade(
-        'pyreSoul',
-        'Radiant Soul',
-        'Soul Pyre: ' + upgradesConfig.pyreSoul.desc,
-        '💉',
-        'soulPyre',
-        (state) => true,
-        (stats, additiveStats, multiplicitiveStats) => {
-            additiveStats['splashRadius'].push(upgradesConfig.pyreSoul.splashRadius);
-        }
-    ),
-
-    // Mist Shrine Upgrades
-    new Upgrade(
-        'mistSlow',
-        'Chilling Mist',
-        'Mist Shrine: ' + upgradesConfig.mistSlow.desc,
-        '❄️',
-        'mistShrine',
-        (state) => true,
-        (stats, additiveStats, multiplicitiveStats) => {
-            multiplicitiveStats['slowEffect'].push(upgradesConfig.mistSlow.slowEffect);
-        }
-    ),
-    // Global Upgrades
-    new Upgrade(
-        'homeReinforcement',
-        'Reinforcement',
-        upgradesConfig.bloodCore.desc,
-        '🛡️',
-        'global',
-        (state) => true,
-        (stats) => {
-            stats.maxBloodCoreHP *= upgradesConfig.bloodCore.maxHpMultiplier;
-        },
-        (state) => {
-            state.bloodCoreHP = Math.min(state.stats.maxBloodCoreHP, state.bloodCoreHP + upgradesConfig.bloodCore.healAmount);
-        }
-    ),
-    new Upgrade(
-        'essenceExtraction',
-        'Essence Extraction',
-        upgradesConfig.essenceExtraction.desc,
-        '🔮',
-        'global',
-        (state) => true,
-        (stats) => {
-            stats.essenceMultiplier *= upgradesConfig.essenceExtraction.value;
-        }
-    ),
-    new Upgrade(
-        'essenceOverflow',
-        'Essence Overflow',
-        upgradesConfig.essenceOverflow.desc,
-        '🔮',
-        'global',
-        (state) => state.bloodCoreHP > state.stats.maxBloodCoreHP / 2,
-        (stats) => {
-            stats.essenceMultiplier *= upgradesConfig.essenceOverflow.value;
-        }
-    ),
-
-];
-
-
-const enemyConstructors = {
-    'zombie': class zombieEnemy extends Entity {
-        constructor(state, image) {
-            super(state, 'zombie', enemiesConfig.zombie, image );
-        }
-    },
-    'skeleton': class skeletonEnemy extends Entity {
-        constructor(state, image) {
-            super(state, 'skeleton', enemiesConfig.skeleton, image );
-        }
-    },
-    'ghost': class ghostEnemy extends Entity {
-        constructor(state, image) {
-            super(state, 'ghost', enemiesConfig.ghost, image);
-        }
-    },
-    'wraith': class WraithEnemy extends Entity {
-        constructor(state, image) {
-            super(state, 'wraith', enemiesConfig.wraith, image);
-        }
-    },
-    'bloodBeast': class BloodBeastEnemy extends Entity {
-        constructor(state, image) {
-            super(state, 'bloodBeast', enemiesConfig.bloodBeast, image);
-        }
-    },
-    'banshee': class BansheeEnemy extends Entity {
-        constructor(state, image) {
-            super(state, 'banshee', enemiesConfig.banshee, image);
-        }
-    }
-};
-const towerConstructors = {
-    'batSwarm': class BatSwarmTower extends Entity {
-        constructor(state, x, y, image) {
-            super(state, x, y, 'batSwarm', towersConfig.batSwarm, image );
-        }
-    },
-    'miner': class MinerTower extends Entity {
-        constructor(state, x, y, image) {
-            super(state, x, y, 'miner', towersConfig.miner, image );
-        }
-    },
-    'supplyDepot': class SupplyDepotTower extends Entity {
-        constructor(state, x, y, image) {
-            super(state, x, y, 'supplyDepot', towersConfig.supplyDepot, image );
-        }
-    },
-    'necromancer': class NecromancerTower extends Entity {
-        constructor(state, x, y, image) {
-            super(state, x, y, 'necromancer', towersConfig.necromancer, image );
-        }
-    },
-    'skeleton': class SkeletonTower extends Entity {
-        constructor(state, x, y, image) {
-            super(state, x, y, 'skeleton', towersConfig.skeleton, image );
-        }
-    },
-    'shadowTurret': class ShadowTurretTower extends Entity {
-        constructor(state, x, y, image) {
-            super(state, x, y, 'shadowTurret', towersConfig.shadowTurret, image);
-        }
-    },
-    'soulPyre': class SoulPyreTower extends Entity {
-        constructor(state, x, y, image) {
-            super(state, x, y, 'soulPyre', towersConfig.soulPyre, image);
-        }
-    },
-    'mistShrine': class MistShrineTower extends Entity {
-        constructor(state, x, y, image) {
-            super(state, x, y, 'mistShrine', towersConfig.mistShrine, image);
-        }
-    }
-};
-
-
-class GameRenderer {
-    constructor(game) {        
-        this.game = game;
-
-        this.ctx = game.canvas.getContext('2d');
-        this.selectedTowerType = null;
-        this.hoverCell = { x: -1, y: -1 };
-        this.showRange = false;
-    }
-
-    clearScreen() {        
-        this.ctx.clearRect(0, 0, CONFIG.CANVAS_WIDTH, CONFIG.CANVAS_HEIGHT);
-    }
-
-    render(state, map) {
-        this.clearScreen();
-        this.drawMap(map.tileMap, map.path);    
-    }
-
-    drawMap(tileMap, path) {
-        this.ctx.fillStyle = '#2b2b3d';
-        this.ctx.fillRect(0, 0, CONFIG.CANVAS_WIDTH, CONFIG.CANVAS_HEIGHT);
-
-        for (let y = 0; y < CONFIG.ROWS; y++) {
-            for (let x = 0; x < CONFIG.COLS; x++) {
-                const tile = tileMap[y][x];
-                this.ctx.fillStyle = tile.type === 'grass' ? '#4a7c59' : tile.type === 'path' ? '#9c826a' : '#3d88c8';
-                this.ctx.fillRect(x * CONFIG.GRID_SIZE, y * CONFIG.GRID_SIZE, CONFIG.GRID_SIZE, CONFIG.GRID_SIZE);
-                this.ctx.strokeStyle = 'rgba(0, 0, 0, 0.1)';
-                this.ctx.strokeRect(x * CONFIG.GRID_SIZE, y * CONFIG.GRID_SIZE, CONFIG.GRID_SIZE, CONFIG.GRID_SIZE);
-            }
-        }
-
-        this.ctx.strokeStyle = '#ffd166';
-        this.ctx.lineWidth = 2;
-        this.ctx.beginPath();
-        this.ctx.moveTo(path[0].x * CONFIG.GRID_SIZE + CONFIG.GRID_SIZE / 2, path[0].y * CONFIG.GRID_SIZE + CONFIG.GRID_SIZE / 2);
-        path.slice(1).forEach(p => this.ctx.lineTo(p.x * CONFIG.GRID_SIZE + CONFIG.GRID_SIZE / 2, p.y * CONFIG.GRID_SIZE + CONFIG.GRID_SIZE / 2));
-        this.ctx.stroke();
-    }
-
-}
-
-class Game {
-    constructor() {
-        this.state = new GameState();
-        this.mapManager = new MapManager();
-        this.uiManager = new UIManager();
-        this.spatialGrid = new SpatialGrid(CONFIG.CANVAS_WIDTH, CONFIG.CANVAS_HEIGHT, CONFIG.GRID_SIZE * 3);
-        this.entityId = 0;
-
-        this.canvas = document.getElementById("gameCanvas");
-        this.ctx = this.canvas.getContext("2d");
-        this.imageManager = new ImageManager();
-        this.imageManager.loadImages('tower', towersConfig);
-        this.imageManager.loadImages('enemy', enemiesConfig);
-        this.imageManager.loadImages('projectile', projectilesConfig);
-
-        this.canvas.setAttribute('width', CONFIG.CANVAS_WIDTH);
-        this.canvas.setAttribute('height', CONFIG.CANVAS_HEIGHT);
-
-        this.entitiesToAdd = [];
-        this.renderer = new GameRenderer(this);
-        this.uiManager.reset();
-    }
-
-    showUpgradeMenu() {
-        if (this.state.isLevelingUp) return; // Prevent re-triggering
-        
-        this.state.isLevelingUp = true;
-        this.state.isPaused = true;
-        
-        this.uiManager.upgradeMenu.style.display = 'block';
-        this.uiManager.overlay.style.display = 'block';
-        this.uiManager.upgradeOptionsDiv.innerHTML = '';
-        
-        // Filter upgrades based on conditions
-        const availableUpgrades = upgrades.filter(upgrade => upgrade.canApply(this.state));
-        
-
-        
-        // Choose 3 random upgrades
-        const options = [];
-        while (options.length < 3 && availableUpgrades.length > 0) {
-            const index = Math.floor(Math.random() * availableUpgrades.length);
-            options.push(availableUpgrades[index]);
-            availableUpgrades.splice(index, 1);
-        }
-        
-        // Create upgrade options
-        options.forEach(upgrade => {
-            const div = document.createElement('div');
-            div.className = 'upgrade-option';
-            div.innerHTML = `
-                <div class="upgrade-icon">${upgrade.icon}</div>
-                <div class="upgrade-desc">
-                    <div class="upgrade-title">${upgrade.title}</div>
-                    ${upgrade.desc}
-                </div>
-            `;
-            div.onclick = () => this.selectUpgrade(upgrade);
-            this.uiManager.upgradeOptionsDiv.appendChild(div);
-        });
-    }
-
-    selectUpgrade(upgrade) {       
-        // Add to active upgrades list if not already
-        if (!this.state.activeUpgrades[upgrade.appliesTo]) {
-            this.state.activeUpgrades[upgrade.appliesTo] = [upgrade];
-        } else {
-            this.state.activeUpgrades[upgrade.appliesTo].push(upgrade);
-        }
-
-        this.applyActiveUpgrades();
-        if(upgrade.onAcquire) {
-            upgrade.onAcquire(this.state);
-        }
-        
-        upgradeMenu.style.display = 'none';
-        overlay.style.display = 'none';
-        
-        this.state.essence -= this.state.essenceToNextLevel;
-        this.state.level++;
-        this.state.essenceToNextLevel = Math.floor(this.state.essenceToNextLevel * 1.4);        
-        
-        this.state.isLevelingUp = false;
-        this.state.isPaused = false;
-    }
-
-
-    // Wave management
-    updateWave() {
-        // Spawn enemies
-        if (this.state.enemiesSpawned < this.state.enemiesInWave) {
-            this.state.spawnCounter++;
-            
-            if (this.state.spawnCounter >= this.state.spawnRate) {
-                this.createEnemy();
-                this.state.enemiesSpawned++;
-                this.state.spawnCounter = 0;
-                
-                // Update wave progress
-                waveProgress.style.width = (this.state.enemiesSpawned / this.state.enemiesInWave * 100) + '%';
-            }
-        } 
-        // Move to next wave if all enemies defeated
-        else if (this.state.enemies.length === 0 && this.state.enemiesSpawned >= this.state.enemiesInWave) {
-            this.state.waveTimer++;
-            
-            if (this.state.waveTimer >= this.state.waveDelay) {
-                this.startNextWave();
-            }
-        }
-    }
-
-    startNextWave() {
-        this.state.wave++;
-        waveDisplay.textContent = this.state.wave;
-        
-        // Check for victory
-        if (this.state.wave > this.state.maxWaves) {
-            this.gameVictory();
-            return;
-        }
-        
-        this.state.enemiesInWave = 10 * (this.state.wave * 2);
-        this.state.enemiesSpawned = 0;
-        this.state.spawnRate = Math.max(10, 60 - (this.state.wave * 3));
-        this.state.spawnCounter = 0;
-        this.state.waveTimer = 0;
-        
-        // Reset wave progress bar
-        waveProgress.style.width = '0%';
-    }
-
-    applyActiveUpgrades() {
-        this.state.stats = {...this.state.defaultStats};
-        calculateStats(this.state.stats, this.state.activeUpgrades['global']);    
-    }
-  
-    // Tower placement system
-    setupTowerPlacement() {
-        let endY = parseInt(CONFIG.ROWS / 2) * CONFIG.GRID_SIZE + CONFIG.GRID_SIZE / 2;
-        let endX = (CONFIG.COLS - 1) * CONFIG.GRID_SIZE + CONFIG.GRID_SIZE / 2;
-
-        const keep =  this.createTower(endX, endY, 'keep');
-        keep.placed = true;
-        const towerButtons = document.querySelectorAll('.tower-option');
-        towerButtons.forEach(button => {
-            button.addEventListener('click', () => {
-                if( this.state.isPaused ) return;
-                const type = button.getAttribute('data-type');
-                let cost = towersConfig[type].cost;
-                const finalCost = Math.floor(cost * this.state.stats.towerCostMod);
-                
-                let populationCost = towersConfig[type].population || 0;
-                if (this.state.bloodShards >= finalCost && this.state.stats.population + populationCost <= this.state.stats.maxPopulation) {
-                    this.state.selectedTowerType = type;
-                    if(this.state.previewTower) {
-                        this.state.previewTower.destroy();
-                    }
-                    this.state.previewTower = this.createPreviewTower(-100, -100, this.state.selectedTowerType, true);
-                }
-            });
-            
-            // Show tooltip with info
-            button.addEventListener('mouseover', (e) => {
-                const type = button.getAttribute('data-type');
-                let info = towersConfig[type].info;
-                
-                this.showTooltip(e.clientX, e.clientY, info);
-            });
-            
-            button.addEventListener('mouseout', () => {
-                this.hideTooltip();
-            });
-        });
-        
-        this.canvas.addEventListener('mousemove', (e) => {
-            if (!this.state.selectedTowerType) return;
-            
-            const rect = this.canvas.getBoundingClientRect();
-            const x = e.clientX - rect.left;
-            const y = e.clientY - rect.top;
-            
-            if(this.state.previewTower){
-                this.state.previewTower.position.x = parseInt(x / CONFIG.GRID_SIZE) * CONFIG.GRID_SIZE + CONFIG.GRID_SIZE / 2;
-                this.state.previewTower.position.y = parseInt(y / CONFIG.GRID_SIZE) * CONFIG.GRID_SIZE + CONFIG.GRID_SIZE / 2;
-            }
-            
-            // Check if position is valid
-            const isValidPosition = this.checkValidTowerPosition(x, y);
-            this.canvas.style.cursor = isValidPosition ? 'pointer' : 'not-allowed';
-
-            if (this.state.selectedTowerType) return;
-            
-            // Check if hovering over a tower
-            let hoveredTower = null;
-            for (const tower of this.state.towers) {
-                const dist = Math.hypot(tower.x - x, tower.y - y);
-                if (dist < 20) {
-                    hoveredTower = tower;
+                    // No valid moves left (should not happen if grid is properly sized)
                     break;
                 }
             }
-            
-            if (hoveredTower) {
-                // Show tower stats
-                let info = `${hoveredTower.type} (Level ${hoveredTower.level})\n`;
-                
-                info += `Damage: ${Math.round(hoveredTower.stats.damage * this.state.stats.damageMultiplier * 10) / 10}\n`;
-                info += `Attack Speed: ${Math.round(1000 / hoveredTower.stats.attackSpeed)} per sec\n`;
-                info += `Range: ${hoveredTower.stats.range}\n`;
-                info += `Crit Chance: ${Math.round(hoveredTower.stats.critChance * 100)}%\n`;
-                
-                if (hoveredTower.stats.leech > 0) {
-                    info += `Life Leech: ${Math.round(hoveredTower.stats.leech * 100 * this.state.stats.healingMultiplier) / 100} HP per hit\n`;
-                }
-                
-                if (hoveredTower.stats.piercing > 0) {
-                    info += `Piercing: ${hoveredTower.stats.piercing} enemies\n`;
-                }
-                
-                if (hoveredTower.stats.summonChance > 0) {
-                    info += `Summon Chance: ${Math.round(hoveredTower.stats.summonChance * 100)}%\n`;
-                }
-                
-                this.showTooltip(e.clientX, e.clientY, info);
-                
-                // Show range indicator
-                hoveredTower.showRange = true;
-            } else {
-                this.hideTooltip();
-                this.state.towers.forEach(t => t.showRange = false);
-            }
-        });
 
-        this.canvas.addEventListener('mouseout', () => {
-            this.hideTooltip();
-        });
-        this.canvas.addEventListener('click', (e) => {
-            if (!this.state.selectedTowerType) return;
+            return path;
+        }
+
+    }
+    class UIManager { 
+        constructor() {
+            this.upgradeMenu = document.getElementById('upgradeMenu');
+            this.upgradeOptionsDiv = document.getElementById('upgradeOptions');
+            this.overlay = document.getElementById('overlay');
+            this.tooltip = document.getElementById('tooltip');
+            this.gameOverMenu = document.getElementById('gameOverMenu');
+            this.victoryMenu = document.getElementById('victoryMenu');
+
+            // Stats displays
+            this.shardsDisplay = document.getElementById('shardsDisplay');
+            this.essenceDisplay = document.getElementById('essenceDisplay');
+            this.essenceNeededDisplay = document.getElementById('essenceNeededDisplay');
+            this.populationDisplay = document.getElementById('populationDisplay');
+            this.maxPopulationDisplay = document.getElementById('maxPopulationDisplay');
+            this.hpDisplay = document.getElementById('hpDisplay');
+            this.waveDisplay = document.getElementById('waveDisplay');
+            this.waveProgress = document.getElementById('waveProgress');
+            this.gameOverWave = document.getElementById('gameOverWave');
+            this.towerMenu = document.getElementById('towerMenu');
+            let towerMenuOptions = '';
+            for(let type in gameConfig.towers) {
+                if(gameConfig.towers[type].cost > 0){
+                    towerMenuOptions += `<div class="tower-option" data-type="${type}">${gameConfig.towers[type].title} (${gameConfig.towers[type].cost})</div>`;
+                }
+            }
+            this.towerMenu.innerHTML = towerMenuOptions;
+        }
+
+        reset() {
+            this.gameOverMenu.style.display = 'none';
+            this.victoryMenu.style.display = 'none';
+            this.overlay.style.display = 'none';
+            this.waveDisplay.textContent = '1';
+            this.waveProgress.style.width = '0%';        
+
+
+        }
+
+        updateWaveDisplay(waveNumber) {
+            this.waveDisplay.textContent = waveNumber;
+        }
+    }
+    class ImageManager {
+        constructor() {
+            this.images = {};
+        }
+
+        async loadImages(prefix, config) {
+            for (const [type, cfg] of Object.entries(config)) {
+                this.images[`${prefix}_${type}`] = await this.createPlaceholder(cfg);
+                // Later: this.images[type] = this.loadRealImage(cfg.src);
+            }
+        }
+
+        async createPlaceholder(config) {
+            const images = await this.captureObjectImagesFromJSON(config);
+            let canvases = [];
+            images.forEach((img, index) => {
+                const canvas = document.createElement('canvas');
+                canvas.width = canvas.height = 64;
+                const ctx = canvas.getContext('2d');
+                ctx.drawImage(img, 0, 0);
+                canvases.push(canvas);
+            });
+            return canvases
+        }
+
+        getImage(prefix, type) {
+            return this.images[`${prefix}_${type}`];
+        }
+
+        async captureObjectImagesFromJSON(shapeData) {
+            const size = 64; // Image size
+            const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+            renderer.setSize(size, size);
             
-            const rect = this.canvas.getBoundingClientRect();
-            const x = e.clientX - rect.left;
-            const y = e.clientY - rect.top;
+            // Create an offscreen render target
+            const renderTarget = new THREE.WebGLRenderTarget(size, size);
+            renderTarget.texture.flipY = true; // Flip the texture vertically
+
+            // Create scene and lights
+            const scene = new THREE.Scene();
+            const light = new THREE.AmbientLight(0xffffff, 5);
+            scene.add(light);
+
+            // Create objects from JSON and add to scene
+            const objectGroup = this.createObjectsFromJSON(shapeData.render);
+            scene.add(objectGroup);
+
+            // Create 4 orthographic cameras (Front, Left, Right, Back)
+            const frustumSize = 48;
+            const cameraDistance = 64;
+            const aspect = 1;
+            const cameras = [
+                new THREE.OrthographicCamera(-frustumSize * aspect, frustumSize * aspect, frustumSize, -frustumSize, 0.1, 1000), // Front
+                new THREE.OrthographicCamera(-frustumSize * aspect, frustumSize * aspect, frustumSize, -frustumSize, 0.1, 1000), // Left
+                new THREE.OrthographicCamera(-frustumSize * aspect, frustumSize * aspect, frustumSize, -frustumSize, 0.1, 1000), // Right
+                new THREE.OrthographicCamera(-frustumSize * aspect, frustumSize * aspect, frustumSize, -frustumSize, 0.1, 1000)  // Back
+            ];
+
+            // Position each camera at different angles
+            cameras[0].position.set(cameraDistance, cameraDistance, cameraDistance); // Front
+            cameras[1].position.set(-cameraDistance, cameraDistance, cameraDistance); // Left
+            cameras[2].position.set(cameraDistance, cameraDistance, -cameraDistance); // Right
+            cameras[3].position.set(-cameraDistance, cameraDistance, -cameraDistance); // Back
+
+            cameras.forEach(camera => camera.lookAt(0, 0, 0));
+
+            // Capture images
+            const images = [];
+            for (const camera of cameras) {
+                renderer.setRenderTarget(renderTarget);
+                renderer.render(scene, camera);
+
+                // Read pixels from render target
+                const buffer = new Uint8Array(size * size * 4);
+                renderer.readRenderTargetPixels(renderTarget, 0, 0, size, size, buffer);
+
+                // Flip the buffer vertically
+                const flippedBuffer = new Uint8Array(size * size * 4);
+                for (let y = 0; y < size; y++) {
+                    const srcRowStart = y * size * 4;
+                    const destRowStart = (size - 1 - y) * size * 4;
+                    flippedBuffer.set(buffer.subarray(srcRowStart, srcRowStart + size * 4), destRowStart);
+                }
+
+                const imageData = new ImageData(new Uint8ClampedArray(flippedBuffer), size, size);
+                const imageBitmap = await createImageBitmap(imageData);
+                images.push(imageBitmap);
+            }
+
+            // Cleanup
+            renderer.setRenderTarget(null);
+            renderer.dispose();
+            renderTarget.dispose();
+
+            return images;
+        }
+
+        /**
+         * Creates 3D objects from shape data.
+         * @param {Object} shapeData - The JSON object containing shape definitions.
+         * @returns {THREE.Group} - A group containing all 3D objects.
+         */
+        createObjectsFromJSON(shapeData) {
+            const group = new THREE.Group(); // Group to hold all shapes
+
+            shapeData.shapes.forEach(shape => {
+                let geometry, material, mesh;
+
+                // Create material with the specified color
+                material = new THREE.MeshStandardMaterial({ color: shape.color });
+
+                
+                // Create geometry based on shape type
+                if (shape.type === 'sphere') {
+                    geometry = new THREE.SphereGeometry(shape.size / 2, 32, 32);
+                }
+                else if (shape.type === 'cube') {
+                    geometry = new THREE.BoxGeometry(shape.size, shape.size, shape.size);
+                }
+                else if (shape.type === 'box') {
+                    geometry = new THREE.BoxGeometry(shape.width, shape.height, shape.depth || shape.width);
+                }
+                else if (shape.type === 'cylinder') {
+                    geometry = new THREE.CylinderGeometry(shape.size / 2, shape.size / 2, shape.height, 32);
+                }
+                else if (shape.type === 'cone') {
+                    geometry = new THREE.ConeGeometry(shape.size / 2, shape.height, 32);
+                }
+                else if (shape.type === 'torus') {
+                    geometry = new THREE.TorusGeometry(shape.size / 2, shape.tubeSize || shape.size / 6, 16, 100);
+                }
+                else if (shape.type === 'tetrahedron') {
+                    geometry = new THREE.TetrahedronGeometry(shape.size / 2);
+                }
+                
+                if (geometry) {
+                    const mesh = new THREE.Mesh(geometry, material);
+                    mesh.userData.isShape = true;
+                    
+                    // Position and rotation
+                    mesh.position.set(shape.x || 0, shape.y || 0, shape.z || 0);
+                    
+                    // Handle rotation (convert from degrees to radians)
+                    if (shape.rotationX) mesh.rotation.x = shape.rotationX * Math.PI / 180;
+                    if (shape.rotationY) mesh.rotation.y = shape.rotationY * Math.PI / 180;
+                    if (shape.rotationZ) mesh.rotation.z = shape.rotationZ * Math.PI / 180;
+                    
+                    group.add(mesh);
+                }
+            });
+
+            return group;
+        }
+        
+        createImage(config) {
+            const canvas = document.createElement('canvas');
+            const ctx = canvas.getContext('2d');
             
-            if (this.checkValidTowerPosition(x, y)) {
-                // Create the tower
-                let cost = towersConfig[this.state.selectedTowerType].cost;
-                let populationCost = towersConfig[this.state.selectedTowerType].population || 0;
+            
+            if (config.render) {
+                canvas.width = config.render.canvasWidth;
+                canvas.height = config.render.canvasHeight;
+                const centerX = canvas.width / 2;
+                const centerY = canvas.height / 2;
+
+                (config.render.shapes || []).forEach(shape => {
+                    ctx.save(); // Save current state
+                    ctx.translate(shape.x, shape.y); // Move origin to shape center
+                    ctx.rotate((shape.rotation || 0) * Math.PI / 180); // Rotate canvas
+
+                    ctx.fillStyle = shape.color;
+
+                    if (shape.type === 'circle') {
+                        ctx.beginPath();
+                        ctx.arc(0, 0, shape.size / 2, 0, Math.PI * 2);
+                        ctx.fill();
+                    } 
+                    else if (shape.type === 'square') {
+                        ctx.fillRect(-shape.size / 2, -shape.size / 2, shape.size, shape.size);
+                    } 
+                    else if (shape.type === 'rect') {
+                        ctx.fillRect(-shape.width / 2, -shape.height / 2, shape.width, shape.height);
+                    } 
+                    else if (shape.type === 'triangle') {
+                        ctx.beginPath();
+                        ctx.moveTo(0, -shape.size / 2);
+                        ctx.lineTo(-shape.size / 2, shape.size / 2);
+                        ctx.lineTo(shape.size / 2, shape.size / 2);
+                        ctx.closePath();
+                        ctx.fill();
+                    }
+
+                    ctx.restore(); // Restore original state
+                });
+            } else {
+                canvas.width = config.size;
+                canvas.height = config.size;
+                ctx.fillStyle = config.color;
+                if (config.isCircle) {
+                    ctx.beginPath();
+                    ctx.arc(config.size/2, config.size/2, config.size/2, 0, Math.PI * 2);
+                    ctx.fill();
+                } else {
+                    ctx.fillRect(0, 0, config.size, config.size);
+                }
+            }
+            return canvas;
+        }
+    }
+
+    class Effect { 
+        constructor(config, applyFn, amount) {
+            this.id = config.id;
+            this.title = config.title;
+            this.desc = config.desc;
+            this.lifeTime = config.lifeTime;
+            this.applyFn = applyFn;
+            this.amount = amount;    
+        }
+
+        update() {
+            this.lifeTime--;
+            if( this.lifeTime <= 0) return false;
+            return true;        
+        }
+
+        apply(s, add, mul) {
+            this.applyFn(s, add, mul, this.amount);
+        }
+    }
+    class Upgrade { 
+        constructor(id, title, desc, icon, appliesTo, condition, apply, onAcquire) {
+            this.id = id;
+            this.title = title;
+            this.desc = desc;
+            this.icon = icon;
+            this.appliesTo = appliesTo;
+            this.conditionFn = condition;
+            this.applyFn = apply;
+            this.onAcquire = onAcquire;        
+        }
+
+        canApply(gameState) {
+            return this.conditionFn(gameState);
+        }
+
+        apply(s, add, mul) {
+            this.applyFn(s, add, mul);
+        }
+    }
+
+    class Component {
+        constructor(game, parent) {
+            this.game = game;
+            this.parent = parent;
+        }
+        getComponent(type) {
+            return this.parent.getComponent(type);
+        }
+        update() {}
+        destroy() {}
+    }
+
+    class Renderer extends Component {
+        constructor(game, parent, image, offsetY) {
+            super(game, parent);
+            this.ctx = game.ctx;
+            this.image = image;        
+            this.lastX = 0;
+            this.lastY = 0;
+            this.currentFrame = 0;
+            this.offsetY = offsetY;
+        }
+        update() {
+            const dx = this.parent.position.x - this.lastX; // Change in x
+            const dy = this.parent.position.y - this.lastY; // Change in y
+
+            // Determine primary direction based on magnitude of movement
+            if (Math.abs(dx) > Math.abs(dy)) {
+                // Horizontal movement dominates
+                if (dx > 0) {
+                    this.currentFrame = 1; // Right
+                } else if (dx < 0) {
+                    this.currentFrame = 2; // Left
+                }
+            } else if (Math.abs(dy) >= Math.abs(dx)) {
+                // Vertical movement dominates or equal to horizontal
+                if (dy > 0) {
+                    this.currentFrame = 0; // Down
+                } else if (dy < 0) {
+                    this.currentFrame = 3; // Up
+                }
+            }
+
+            // Update last known position
+            this.lastX = this.parent.position.x;
+            this.lastY = this.parent.position.y;
+        }
+
+        drawOld() {        
+            if( this.image && this.image.length > this.currentFrame ){
+                this.ctx.drawImage(this.image[this.currentFrame], this.parent.position.x - this.image[this.currentFrame].width / 2, this.parent.position.y - this.image[this.currentFrame].width / 2);
+            }
+        }
+
+        draw() {
+            if (this.image && this.image.length > this.currentFrame) {
+                const pixelX = this.parent.position.x;
+                const pixelY = this.parent.position.y;
+
+                // Convert pixel to isometric
+                const isoPos = translator.pixelToIso(pixelX, pixelY);
+
+                const imgWidth = this.image[this.currentFrame].width;
+                const imgHeight = this.image[this.currentFrame].height;
                 
-                const finalCost = Math.floor(cost * this.state.stats.towerCostMod);
+                const drawX = isoPos.x - imgWidth / 2;
+                const drawY = isoPos.y - imgHeight / 2 + this.offsetY;
+
+                this.ctx.drawImage(this.image[this.currentFrame], drawX, drawY);
+
+            }
+        }
+      
+    }
+    
+    class RangeIndicator extends Component {
+        constructor(game, parent, image, offsetY) {
+            super(game, parent);
+            this.ctx = game.ctx;
+        }
+        draw() {
+
+            let statsComp = this.getComponent('stats');
+            if (statsComp && statsComp.stats.range) {
+                this.drawRangeIndicator(statsComp.stats.range);
+            }
+        }
+
+        drawRangeIndicator(range) {            
+            const pixelX = this.parent.position.x;
+            const pixelY = this.parent.position.y;
+            let gridPos = translator.pixelToGrid(pixelX, pixelY);
+            gridPos = translator.snapToGrid(gridPos.x, gridPos.y);
+            if( gridPos.x == this.game.state.mousePosition.gridX && gridPos.y == this.game.state.mousePosition.gridY ) {
+                const isoPos = translator.pixelToIso(pixelX, pixelY);
+                // Convert range from grid units to isometric pixel units
+                const isoRangeX = range;         // X-axis range remains roughly the same in isometric space
+                const isoRangeY = range * 0.5;   // Y-axis range is halved due to isometric compression
+
+                // Set styling for the range indicator
+                this.ctx.beginPath();
+                this.ctx.strokeStyle = 'rgba(255, 0, 0, 0.5)'; // Red with transparency
+                this.ctx.lineWidth = 2;
+
+                // Draw an ellipse to represent the range in isometric space
+                this.ctx.ellipse(
+                    isoPos.x,           // Center x in isometric coords
+                    isoPos.y,           // Center y in isometric coords
+                    isoRangeX,          // X radius (wider due to isometric projection)
+                    isoRangeY,          // Y radius (shorter due to flattening)
+                    0,                  // Rotation (none needed for isometric)
+                    0,                  // Start angle
+                    2 * Math.PI         // End angle (full circle)
+                );
+
+                this.ctx.stroke();
+                this.ctx.closePath();
+            }
+        }
+    }
+
+    class Leveler extends Component {
+        constructor(game, parent, level = 1) {
+            super(game, parent);
+            this.level = level;
+        }
+    }
+
+    class Explosion extends Component {
+        constructor(game, parent, radius) {
+            super(game, parent);
+            this.maxRadius = radius;
+            this.currentRadius = 0;
+            this.alpha = 1;
+        }
+
+        update() {
+            this.currentRadius += this.maxRadius * 0.1;
+            this.alpha -= 0.05;
+            if( this.alpha < 0 ) {
+                this.parent.destroy();
+            }
+        }
+
+        draw() {
+            const pixelX = this.parent.position.x;
+            const pixelY = this.parent.position.y;
+
+            // Convert pixel to isometric
+            const isoPos = translator.pixelToIso(pixelX, pixelY);
+            const isoRadiusX = this.currentRadius;         // X-axis range remains roughly the same in isometric space
+            const isoRadiusY = this.currentRadius * 0.5;   // Y-axis range is halved due to isometric compression
+
+            this.game.ctx.beginPath();
+            this.game.ctx.ellipse(
+                    isoPos.x,           // Center x in isometric coords
+                    isoPos.y,           // Center y in isometric coords
+                    isoRadiusX,          // X radius (wider due to isometric projection)
+                    isoRadiusY,          // Y radius (shorter due to flattening)
+                    0,                  // Rotation (none needed for isometric)
+                    0,                  // Start angle
+                    2 * Math.PI         // End angle (full circle)
+                );
+            this.game.ctx.fillStyle = `rgba(255, 200, 0, ${this.alpha * 0.5})`;
+            this.game.ctx.fill();
+
+            this.game.ctx.beginPath();
+            this.game.ctx.ellipse(
+                    isoPos.x,           // Center x in isometric coords
+                    isoPos.y,           // Center y in isometric coords
+                    isoRadiusX * .7,          // X radius (wider due to isometric projection)
+                    isoRadiusY * .7,          // Y radius (shorter due to flattening)
+                    0,                  // Rotation (none needed for isometric)
+                    0,                  // Start angle
+                    2 * Math.PI         // End angle (full circle)
+                );
+            this.game.ctx.fillStyle = `rgba(255, 100, 0, ${this.alpha})`;
+            this.game.ctx.fill();
+        
+        }
+    }
+
+    class LifeSpan extends Component {
+        constructor(game, parent, lifeSpan) {
+            super(game, parent);
+            this.lifeSpan = lifeSpan;
+        }
+        update() {        
+            if( this.lifeSpan > 0 ) {
+                this.lifeSpan--;
+            } else {
+                this.parent.destroy();
+            }
+        }
+    }
+
+    class Buildable extends Component {
+        constructor(game, parent) {
+            super(game, parent);
+            this.placed = false;
+        }
+    }
+
+    class PopulationBurden extends Component {
+        constructor(game, parent) {
+            super(game, parent);
+            this.stats = this.parent.getComponent('stats').stats;        
+        }
+        update() {
+            if(this.stats){ 
+                if( this.stats.population ) {
+                    this.game.state.stats.population += this.stats.population;
+                } 
+                if( this.stats.supply ) {
+                    this.game.state.stats.maxPopulation += this.stats.supply;
+                }
+            }
+        }
+    }
+
+    class Attacker extends Component {
+        constructor(game, parent) {
+            super(game, parent);     
+            this.stats = this.getComponent('stats').stats;    
+            this.level = 1;
+            this.target = null;
+            this.projectiles = [];  
+            this.cooldown = 0;
+        }
+
+        update() {
+
+            if (this.cooldown > 0) this.cooldown--;
+                    
+            // Find target if none
+            if (!this.target || this.target.getComponent('health').hp <= 0 || Math.hypot(this.target.position.x - this.parent.position.x, this.target.position.y - this.parent.position.y) > this.stats.range) {
+                this.findTarget();
+            }
+            
+            // Attack if ready and has target
+            if (this.cooldown <= 0 && this.target) {
+                this.attack();
+            }
+
+            if( this.cooldown <= 0 && this.stats.mineAmt > 0 ){
+                this.gather();
+            }
+            return true;
+        }
+        
+        findTarget() {
+            this.target = null;
+            let furthestEnemy = null;
+            let furthestDistance = -1;
+            const nearbyEnemies = this.game.spatialGrid.getNearbyEntities(
+                this.parent.position.x, 
+                this.parent.position.y, 
+                this.stats.range
+            );
+            for (let enemy of nearbyEnemies) {
+                let enemyHP = enemy.getComponent('health').hp;
+                let followPath = enemy.getComponent('followPath');
+                if (enemyHP <= 0) continue;          
+
+                // Target furthest enemy along path (closest to core)
+                if (followPath.pathIndex > furthestDistance) {
+                    furthestDistance = followPath.pathIndex;
+                    furthestEnemy = enemy;
+                }
                 
-                if (this.state.bloodShards >= finalCost && this.state.stats.population + populationCost <= this.state.stats.maxPopulation) {
-                    let towerX = parseInt(x / CONFIG.GRID_SIZE) * CONFIG.GRID_SIZE + CONFIG.GRID_SIZE / 2;
-                    let towerY = parseInt(y / CONFIG.GRID_SIZE) * CONFIG.GRID_SIZE + CONFIG.GRID_SIZE / 2;
-                    const tower =  this.createTower(towerX, towerY, this.state.selectedTowerType);
-                    tower.placed = true;
-                    this.state.bloodShards -= finalCost;
-                    this.state.previewTower.destroy();
-                    this.state.previewTower = null;
-                    // Clear selection
+            }
+            
+            this.target = furthestEnemy;
+        }
+
+        gather() {
+            this.game.state.bloodShards += this.stats.mineAmt;
+            this.cooldown = this.stats.attackSpeed;
+        }
+
+        attack() {
+            if (!this.target) return; 
+            this.launchProjectile();
+            this.cooldown = this.stats.attackSpeed;
+        }
+        
+        launchProjectile() {
+            let damage = this.stats.damage * this.game.state.stats.damageMultiplier;
+            let projectileType = this.stats.projectile;
+            // Critical hit calculation
+            const isCritical = Math.random() < this.stats.critChance;
+            if (isCritical) {
+                damage *= this.stats.critMultiplier;
+            } 
+            
+            this.game.createProjectile(projectileType, this.parent.position.x, this.parent.position.y, this.target, damage, isCritical, this.parent);
+                    
+        }
+
+    }
+
+    class Health extends Component { 
+        constructor( game, parent ) {
+            super(game, parent);        
+            let statsComp = parent.getComponent('stats');
+            this.hp = statsComp.stats.hp;
+            statsComp.addStat('maxHp', this.hp);
+        }
+        update() {        
+            if (this.hp <= 0){            
+                this.parent.destroy();
+            }
+        }
+    }
+
+    class EssenceBounty extends Component { 
+        constructor( game, parent ) {
+            super(game, parent);        
+            this.statsComp = parent.getComponent('stats');
+        }
+        destroy() {               
+            this.game.state.essence += this.statsComp.stats.essence * this.game.state.stats.essenceMultiplier;        
+        }
+    }
+
+    class SpacialGridEntity extends Component { 
+        update() {
+            this.game.spatialGrid.insert(this.parent);
+        }
+        destroy() {
+            this.game.spatialGrid.remove(this.parent);
+        }
+    }
+
+    class Stats extends Component { 
+        constructor( game, parent, type, stats ) {
+            super(game, parent);
+            this.type = type;
+            this.stats = {...stats};
+            this.defaultStats = {...this.stats};
+            this.activeEffects = {};
+        }
+        update() {
+            this.stats = {...this.defaultStats};
+            this.applyEffects();
+            this.applyUpgrades();
+        }
+        addStat(statName, statValue) {
+            this.stats[statName] = statValue;
+            this.defaultStats[statName] = statValue;
+        }
+        addEffect(effectConfig, effectFn, effectAmt) {        
+            this.activeEffects[effectConfig.id] = new Effect( effectConfig, effectFn, effectAmt );
+        }
+        applyEffects() {
+            let effectArr = [];
+            for(let effectId in this.activeEffects) {
+                if(this.activeEffects[effectId] && this.activeEffects[effectId].update()){
+                    effectArr.push(this.activeEffects[effectId]);
+                } else {
+                    this.activeEffects[effectId] = undefined;
+                }
+            }        
+            
+            calculateStats(this.stats, effectArr);
+        }
+        
+        applyUpgrades() {
+            calculateStats(this.stats, this.game.state.activeUpgrades[this.type]);        
+        }
+    }
+
+    class FollowPath extends Component {
+        constructor(game, parent, pathIndex = 0) {
+            super(game, parent);
+            this.pathIndex = pathIndex;
+            this.x = this.game.state.path[this.pathIndex].x;
+            this.y = this.game.state.path[this.pathIndex].y;
+            this.parent.position = { x: this.x * CONFIG.GRID_SIZE + CONFIG.GRID_SIZE / 2, y: this.y * CONFIG.GRID_SIZE + CONFIG.GRID_SIZE / 2 };        
+        }
+
+        update() {
+            this.stats = this.getComponent('stats').stats;
+            if (this.pathIndex < this.game.state.path.length - 1) {
+                const target = this.game.state.path[this.pathIndex + 1];
+                const dx = target.x * CONFIG.GRID_SIZE + (CONFIG.GRID_SIZE / 2) - this.parent.position.x;
+                const dy = target.y * CONFIG.GRID_SIZE + (CONFIG.GRID_SIZE / 2) - this.parent.position.y;
+                const dist = Math.hypot(dx, dy);
+
+                if (dist > this.stats.speed) {
+                    this.parent.position.x += (dx / dist) * this.stats.speed;
+                    this.parent.position.y += (dy / dist) * this.stats.speed;
+                } else {
+                    this.pathIndex++;
+                }
+                this.x = parseInt(this.parent.position.x / CONFIG.GRID_SIZE);
+                this.y = parseInt(this.parent.position.y / CONFIG.GRID_SIZE);
+            } else {
+                this.game.state.bloodCoreHP -= this.stats.value;
+                this.parent.destroy();
+                return false;
+            }
+        }
+    }
+
+    class Projectile extends Component {
+        constructor(game, parent, type, owner, target, stats) {
+            super(game, parent);
+            this.type = type;
+            this.owner = owner;
+            this.target = target;
+            this.stats = stats;
+            this.piercedEnemies = [];
+            this.ownerStats = this.owner.getComponent("stats").stats;
+            
+        }
+
+        update() {
+        
+            // Remove if target is gone
+            if (!this.target || this.target.destroyed) {
+                this.parent.destroy();
+            }
+            // Move towards target
+            const dx = this.target.position.x - this.parent.position.x;
+            const dy = this.target.position.y - this.parent.position.y;
+            const distSq = dx * dx + dy * dy;
+            
+            // Hit detection
+            if (distSq < 15 * 15 ) {
+                let targetHealth = this.target.getComponent("health");
+                if (this.stats.splashRadius > 0) {
+                    const nearbyEnemies = this.game.spatialGrid.getNearbyEntities(
+                        this.parent.position.x, 
+                        this.parent.position.y, 
+                        this.stats.splashRadius
+                    );
+                    // Process only relevant enemies
+                    for (const enemy of nearbyEnemies) {
+                        if (enemy.isDead) continue;
+                        let enemyHealth = enemy.getComponent("health");
+                        let enemyStats = enemy.getComponent("stats");
+                        const dx = enemy.position.x - this.target.position.x;
+                        const dy = enemy.position.y - this.target.position.y;
+                        const distSq1 = dx * dx + dy * dy;
+                        
+                        // Compare with squared splash radius for efficiency
+                        const splashRadiusSq = this.stats.splashRadius * this.stats.splashRadius;
+                        if (distSq1 <= splashRadiusSq) {
+                            // Calculate actual distance only when needed
+                            const splashDist = Math.sqrt(distSq1);
+                            enemyHealth.hp -= (this.stats.damage * (1 - (splashDist / this.stats.splashRadius) * 0.5));                     
+
+                            if( this.ownerStats.slowEffect ) {
+                                enemyStats.addEffect(gameConfig.effects.slow, effects.slow, this.ownerStats.slowEffect);
+                            }
+                        }
+                    }
+                    let explosion = new Entity(this.game, this.parent.position.x, this.parent.position.y);
+                    explosion.addRenderer(Explosion, this.stats.splashRadius);
+                    this.game.state.addEntity(explosion);
+                } else {
+                    // Apply damage
+                    targetHealth.hp -= this.stats.damage;
+
+                    if( this.ownerStats.slowEffect ) {
+                        this.target.addEffect(gameConfig.effects.slow, effects.slow, this.ownerStats.slowEffect );
+                    }
+                }
+
+                //summon skeleton
+                if (this.ownerStats.summonChance > 0 && 
+                    targetHealth.hp <= 0 && 
+                    Math.random() < this.ownerStats.summonChance - 1) {
+                        this.game.createSummon(this.target.position.x, this.target.position.y, this.ownerStats.summonType);
+                }
+
+                // Apply tower special effects
+                if (this.ownerStats.leech > 0) {
+                    const healing = this.stats.damage * this.ownerStats.leech * this.game.state.stats.healingMultiplier;
+                    this.game.state.bloodCoreHP = Math.min(this.game.state.stats.maxBloodCoreHP, this.game.state.bloodCoreHP + healing);
+                }
+                if (this.ownerStats.thief && this.ownerStats.thief != 0) {
+                    const stealAmt = this.stats.damage * this.ownerStats.thief * this.game.state.stats.bloodShardMultiplier;
+                    this.game.state.bloodShards += stealAmt;
+                }
+                // Piercing logic
+                if (this.stats.piercing > 0 && this.piercedEnemies.length < this.stats.piercing) {
+                    this.piercedEnemies.push(this.target);
+                    const nearbyEnemies = this.game.spatialGrid.getNearbyEntities(
+                        this.parent.position.x, 
+                        this.parent.position.y, 
+                        this.stats.range
+                    );
+                    // Find a new target
+                    let newTarget = null;
+                    for (let enemy of nearbyEnemies) {
+                        if (!enemy.isDead && !this.piercedEnemies.includes(enemy)) {
+                            const dx = enemy.position.x - this.parent.position.x;
+                            const dy = enemy.position.y - this.parent.position.y;
+                            const distSq2 = dx * dx + dy * dy;
+                            if (distSq2 < this.ownerStats.range * this.ownerStats.range) {
+                                newTarget = enemy;
+                                break;
+                            }
+                        }
+                    }
+                    
+                    if (newTarget) {
+                        this.target = newTarget;   
+                        return;                 
+                    } 
+                }
+                
+                this.parent.destroy();
+            }
+            
+            // Move projectile
+            let dist = Math.sqrt(distSq);
+            const speed = this.stats.speed * this.game.state.timeScale;
+            this.parent.position.x += (dx / dist) * speed;
+            this.parent.position.y += (dy / dist) * speed;
+        }
+    }
+
+    class SpatialGrid {
+        constructor(worldWidth, worldHeight, cellSize) {
+            this.cellSize = cellSize;
+            this.cols = Math.ceil(worldWidth / cellSize);
+            this.rows = Math.ceil(worldHeight / cellSize);
+            this.grid = new Array(this.cols * this.rows).fill().map(() => []);
+            
+            // Track which cell each entity is in
+            this.entityCells = new Map(); // Map of entity -> cell index
+        }
+        
+        getIndex(x, y) {
+            // Clamp coordinates to world boundaries
+            const clampedX = Math.max(0, Math.min(x, this.cols * this.cellSize - 1));
+            const clampedY = Math.max(0, Math.min(y, this.rows * this.cellSize - 1));
+            
+            const col = Math.floor(clampedX / this.cellSize);
+            const row = Math.floor(clampedY / this.cellSize);
+            return row * this.cols + col;
+        }
+
+        insert(entity) {
+            const newIndex = this.getIndex(entity.position.x, entity.position.y);
+            const oldIndex = this.entityCells.get(entity);
+            
+            // If entity moved to a new cell
+            if (oldIndex !== newIndex) {
+                // Remove from old cell if it exists
+                if (oldIndex !== undefined) {
+                    const oldCell = this.grid[oldIndex];
+                    const entityIndex = oldCell.indexOf(entity);
+                    if (entityIndex !== -1) {
+                        oldCell.splice(entityIndex, 1);
+                    }
+                }
+                
+                // Add to new cell
+                if (newIndex >= 0 && newIndex < this.grid.length) {
+                    this.grid[newIndex].push(entity);
+                    this.entityCells.set(entity, newIndex);
+                }
+            }
+        }
+        
+        remove(entity) {
+            const index = this.entityCells.get(entity);
+            if (index !== undefined) {
+                const cell = this.grid[index];
+                const entityIndex = cell.indexOf(entity);
+                if (entityIndex !== -1) {
+                    cell.splice(entityIndex, 1);
+                }
+                this.entityCells.delete(entity);
+            }
+        }
+        
+        getNearbyEntities(x, y, radius) {
+            const nearby = [];
+            
+            // Get cells that could contain entities within radius
+            const startCol = Math.max(0, Math.floor((x - radius) / this.cellSize));
+            const endCol = Math.min(this.cols - 1, Math.floor((x + radius) / this.cellSize));
+            const startRow = Math.max(0, Math.floor((y - radius) / this.cellSize));
+            const endRow = Math.min(this.rows - 1, Math.floor((y + radius) / this.cellSize));
+            
+            // Collect potential candidates from relevant cells
+            for (let row = startRow; row <= endRow; row++) {
+                for (let col = startCol; col <= endCol; col++) {
+                    const index = row * this.cols + col;
+                    if (index >= 0 && index < this.grid.length) {
+                        this.grid[index].forEach(entity => nearby.push(entity));
+                    }
+                }
+            }
+            
+            return nearby;
+        }
+        
+        clear() {
+            this.grid = this.grid.map(() => []);
+            this.entityCells.clear();
+        }
+        
+        // Optional: Only clear but maintain all entity positions
+        // Useful for when reusing the same grid across updates
+        resetKeepingEntities() {
+            const allEntities = [];
+            this.entityCells.forEach((_, entity) => {
+                allEntities.push(entity);
+            });
+            
+            this.clear();
+            
+            allEntities.forEach(entity => {
+                this.insert(entity);
+            });
+        }
+    }
+
+
+    class ArrayTracker extends Component {
+        constructor(game, parent, arr) {
+            super(game, parent);
+            this.arr = arr;
+            this.game.state[this.arr].push(this.parent);
+        }
+
+        destroy(){
+            let index = this.game.state[this.arr].indexOf(this.parent);
+            this.game.state[this.arr].splice(index, 1);        
+        }
+    }    
+    
+    class Entity {
+        constructor(game, x, y) {
+            this.game = game;
+            this.position = { x: x, y: y };
+            this.components = [];
+            this.renderers = [];
+            this.destroyed = false;        
+            this.id = ++game.entityId;
+        }
+
+        getComponent(name) {
+            return this.components[name.toLowerCase()];
+        }
+        addRenderer(ComponentClass, ...params) {
+            let renderer = this.addComponent(ComponentClass, ...params);
+            this.renderers.push(renderer);
+            return renderer;
+        }
+        addComponent(ComponentClass, ...params) {
+            const component = new ComponentClass(this.game, this, ...params);
+            this.components[ComponentClass.name.toLowerCase()] = component;
+            return component;
+        }
+        removeComponent(component) {
+            let index = this.components.indexOf(component);
+            if( index >= 0 ) {
+                this.components.splice(index, 1);
+            }
+        }
+        update() {   
+    
+            for(let c in this.components) {
+                this.components[c].update();   
+                if(this.destroyed) break;
+            }
+            return !this.destroyed;
+        }
+        draw() {
+            if( this.renderers.length ) {
+                this.renderers.forEach( (r) => r.draw() );
+            }
+        }
+        destroy() {
+            this.destroyed = true;
+            for(let c in this.components) {
+                this.components[c].destroy();   
+            }
+        }
+    }
+
+    class GameRenderer {
+        constructor(game) {        
+            this.game = game;
+
+            this.ctx = game.canvas.getContext('2d');
+            this.selectedTowerType = null;
+            this.hoverCell = { x: -1, y: -1 };
+            this.showRange = false;
+        }
+
+        clearScreen() {        
+            this.ctx.clearRect(0, 0, CONFIG.CANVAS_WIDTH, CONFIG.CANVAS_HEIGHT);
+        }
+
+        render(state, map) {
+            this.clearScreen();
+            this.drawIsoMap(map.tileMap, map.path);    
+        }
+
+        drawMap(tileMap, path) {
+            this.ctx.fillStyle = '#2b2b3d';
+            this.ctx.fillRect(0, 0, CONFIG.CANVAS_WIDTH, CONFIG.CANVAS_HEIGHT);
+
+            for (let y = 0; y < CONFIG.ROWS; y++) {
+                for (let x = 0; x < CONFIG.COLS; x++) {
+                    const tile = tileMap[y][x];
+                    this.ctx.fillStyle = tile.type === 'grass' ? '#4a7c59' : tile.type === 'path' ? '#9c826a' : '#3d88c8';
+                    this.ctx.fillRect(x * CONFIG.GRID_SIZE, y * CONFIG.GRID_SIZE, CONFIG.GRID_SIZE, CONFIG.GRID_SIZE);
+                    this.ctx.strokeStyle = 'rgba(0, 0, 0, 0.1)';
+                    this.ctx.strokeRect(x * CONFIG.GRID_SIZE, y * CONFIG.GRID_SIZE, CONFIG.GRID_SIZE, CONFIG.GRID_SIZE);
+                }
+            }
+
+            this.ctx.strokeStyle = '#ffd166';
+            this.ctx.lineWidth = 2;
+            this.ctx.beginPath();
+            this.ctx.moveTo(path[0].x * CONFIG.GRID_SIZE + CONFIG.GRID_SIZE / 2, path[0].y * CONFIG.GRID_SIZE + CONFIG.GRID_SIZE / 2);
+            path.slice(1).forEach(p => this.ctx.lineTo(p.x * CONFIG.GRID_SIZE + CONFIG.GRID_SIZE / 2, p.y * CONFIG.GRID_SIZE + CONFIG.GRID_SIZE / 2));
+            this.ctx.stroke();
+        }
+
+        drawIsoMap(tileMap, path) {
+            this.ctx.fillStyle = '#2b2b3d';
+            this.ctx.fillRect(0, 0, CONFIG.CANVAS_WIDTH, CONFIG.CANVAS_HEIGHT);
+
+            // Isometric transformation constants
+            const tileWidth = CONFIG.GRID_SIZE;
+            const tileHeight = CONFIG.GRID_SIZE * 0.5; // Half height for isometric look
+            
+            for (let y = 0; y < CONFIG.ROWS; y++) {
+                for (let x = 0; x < CONFIG.COLS; x++) {
+                    const tile = tileMap[y][x];
+                    
+                    // Convert grid coordinates to isometric coordinates
+                    const isoX = (x - y) * (tileWidth / 2) + CONFIG.CANVAS_WIDTH / 2;
+                    const isoY = (x + y) * (tileHeight / 2);
+
+                    // Set fill color based on tile type
+                    this.ctx.fillStyle = tile.type === 'grass' ? '#4a7c59' : 
+                                    tile.type === 'path' ? '#9c826a' : 
+                                    '#3d88c8';
+
+                    // Draw isometric tile (diamond shape)
+                    this.ctx.beginPath();
+                    this.ctx.moveTo(isoX, isoY);                    // Top point
+                    this.ctx.lineTo(isoX + tileWidth / 2, isoY + tileHeight / 2);  // Right point
+                    this.ctx.lineTo(isoX, isoY + tileHeight);      // Bottom point
+                    this.ctx.lineTo(isoX - tileWidth / 2, isoY + tileHeight / 2);  // Left point
+                    this.ctx.closePath();
+                    this.ctx.fill();
+
+                    // Draw tile border
+                    this.ctx.strokeStyle = 'rgba(0, 0, 0, 0.1)';
+                    this.ctx.stroke();
+                }
+            }
+
+            // Draw path in isometric perspective
+            this.ctx.strokeStyle = '#ffd166';
+            this.ctx.lineWidth = 2;
+            this.ctx.beginPath();
+            
+            // Convert first path point to isometric coordinates
+            const firstIsoX = (path[0].x - path[0].y) * (tileWidth / 2) + CONFIG.CANVAS_WIDTH / 2;
+            const firstIsoY = (path[0].x + path[0].y) * (tileHeight / 2) + tileHeight / 2;
+            this.ctx.moveTo(firstIsoX, firstIsoY);
+
+            // Draw path lines
+            path.slice(1).forEach(p => {
+                const isoX = (p.x - p.y) * (tileWidth / 2) + CONFIG.CANVAS_WIDTH / 2;
+                const isoY = (p.x + p.y) * (tileHeight / 2) + tileHeight / 2;
+                this.ctx.lineTo(isoX, isoY);
+            });
+            
+            this.ctx.stroke();
+        }
+
+    }
+
+    class Game {
+        constructor() {
+            this.state = new GameState();
+            this.mapManager = new MapManager();
+            this.uiManager = new UIManager();
+            this.spatialGrid = new SpatialGrid(CONFIG.CANVAS_WIDTH, CONFIG.CANVAS_WIDTH, CONFIG.GRID_SIZE * 2);
+            this.entityId = 0;
+
+            this.canvas = document.getElementById("gameCanvas");
+            this.ctx = this.canvas.getContext("2d");
+            this.imageManager = new ImageManager();
+
+            this.canvas.setAttribute('width', CONFIG.CANVAS_WIDTH);
+            this.canvas.setAttribute('height', CONFIG.CANVAS_HEIGHT);
+
+            this.entitiesToAdd = [];
+            this.renderer = new GameRenderer(this);
+            this.uiManager.reset();
+        }
+
+        showUpgradeMenu() {
+            if (this.state.isLevelingUp) return; // Prevent re-triggering
+            
+            this.state.isLevelingUp = true;
+            this.state.isPaused = true;
+            
+            this.uiManager.upgradeMenu.style.display = 'block';
+            this.uiManager.overlay.style.display = 'block';
+            this.uiManager.upgradeOptionsDiv.innerHTML = '';
+            
+            // Filter upgrades based on conditions
+            const availableUpgrades = upgrades.filter(upgrade => upgrade.canApply(this.state));
+            
+
+            
+            // Choose 3 random upgrades
+            const options = [];
+            while (options.length < 3 && availableUpgrades.length > 0) {
+                const index = Math.floor(Math.random() * availableUpgrades.length);
+                options.push(availableUpgrades[index]);
+                availableUpgrades.splice(index, 1);
+            }
+            
+            // Create upgrade options
+            options.forEach(upgrade => {
+                const div = document.createElement('div');
+                div.className = 'upgrade-option';
+                div.innerHTML = `
+                    <div class="upgrade-icon">${upgrade.icon}</div>
+                    <div class="upgrade-desc">
+                        <div class="upgrade-title">${upgrade.title}</div>
+                        ${upgrade.desc}
+                    </div>
+                `;
+                div.onclick = () => this.selectUpgrade(upgrade);
+                this.uiManager.upgradeOptionsDiv.appendChild(div);
+            });
+        }
+
+        selectUpgrade(upgrade) {       
+            // Add to active upgrades list if not already
+            if (!this.state.activeUpgrades[upgrade.appliesTo]) {
+                this.state.activeUpgrades[upgrade.appliesTo] = [upgrade];
+            } else {
+                this.state.activeUpgrades[upgrade.appliesTo].push(upgrade);
+            }
+
+            this.applyActiveUpgrades();
+            if(upgrade.onAcquire) {
+                upgrade.onAcquire(this.state);
+            }
+            
+            upgradeMenu.style.display = 'none';
+            overlay.style.display = 'none';
+            
+            this.state.essence -= this.state.essenceToNextLevel;
+            this.state.level++;
+            this.state.essenceToNextLevel = Math.floor(this.state.essenceToNextLevel * 1.4);        
+            
+            this.state.isLevelingUp = false;
+            this.state.isPaused = false;
+        }
+
+
+        // Wave management
+        updateWave() {
+            // Spawn enemies
+            if (this.state.enemiesSpawned < this.state.enemiesInWave) {
+                this.state.spawnCounter++;
+                
+                if (this.state.spawnCounter >= this.state.spawnRate) {
+                    this.createEnemy(this.state.enemiesSpawned == parseInt(this.state.enemiesInWave / 2) ? "boss" : "");//spawn boss halfway through
+                    this.state.enemiesSpawned++;
+                    this.state.spawnCounter = 0;
+                    
+                    // Update wave progress
+                    waveProgress.style.width = (this.state.enemiesSpawned / this.state.enemiesInWave * 100) + '%';
+                }
+            } 
+            // Move to next wave if all enemies defeated
+            else if (this.state.enemies.length === 0 && this.state.enemiesSpawned >= this.state.enemiesInWave) {
+                this.state.waveTimer++;
+                
+                if (this.state.waveTimer >= this.state.waveDelay) {
+                    this.startNextWave();
+                }
+            }
+        }
+
+        startNextWave() {
+            this.state.wave++;
+            waveDisplay.textContent = this.state.wave;
+            
+            // Check for victory
+            if (this.state.wave > this.state.maxWaves) {
+                this.gameVictory();
+                return;
+            }
+            
+            this.state.enemiesInWave = 10 * (this.state.wave * 2);
+            this.state.enemiesSpawned = 0;
+            this.state.spawnRate = Math.max(10, 60 - (this.state.wave * 3));
+            this.state.spawnCounter = 0;
+            this.state.waveTimer = 0;
+            
+            // Reset wave progress bar
+            waveProgress.style.width = '0%';
+        }
+
+        applyActiveUpgrades() {
+            this.state.stats = {...this.state.defaultStats};
+            calculateStats(this.state.stats, this.state.activeUpgrades['global']);    
+        }
+    
+        // Tower placement system
+        setupTowerPlacement() {
+            let endY = parseInt(CONFIG.ROWS / 2) * CONFIG.GRID_SIZE + CONFIG.GRID_SIZE / 2;
+            let endX = (CONFIG.COLS - 1) * CONFIG.GRID_SIZE + CONFIG.GRID_SIZE / 2;
+
+            const keep =  this.createTower(endX, endY, 'keep');
+            keep.placed = true;
+            const towerButtons = document.querySelectorAll('.tower-option');
+            towerButtons.forEach(button => {
+                button.addEventListener('click', () => {
+                    if( this.state.isPaused ) return;
+                    const type = button.getAttribute('data-type');
+                    let cost = gameConfig.towers[type].cost;
+                    const finalCost = Math.floor(cost * this.state.stats.towerCostMod);
+                    
+                    let populationCost = gameConfig.towers[type].population || 0;
+                    if (this.state.bloodShards >= finalCost && this.state.stats.population + populationCost <= this.state.stats.maxPopulation) {
+                        this.state.selectedTowerType = type;
+                        if(this.state.previewTower) {
+                            this.state.previewTower.destroy();
+                        }
+                        this.state.previewTower = this.createPreviewTower(-100, -100, this.state.selectedTowerType, true);
+                    }
+                });
+                
+                // Show tooltip with info
+                button.addEventListener('mouseover', (e) => {
+                    const type = button.getAttribute('data-type');
+                    let info = gameConfig.towers[type].info;
+                    
+                    this.showTooltip(e.clientX, e.clientY, info);
+                });
+                
+                button.addEventListener('mouseout', () => {
+                    this.hideTooltip();
+                });
+            });
+            
+            this.canvas.addEventListener('mousemove', (e) => {
+                if (!this.state.selectedTowerType && !this.state.towers.length) return;
+
+                const rect = this.canvas.getBoundingClientRect();
+                const mouseX = e.clientX - rect.left;
+                const mouseY = e.clientY - rect.top;
+                const gridPos = translator.isoToGrid(mouseX, mouseY);
+                const snappedGrid = translator.snapToGrid(gridPos.x, gridPos.y);
+                const isoSnappedGridPos = translator.gridToIso(snappedGrid.x, snappedGrid.y);
+                const pixelIsoPos = translator.pixelToIso( mouseX, mouseY );
+                this.state.mousePosition = { x: mouseX, y: mouseY, isoX: pixelIsoPos.x, isoY: pixelIsoPos.y, gridX: snappedGrid.x, gridY: snappedGrid.y };
+
+
+                if (this.state.selectedTowerType && this.state.previewTower) {
+                    const snappedPixelPos = translator.isoToPixel(isoSnappedGridPos.x, isoSnappedGridPos.y); // If checkValidTowerPosition needs pixels
+                    this.state.previewTower.position.x = snappedPixelPos.x + CONFIG.GRID_SIZE / 2;
+                    this.state.previewTower.position.y = snappedPixelPos.y + CONFIG.GRID_SIZE / 2; // Adjust if centering needed
+                    const isValidPosition = this.checkValidTowerPosition(snappedPixelPos.x, snappedPixelPos.y);
+                    this.canvas.style.cursor = isValidPosition ? 'pointer' : 'not-allowed';
+                }
+
+                let hoveredTower = null;
+                for (const tower of this.state.towers) {
+                    const towerIso = translator.pixelToIso(tower.x, tower.y);
+                    const dist = Math.hypot(towerIso.x - mouseX, towerIso.y + translator.tileHeight / 2 - mouseY);
+                    if (dist < 20) {
+                        hoveredTower = tower;
+                        break;
+                    }
+                }
+
+                if (hoveredTower) {
+                    let info = `${hoveredTower.type} (Level ${hoveredTower.level})\n`;
+                    info += `Damage: ${Math.round(hoveredTower.stats.damage * this.state.stats.damageMultiplier * 10) / 10}\n`;
+                    info += `Attack Speed: ${Math.round(1000 / hoveredTower.stats.attackSpeed)} per sec\n`;
+                    info += `Range: ${hoveredTower.stats.range}\n`;
+                    info += `Crit Chance: ${Math.round(hoveredTower.stats.critChance * 100)}%\n`;
+                    if (hoveredTower.stats.leech > 0) {
+                        info += `Life Leech: ${Math.round(hoveredTower.stats.leech * 100 * this.state.stats.healingMultiplier) / 100} HP per hit\n`;
+                    }
+                    if (hoveredTower.stats.piercing > 0) {
+                        info += `Piercing: ${hoveredTower.stats.piercing} enemies\n`;
+                    }
+                    if (hoveredTower.stats.summonChance > 0) {
+                        info += `Summon Chance: ${Math.round(hoveredTower.stats.summonChance * 100)}%\n`;
+                    }
+
+                    this.showTooltip(e.clientX, e.clientY, info);
+                    hoveredTower.showRange = true;
+                } else {
+                    this.hideTooltip();
+                    this.state.towers.forEach(t => t.showRange = false);
+                }
+            });
+
+            this.canvas.addEventListener('mouseout', () => {
+                this.hideTooltip();
+            });
+            this.canvas.addEventListener('click', (e) => {
+                if (!this.state.selectedTowerType) return;
+                
+                const rect = this.canvas.getBoundingClientRect();
+                const mouseX = e.clientX - rect.left;
+                const mouseY = e.clientY - rect.top;
+
+                // Convert mouse (isometric pixel) to grid
+                const gridPos = translator.isoToGrid(mouseX, mouseY);
+                const snappedGrid = translator.snapToGrid(gridPos.x, gridPos.y);
+
+                // Convert snapped grid back to isometric for preview
+                const isoSnappedGridPos = translator.gridToIso(snappedGrid.x, snappedGrid.y); 
+                const snappedPixelPos = translator.isoToPixel(isoSnappedGridPos.x, isoSnappedGridPos.y); // If checkValidTowerPosition needs pixels
+                
+                if (this.checkValidTowerPosition(snappedPixelPos.x + CONFIG.GRID_SIZE / 2, snappedPixelPos.y + CONFIG.GRID_SIZE / 2)) {
+                    // Create the tower
+                    let cost = gameConfig.towers[this.state.selectedTowerType].cost;
+                    let populationCost = gameConfig.towers[this.state.selectedTowerType].population || 0;
+                    
+                    const finalCost = Math.floor(cost * this.state.stats.towerCostMod);
+                    
+                    if (this.state.bloodShards >= finalCost && this.state.stats.population + populationCost <= this.state.stats.maxPopulation) {
+                        const tower = this.createTower(snappedPixelPos.x + CONFIG.GRID_SIZE / 2, snappedPixelPos.y + CONFIG.GRID_SIZE / 2, this.state.selectedTowerType);
+                        tower.placed = true;
+                        this.state.bloodShards -= finalCost;
+                        this.state.previewTower.destroy();
+                        this.state.previewTower = null;
+                        // Clear selection
+                        this.state.selectedTowerType = null;
+                        this.canvas.style.cursor = 'default';
+                    }
+                }
+            });
+            
+            // Cancel tower placement with right click
+            this.canvas.addEventListener('contextmenu', (e) => {
+                e.preventDefault();
+                if (this.state.selectedTowerType) {
                     this.state.selectedTowerType = null;
                     this.canvas.style.cursor = 'default';
                 }
-            }
-        });
-        
-        // Cancel tower placement with right click
-        this.canvas.addEventListener('contextmenu', (e) => {
-            e.preventDefault();
-            if (this.state.selectedTowerType) {
-                this.state.selectedTowerType = null;
-                this.canvas.style.cursor = 'default';
-            }
-        });
-    }
+            });
+        }
 
-    checkValidTowerPosition(x, y) {
-        // Check if too close to path
-        for (let i = 0; i < this.state.path.length - 1; i++) {
-            const p1 = this.state.path[i];
-            const p2 = this.state.path[i + 1];
+        checkValidTowerPosition(posX, posY) {
+            // Check if too close to path
+            for (let i = 0; i < this.state.path.length - 1; i++) {
+                const p1 = this.state.path[i];
+                
+                // Calculate distance from point to line segment
+                const dist = Math.hypot(posX - p1.x, posY - p1.y);
+                if (dist < CONFIG.GRID_SIZE) return false;
+            }
             
-            // Calculate distance from point to line segment
-            const distance = this.distToSegment(x, y, p1.x, p1.y, p2.x, p2.y);
-            if (distance < 30) return false;
-        }
-        
-        // Check if too close to other towers
-        for (const tower of this.state.towers) {
-            const dist = Math.hypot(tower.x - x, tower.y - y);
-            if (dist < 40) return false;
-        }
+            // Check if too close to other towers
+            for (const tower of this.state.towers) {
                 
-        return true;
-    }
-
-    // Calculate distance from point to line segment (for path collision)
-    distToSegment(x, y, x1, y1, x2, y2) {
-        const A = x - x1;
-        const B = y - y1;
-        const C = x2 - x1;
-        const D = y2 - y1;
-        
-        const dot = A * C + B * D;
-        const len_sq = C * C + D * D;
-        let param = -1;
-        
-        if (len_sq !== 0) param = dot / len_sq;
-        
-        let xx, yy;
-        
-        if (param < 0) {
-            xx = x1;
-            yy = y1;
-        } else if (param > 1) {
-            xx = x2;
-            yy = y2;
-        } else {
-            xx = x1 + param * C;
-            yy = y1 + param * D;
-        }
-        
-        const dx = x - xx;
-        const dy = y - yy;
-        
-        return Math.sqrt(dx * dx + dy * dy);
-    }
-
-    // Game-over and reset functions
-    gameOver() {
-        this.state.gameOver = true;
-        this.state.isPaused = true;
-        gameOverWave.textContent = this.state.wave;
-        gameOverMenu.style.display = 'block';
-        overlay.style.display = 'block';
-    }
-
-    gameVictory() {
-        this.state.victory = true;
-        this.state.isPaused = true;
-        victoryMenu.style.display = 'block';
-        overlay.style.display = 'block';
-    }
-
-    // Tooltip system
-    showTooltip(x, y, text) {
-        tooltip.style.display = 'block';
-        tooltip.style.left = (x + 10) + 'px';
-        tooltip.style.top = (y + 10) + 'px';
-        tooltip.textContent = text;
-    }
-
-    hideTooltip() {
-        tooltip.style.display = 'none';
-    }
-
-    // Game Loop
-    update() {
-        if (this.state.gameOver || this.state.victory || this.state.isLevelingUp) return;
-        
-        this.applyActiveUpgrades();
-        
-        let entitiesToRemove = [];
-        for( let i = this.state.entities.length - 1; i >= 0; i-- ) {
-            let e = this.state.entities[i];
-            let result = e.update();
-            if( !result ) {               
-                this.state.entities.splice(i, 1);
+                const towerGridPos = translator.isoToGrid(tower.position.x, tower.position.y);
+                const dist = Math.hypot(towerGridPos.x - posX, towerGridPos.y - posY);
+                if (dist < CONFIG.GRID_SIZE) return false;
             }
-            e.draw();
-        }   
-
-        this.entitiesToAdd.forEach((entity) => this.state.addEntity(entity));
-        this.entitiesToAdd = [];
-        // Update wave status
-        this.updateWave();
-        // Level Up check
-        if (this.state.essence >= this.state.essenceToNextLevel && !this.state.isLevelingUp) {
-            this.showUpgradeMenu();
+                    
+            return true;
         }
-        
-        // Game over check
-        if (this.state.bloodCoreHP <= 0 && !this.state.gameOver) {
-            this.gameOver();
-        }      
-    }
-
-    // Draw function
-    draw() {
-                
-        this.drawStats();  
-
-        // Draw wave timer
-        if (this.state.enemies.length === 0 && this.state.enemiesSpawned >= this.state.enemiesInWave && !this.state.victory) {
-            const countdown = Math.ceil((this.state.waveDelay - this.state.waveTimer) / 60);
-            this.ctx.fillStyle = 'white';
-            this.ctx.font = '20px Arial';
-            this.ctx.textAlign = 'center';
-            this.ctx.fillText(`Next Wave in ${countdown}...`, this.canvas.width / 2, 50);
+        // Game-over and reset functions
+        gameOver() {
+            this.state.gameOver = true;
+            this.state.isPaused = true;
+            gameOverWave.textContent = this.state.wave;
+            gameOverMenu.style.display = 'block';
+            overlay.style.display = 'block';
         }
-    }
-    // Stats updating
-    drawStats() {
-        this.uiManager.shardsDisplay.textContent = Math.floor(this.state.bloodShards);
-        this.uiManager.essenceDisplay.textContent = Math.floor(this.state.essence);
-        this.uiManager.essenceNeededDisplay.textContent = Math.floor(this.state.essenceToNextLevel);
-        this.uiManager.hpDisplay.textContent = Math.floor(this.state.bloodCoreHP);
-        this.uiManager.populationDisplay.textContent = Math.floor(this.state.stats.population);
-        this.uiManager.maxPopulationDisplay.textContent = Math.floor(this.state.stats.maxPopulation);     
-    }
-    // Drawing the path
-    drawPath() {
-        this.ctx.strokeStyle = 'rgba(100, 0, 0, 0.5)';
-        this.ctx.lineWidth = 30;
-        this.ctx.beginPath();
-        this.ctx.moveTo(this.state.path[0].x, this.state.path[0].y);
-        
-        for (let i = 1; i < this.state.path.length; i++) {
-            this.ctx.lineTo(this.state.path[i].x, this.state.path[i].y);
-        }
-        
-        this.ctx.stroke();
-        
-        // Draw path borders
-        this.ctx.strokeStyle = 'rgba(150, 0, 0, 0.7)';
-        this.ctx.lineWidth = 2;
-        
-        this.ctx.beginPath();
-        this.ctx.moveTo(this.state.path[0].x, this.state.path[0].y - 15);
-        for (let i = 1; i < this.state.path.length; i++) {
-            this.ctx.lineTo(this.state.path[i].x, this.state.path[i].y - 15);
-        }
-        this.ctx.stroke();
-        
-        this.ctx.beginPath();
-        this.ctx.moveTo(this.state.path[0].x, this.state.path[0].y + 15);
-        for (let i = 1; i < this.state.path.length; i++) {
-            this.ctx.lineTo(this.state.path[i].x, this.state.this.state.path[i].y + 15);
-        }
-        this.ctx.stroke();
-    }
 
-    // Main Loop
-    gameLoop() {
-        this.renderer.render(this.state, { tileMap: this.state.tileMap, path: this.state.path });
-        if (!this.state.isPaused) {
-            this.update();
-        } 
-        this.draw();
-    }
+        gameVictory() {
+            this.state.victory = true;
+            this.state.isPaused = true;
+            victoryMenu.style.display = 'block';
+            overlay.style.display = 'block';
+        }
 
-    addEntity(entity) {
-        this.entitiesToAdd.push(entity);
-    }
-    // Initialize the game
-    init() {
-        const { tileMap, path } = this.mapManager.generateMap();
-        this.state.tileMap = tileMap;
-        this.state.path = path;
-        this.reset();            
-        game.gameInterval = setInterval(() => { game.gameLoop(); }, 10);
-        this.state.isPaused = true;
-        
-        this.setupTowerPlacement();
-        this.drawStats();
-    }
-    reset() { 
-        this.state.reset();
-        this.uiManager.reset();
-    }
-    createProjectile(type, x, y, target, damage, isCritical, owner) {
-        let ownerStats = owner.getComponent('stats').stats;
-        let stats = {            
-            speed: 5,
-            damage: damage,
-            isCritical: isCritical,
-            piercing: ownerStats.piercing || 0,
-            splashRadius: ownerStats.splashRadius || 0
-        };
+        // Tooltip system
+        showTooltip(x, y, text) {
+            tooltip.style.display = 'block';
+            tooltip.style.left = (x + 10) + 'px';
+            tooltip.style.top = (y + 10) + 'px';
+            tooltip.textContent = text;
+        }
 
-        let entity = new Entity(this, x, y);
-        entity.addRenderer(Renderer, this.imageManager.getImage("projectile", type));
-        entity.addComponent(Stats, type, stats);
-        entity.addComponent(Projectile, type, owner, target, stats );
-        this.addEntity(entity);     
-    }
-    createTower(x, y, type) {
-        let stats = towersConfig[type];
-        let entity = new Entity(this, x, y);
-        entity.addRenderer(Renderer, this.imageManager.getImage("tower", type));
-        entity.addComponent(Stats, type, stats);
-        entity.addComponent(Leveler);
-        entity.addComponent(Buildable);
-        entity.addComponent(PopulationBurden);
-        entity.addComponent(Attacker);
-        entity.addComponent(ArrayTracker, "towers");
-        
-        this.addEntity(entity);      
-        return entity;  
-    }
-    createPreviewTower(x, y, type) {
-        let stats = towersConfig[type];
-        let entity = new Entity(this, x, y);
-        entity.addRenderer(Renderer, this.imageManager.getImage("tower", type));
-        entity.addComponent(Stats, type, stats);
-        entity.addComponent(Buildable);
-        
-        this.addEntity(entity);        
-        return entity;
-    }
-    removeSummon(summon) {
-        this.state.removeEntity(summon);
-    }
-    createSummon(x, y, type, isPreview) {
-        const TowerClass = towerConstructors[type];
-        if (TowerClass) {
-            const tower = new TowerClass(this.state, x, y, this.imageManager.getImage('tower', type));
-            if(!isPreview) {
-                this.addEntity(tower);
+        hideTooltip() {
+            tooltip.style.display = 'none';
+        }
+
+        // Game Loop
+        update() {
+            if (this.state.gameOver || this.state.victory || this.state.isLevelingUp) return;
+            
+            this.applyActiveUpgrades();
+            this.state.entities.sort((a, b) => {
+                return (b.position.y * CONFIG.COLS + b.position.x) - (a.position.y * CONFIG.COLS + a.position.x)
+            });
+            let entitiesToRemove = [];
+
+            for( let i = this.state.entities.length - 1; i >= 0; i-- ) {
+                let e = this.state.entities[i];
+                let result = e.update();
+                if( !result ) {               
+                    this.state.entities.splice(i, 1);
+                }
+                e.draw();
+            }   
+
+            this.entitiesToAdd.forEach((entity) => this.state.addEntity(entity));
+            this.entitiesToAdd = [];
+            // Update wave status
+            this.updateWave();
+            // Level Up check
+            if (this.state.essence >= this.state.essenceToNextLevel && !this.state.isLevelingUp) {
+                this.showUpgradeMenu();
             }
-            return tower;
+            
+            // Game over check
+            if (this.state.bloodCoreHP <= 0 && !this.state.gameOver) {
+                this.gameOver();
+            }      
         }
-        throw new Error(`Unknown tower type: ${type}`);
-    }
-    createEnemy() {        
-        let types = [];
-        for(let type in enemiesConfig) {
-            types.push(type);
+
+        // Draw function
+        draw() {
+                    
+            this.drawStats();  
+
+            // Draw wave timer
+            if (this.state.enemies.length === 0 && this.state.enemiesSpawned >= this.state.enemiesInWave && !this.state.victory) {
+                const countdown = Math.ceil((this.state.waveDelay - this.state.waveTimer) / 60);
+                this.ctx.fillStyle = 'white';
+                this.ctx.font = '20px Arial';
+                this.ctx.textAlign = 'center';
+                this.ctx.fillText(`Next Wave in ${countdown}...`, this.canvas.width / 2, 50);
+            }
         }
-        let type = types[Math.floor(Math.random() * types.length)];
-        let stats = enemiesConfig[type];
-        let entity = new Entity(this, 0, 0);
-        entity.addRenderer(Renderer, this.imageManager.getImage("enemy", type));
-        entity.addComponent(Stats, type, stats);
-        entity.addComponent(Health);
-        entity.addComponent(EssenceBounty);
-        entity.addComponent(FollowPath);
-        entity.addComponent(SpacialGridEntity);
-        entity.addComponent(ArrayTracker, "enemies");
-        this.addEntity(entity);
-    }
-    applyUpgrade(upgradeId) {
-        const upgrade = upgrades.find(u => u.id === upgradeId);
-        if (upgrade && upgrade.canApply(this.state)) {
-            upgrade.apply(this.state);
-            this.uiManager.updateUpgrades(); // Hypothetical UI update
+        // Stats updating
+        drawStats() {
+            this.uiManager.shardsDisplay.textContent = Math.floor(this.state.bloodShards);
+            this.uiManager.essenceDisplay.textContent = Math.floor(this.state.essence);
+            this.uiManager.essenceNeededDisplay.textContent = Math.floor(this.state.essenceToNextLevel);
+            this.uiManager.hpDisplay.textContent = Math.floor(this.state.bloodCoreHP);
+            this.uiManager.populationDisplay.textContent = Math.floor(this.state.stats.population);
+            this.uiManager.maxPopulationDisplay.textContent = Math.floor(this.state.stats.maxPopulation);     
+        }
+        // Drawing the path
+        drawPath() {
+            this.ctx.strokeStyle = 'rgba(100, 0, 0, 0.5)';
+            this.ctx.lineWidth = 30;
+            this.ctx.beginPath();
+            this.ctx.moveTo(this.state.path[0].x, this.state.path[0].y);
+            
+            for (let i = 1; i < this.state.path.length; i++) {
+                this.ctx.lineTo(this.state.path[i].x, this.state.path[i].y);
+            }
+            
+            this.ctx.stroke();
+            
+            // Draw path borders
+            this.ctx.strokeStyle = 'rgba(150, 0, 0, 0.7)';
+            this.ctx.lineWidth = 2;
+            
+            this.ctx.beginPath();
+            this.ctx.moveTo(this.state.path[0].x, this.state.path[0].y - 15);
+            for (let i = 1; i < this.state.path.length; i++) {
+                this.ctx.lineTo(this.state.path[i].x, this.state.path[i].y - 15);
+            }
+            this.ctx.stroke();
+            
+            this.ctx.beginPath();
+            this.ctx.moveTo(this.state.path[0].x, this.state.path[0].y + 15);
+            for (let i = 1; i < this.state.path.length; i++) {
+                this.ctx.lineTo(this.state.path[i].x, this.state.this.state.path[i].y + 15);
+            }
+            this.ctx.stroke();
+        }
+
+        // Main Loop
+        gameLoop() {
+            this.renderer.render(this.state, { tileMap: this.state.tileMap, path: this.state.path });
+            if (!this.state.isPaused) {
+                this.update();
+            } 
+            this.draw();
+        }
+
+        addEntity(entity) {
+            this.entitiesToAdd.push(entity);
+        }
+        // Initialize the game
+        async init() {
+            const { tileMap, path } = this.mapManager.generateMap();
+            this.state.tileMap = tileMap;
+            this.state.path = path;
+            this.reset();            
+
+            await this.imageManager.loadImages('tower', gameConfig.towers);
+            await this.imageManager.loadImages('enemy', gameConfig.enemies);
+            await this.imageManager.loadImages('projectile', gameConfig.projectiles);
+
+            game.gameInterval = setInterval(() => { game.gameLoop(); }, 10);
+            this.state.isPaused = true;
+            
+            this.setupTowerPlacement();
+            this.drawStats();
+        }
+        reset() { 
+            this.state.reset();
+            this.uiManager.reset();
+        }
+        createProjectile(type, x, y, target, damage, isCritical, owner) {
+            let ownerStats = owner.getComponent('stats').stats;
+            let stats = {            
+                speed: 5,
+                damage: damage,
+                isCritical: isCritical,
+                piercing: ownerStats.piercing || 0,
+                splashRadius: ownerStats.splashRadius || 0
+            };
+
+            let entity = new Entity(this, x, y);
+            entity.addRenderer(Renderer, this.imageManager.getImage("projectile", type), 0);
+            entity.addComponent(Stats, type, stats);
+            entity.addComponent(Projectile, type, owner, target, stats );
+            this.addEntity(entity);     
+        }
+        createTower(x, y, type, tracker="towers") {
+            let stats = gameConfig.towers[type];
+            let entity = new Entity(this, x, y);
+            entity.addRenderer(Renderer, this.imageManager.getImage("tower", type), stats.drawOffsetY ? stats.drawOffsetY : 0 );
+            entity.addComponent(Stats, type, stats);
+            entity.addComponent(Leveler);
+            entity.addComponent(Buildable);
+            entity.addComponent(PopulationBurden);
+            entity.addComponent(Attacker);
+            entity.addRenderer(RangeIndicator);
+            entity.addComponent(ArrayTracker, tracker);
+            
+            this.addEntity(entity);      
+            return entity;  
+        }
+        createPreviewTower(x, y, type) {
+            let stats = gameConfig.towers[type];
+            let entity = new Entity(this, x, y);
+            entity.addRenderer(Renderer, this.imageManager.getImage("tower", type),  stats.drawOffsetY ? stats.drawOffsetY : 0);
+            entity.addRenderer(RangeIndicator);
+            entity.addComponent(Stats, type, stats);
+            entity.addComponent(Buildable);
+            
+            this.addEntity(entity);        
+            return entity;
+        }
+        removeSummon(summon) {
+            this.state.removeEntity(summon);
+        }
+        createSummon(x, y, type) {
+            let stats = gameConfig.towers[type];
+            let summon = this.createTower(x, y, type);
+            summon.addComponent(LifeSpan, stats.lifeSpan);
+        }
+        createEnemy(spawnType = "") {        
+            let normalTypes = [];
+            let bossTypes = [];
+            for(let type in gameConfig.enemies) {
+                if(gameConfig.enemies[type].boss) {
+                    bossTypes.push(type);
+                } else {
+                    normalTypes.push(type);
+                }
+            }
+
+            let allTypes = {
+                normal: normalTypes,
+                boss: bossTypes
+            }
+            let typeArr = allTypes[spawnType];
+            if(!typeArr) typeArr = allTypes.normal;    
+            let type = typeArr[Math.floor(Math.random() * typeArr.length)];
+         
+
+            let stats = gameConfig.enemies[type];
+            let entity = new Entity(this, 0, 0);
+            entity.addRenderer(Renderer, this.imageManager.getImage("enemy", type), stats.drawOffsetY ? stats.drawOffsetY : 0 );
+            entity.addComponent(Stats, type, stats);
+            entity.addComponent(Health);
+            entity.addComponent(EssenceBounty);
+            entity.addComponent(FollowPath);
+            entity.addComponent(SpacialGridEntity);
+            entity.addComponent(ArrayTracker, "enemies");
+            this.addEntity(entity);
+        }
+        applyUpgrade(upgradeId) {
+            const upgrade = upgrades.find(u => u.id === upgradeId);
+            if (upgrade && upgrade.canApply(this.state)) {
+                upgrade.apply(this.state);
+                this.uiManager.updateUpgrades(); // Hypothetical UI update
+            }
         }
     }
-}
 
-const game = new Game();  
-function main() {  
-    game.init();
-    document.getElementById('startGameBtn').addEventListener('click', (e) => {    
-        game.state.isPaused = false;
-        e.target.setAttribute('style','display:none;');
-    });
-}
+    const translator = new CoordinateTranslator(CONFIG);
+    const gameConfig = {
+        projectiles: {
+            plasmaBolt: { render: {"shapes":[{"type":"sphere","size":6,"x":0,"y":5,"z":0,"rotationX":90,"color":"#ee6060"}]} },
+            nanoOrb: { color: '#87ceeb', size: 12, isCircle: true, render: {"shapes":[{"type":"sphere","size":6,"x":0,"y":5,"z":0,"rotationX":90,"color":"#ee6060"}]} },
+            neutronFragment: { color: '#f0e68c', size: 8, isCircle: true, render: {"shapes":[{"type":"sphere","size":6,"x":0,"y":5,"z":0,"rotationX":90,"color":"#ee6060"}]} },
+            voidPulse: { color: '#8000ff', size: 10, isCircle: true, render: {"shapes":[{"type":"sphere","size":6,"x":0,"y":5,"z":0,"rotationX":90,"color":"#ee6060"}]} },
+            missile: { isCircle: true, render: {"shapes":[{"type":"cone","size":6,"height":12,"x":0,"y":5,"z":0,"rotationX":90,"color":"#606060"}]} },
+            cryoMist: { color: '#4682b4', size: 15, isCircle: true, render: {"shapes":[{"type":"sphere","size":6,"x":0,"y":5,"z":0,"rotationX":90,"color":"#6060ee"}]} },
+        },
+        towers: {
+            keep: { title: 'Citadel', mineAmt: 1, attackSpeed: 50, drawOffsetY: -12, render: {"shapes":[{"type":"box","width":40,"height":12,"depth":40,"color":"#8B8B8B","x":0,"y":-16,"z":0},{"type":"box","width":32,"height":20,"depth":32,"color":"#A0A0A0","x":0,"y":0,"z":0},{"type":"box","width":24,"height":16,"depth":24,"color":"#C0C0C0","x":0,"y":18,"z":0},{"type":"cylinder","size":12,"height":30,"color":"#D8D8D8","x":0,"y":38,"z":0},{"type":"cone","size":14,"height":20,"color":"#4169E1","x":0,"y":60,"z":0},{"type":"cylinder","size":6,"height":24,"color":"#C0C0C0","x":16,"y":4,"z":16},{"type":"cylinder","size":6,"height":24,"color":"#C0C0C0","x":-16,"y":4,"z":16},{"type":"cylinder","size":6,"height":24,"color":"#C0C0C0","x":16,"y":4,"z":-16},{"type":"cylinder","size":6,"height":24,"color":"#C0C0C0","x":-16,"y":4,"z":-16},{"type":"cone","size":8,"height":10,"color":"#4169E1","x":16,"y":20,"z":16},{"type":"cone","size":8,"height":10,"color":"#4169E1","x":-16,"y":20,"z":16},{"type":"cone","size":8,"height":10,"color":"#4169E1","x":16,"y":20,"z":-16},{"type":"cone","size":8,"height":10,"color":"#4169E1","x":-16,"y":20,"z":-16},{"type":"box","width":44,"height":4,"depth":44,"color":"#696969","x":0,"y":-20,"z":0}]} },
+            sentry: { title: 'Photon Sentry', info: 'Defensive attack sentry.', drawOffsetY: -12, cost: 25, population: 1, range: 120, damage: 2, attackSpeed: 20, projectile: 'plasmaBolt', critChance: 0.05, critMultiplier: 1.5, render: {"shapes":[{"type":"cylinder","size":12,"height":4,"color":"#696969","x":0,"y":-16,"z":0},{"type":"cylinder","size":10,"height":24,"color":"#8B8B8B","x":0,"y":0,"z":0},{"type":"cylinder","size":12,"height":4,"color":"#696969","x":0,"y":14,"z":0},{"type":"cylinder","size":6,"height":14,"color":"#A9A9A9","x":0,"y":22,"z":0},{"type":"sphere","size":8,"color":"#CD7F32","x":0,"y":22,"z":0},{"type":"cylinder","size":2,"height":12,"color":"#A9A9A9","x":0,"y":24,"z":0,"rotationX":90},{"type":"sphere","size":3,"color":"#FF4500","x":0,"y":24,"z":6},{"type":"box","width":3,"height":5,"depth":3,"color":"#696969","x":4,"y":16,"z":4},{"type":"box","width":3,"height":5,"depth":3,"color":"#696969","x":-4,"y":16,"z":4},{"type":"box","width":3,"height":5,"depth":3,"color":"#696969","x":4,"y":16,"z":-4},{"type":"box","width":3,"height":5,"depth":3,"color":"#696969","x":-4,"y":16,"z":-4}]} },
+            fusionCore: { title: 'Fusion Core', info: 'Creates additional energy every second.', drawOffsetY: -12, cost: 50, population: 1, attackSpeed: 50, critMultiplier: 1, mineAmt: 1, render: {"shapes":[{"type":"cylinder","size":24,"height":8,"color":"#3A3A3A","x":0,"y":-16,"z":0},{"type":"cylinder","size":20,"height":12,"color":"#555555","x":0,"y":-6,"z":0},{"type":"sphere","size":14,"color":"#4B0082","x":0,"y":6,"z":0},{"type":"torus","size":22,"tubeSize":2,"color":"#00BFFF","x":0,"y":6,"z":0,"rotationX":30},{"type":"torus","size":22,"tubeSize":2,"color":"#00BFFF","x":0,"y":6,"z":0,"rotationX":60,"rotationZ":45},{"type":"cylinder","size":4,"height":10,"color":"#666666","x":12,"y":-10,"z":12},{"type":"cylinder","size":4,"height":10,"color":"#666666","x":-12,"y":-10,"z":12},{"type":"cylinder","size":4,"height":10,"color":"#666666","x":12,"y":-10,"z":-12},{"type":"cylinder","size":4,"height":10,"color":"#666666","x":-12,"y":-10,"z":-12},{"type":"box","width":8,"height":4,"depth":8,"color":"#555555","x":16,"y":-14,"z":0},{"type":"box","width":8,"height":4,"depth":8,"color":"#555555","x":-16,"y":-14,"z":0},{"type":"box","width":8,"height":4,"depth":8,"color":"#555555","x":0,"y":-14,"z":16},{"type":"box","width":8,"height":4,"depth":8,"color":"#555555","x":0,"y":-14,"z":-16},{"type":"sphere","size":3,"color":"#00FFFF","x":12,"y":-4,"z":12},{"type":"sphere","size":3,"color":"#00FFFF","x":-12,"y":-4,"z":12},{"type":"sphere","size":3,"color":"#00FFFF","x":12,"y":-4,"z":-12},{"type":"sphere","size":3,"color":"#00FFFF","x":-12,"y":-4,"z":-12}]} },
+            barracks: { title: 'Barracks', info: 'Provides 5 additional max population.', cost: 100, attackSpeed: 1000, critChance: 0.1, critMultiplier: 2, supply: 5, render: {"shapes":[{"type":"box","width":44,"height":4,"depth":32,"x":0,"y":0,"z":0,"color":"#8B7355"},{"type":"box","width":40,"height":16,"depth":28,"x":0,"y":12,"z":0,"color":"#CD853F"},{"type":"box","width":44,"height":2,"depth":32,"x":0,"y":21,"z":0,"color":"#8B7355"},{"type":"box","width":48,"height":1,"depth":36,"x":0,"y":24,"z":0,"rotationZ":0,"color":"#552A2A"},{"type":"box","width":10,"height":12,"depth":2,"x":0,"y":12,"z":15,"color":"#654321"},{"type":"box","width":8,"height":6,"depth":1,"x":12,"y":12,"z":14.5,"color":"#5F9EA0"},{"type":"box","width":8,"height":6,"depth":1,"x":-12,"y":12,"z":14.5,"color":"#5F9EA0"},{"type":"cylinder","size":5,"height":20,"x":18,"y":10,"z":12,"color":"#8B7355"},{"type":"cylinder","size":5,"height":20,"x":-18,"y":10,"z":12,"color":"#8B7355"},{"type":"box","width":6,"height":4,"depth":6,"x":18,"y":22,"z":12,"color":"#CD853F"},{"type":"box","width":6,"height":4,"depth":6,"x":-18,"y":22,"z":12,"color":"#CD853F"},{"type":"cylinder","size":6,"height":12,"x":0,"y":36,"z":0,"color":"#8B4513"},{"type":"sphere","size":3,"x":0,"y":42,"z":0,"color":"#DAA520"}]} },
+            fabricator: { title: 'Fabricator', info: 'Can be upgraded to summon drones from defeated enemies.', summonType: 'drone', cost: 200, population: 4, range: 150, damage: 8, attackSpeed: 30, projectile: 'nanoOrb', piercing: 1, critChance: 0.15, critMultiplier: 1.8, render: {"shapes":[{"type":"box","width":40,"height":6,"depth":40,"x":0,"y":3,"z":0,"color":"#303030"},{"type":"cylinder","size":36,"height":14,"x":0,"y":13,"z":0,"color":"#505050"},{"type":"cylinder","size":28,"height":4,"x":0,"y":22,"z":0,"color":"#202020"},{"type":"cylinder","size":24,"height":16,"x":0,"y":32,"z":0,"color":"#404040"},{"type":"torus","size":20,"tubeSize":2,"x":0,"y":26,"z":0,"color":"#00FFAA"},{"type":"sphere","size":14,"x":0,"y":32,"z":0,"color":"#80FFD0"},{"type":"box","width":6,"height":28,"depth":6,"x":16,"y":22,"z":16,"color":"#303030"},{"type":"box","width":6,"height":28,"depth":6,"x":-16,"y":22,"z":16,"color":"#303030"},{"type":"box","width":6,"height":28,"depth":6,"x":16,"y":22,"z":-16,"color":"#303030"},{"type":"box","width":6,"height":28,"depth":6,"x":-16,"y":22,"z":-16,"color":"#303030"},{"type":"sphere","size":4,"x":16,"y":38,"z":16,"color":"#00FFAA"},{"type":"sphere","size":4,"x":-16,"y":38,"z":16,"color":"#00FFAA"},{"type":"sphere","size":4,"x":16,"y":38,"z":-16,"color":"#00FFAA"},{"type":"sphere","size":4,"x":-16,"y":38,"z":-16,"color":"#00FFAA"},{"type":"cylinder","size":10,"height":4,"x":0,"y":42,"z":0,"color":"#606060"},{"type":"cylinder","size":6,"height":8,"x":0,"y":48,"z":0,"color":"#505050"},{"type":"torus","size":8,"tubeSize":1,"x":0,"y":46,"z":0,"rotationX":90,"color":"#00FFAA"},{"type":"torus","size":4,"tubeSize":1,"x":0,"y":32,"z":0,"rotationX":30,"rotationY":45,"color":"#00FFFF"},{"type":"torus","size":4,"tubeSize":1,"x":0,"y":32,"z":0,"rotationX":120,"rotationY":45,"color":"#00FFFF"},{"type":"sphere","size":2,"x":6,"y":32,"z":0,"color":"#FFFFFF"},{"type":"sphere","size":2,"x":-6,"y":32,"z":0,"color":"#FFFFFF"},{"type":"sphere","size":2,"x":0,"y":32,"z":6,"color":"#FFFFFF"},{"type":"sphere","size":2,"x":0,"y":32,"z":-6,"color":"#FFFFFF"}]} },
+            drone: { title: 'Drone', info: 'Raise the dead.', drawOffsetY: -12, population: 1, range: 80, damage: 5, attackSpeed: 30, projectile: 'neutronFragment', critMultiplier: 1, lifeSpan: 500, render: {"shapes":[{"type":"sphere","size":10,"x":0,"y":10,"z":0,"color":"#3D3D3D"},{"type":"torus","size":12,"tubeSize":2,"x":0,"y":10,"z":0,"rotationX":90,"color":"#00FFAA"},{"type":"torus","size":12,"tubeSize":2,"x":0,"y":10,"z":0,"rotationY":90,"color":"#00FFAA"},{"type":"cylinder","size":4,"height":2,"x":0,"y":16,"z":0,"color":"#505050"},{"type":"sphere","size":3,"x":0,"y":18,"z":0,"color":"#00FFDD"},{"type":"cylinder","size":16,"height":1,"x":0,"y":8,"z":0,"rotationX":90,"rotationY":0,"color":"#404040"},{"type":"cylinder","size":16,"height":1,"x":0,"y":8,"z":0,"rotationX":90,"rotationY":90,"color":"#404040"},{"type":"cylinder","size":4,"height":1,"x":14,"y":8,"z":14,"color":"#505050"},{"type":"cylinder","size":4,"height":1,"x":-14,"y":8,"z":14,"color":"#505050"},{"type":"cylinder","size":4,"height":1,"x":14,"y":8,"z":-14,"color":"#505050"},{"type":"cylinder","size":4,"height":1,"x":-14,"y":8,"z":-14,"color":"#505050"},{"type":"torus","size":6,"tubeSize":1,"x":14,"y":9,"z":14,"rotationX":90,"color":"#00FFAA"},{"type":"torus","size":6,"tubeSize":1,"x":-14,"y":9,"z":14,"rotationX":90,"color":"#00FFAA"},{"type":"torus","size":6,"tubeSize":1,"x":14,"y":9,"z":-14,"rotationX":90,"color":"#00FFAA"},{"type":"torus","size":6,"tubeSize":1,"x":-14,"y":9,"z":-14,"rotationX":90,"color":"#00FFAA"},{"type":"cylinder","size":1,"height":4,"x":0,"y":6,"z":0,"color":"#00FFDD"},{"type":"sphere","size":2,"x":0,"y":4,"z":0,"color":"#00FFAA"},{"type":"sphere","size":1,"x":5,"y":10,"z":0,"color":"#FFFFFF"},{"type":"sphere","size":1,"x":-5,"y":10,"z":0,"color":"#FFFFFF"},{"type":"sphere","size":1,"x":0,"y":10,"z":5,"color":"#FFFFFF"},{"type":"sphere","size":1,"x":0,"y":10,"z":-5,"color":"#FFFFFF"}]} },
+            teslaCoil: { title: 'Tesla Coil', info: 'Projectiles chain between enemies.',  cost: 70, population: 3, range: 100, damage: 10, attackSpeed: 25, projectile: 'voidPulse', piercing: 2, critChance: 0.1, critMultiplier: 1.7, render: {"shapes":[{"type":"box","width":14,"height":8,"depth":14,"color":"#4A4A6A","x":0,"y":4,"z":0},{"type":"cylinder","size":8,"height":10,"color":"#6A6A8A","x":0,"y":11,"z":0},{"type":"torus","size":10,"tubeSize":1.5,"color":"#8A8AAA","x":0,"y":14,"z":0,"rotationX":90},{"type":"sphere","size":6,"color":"#AAAAFF","x":0,"y":18,"z":0},{"type":"tetrahedron","size":8,"color":"#555577","x":0,"y":22,"z":0,"rotationX":45,"rotationY":45}]} },
+            missileLauncher: { title: 'Missile Launcher', info: 'Projectiles explode in an AoE.', cost: 90, population: 3, range: 90, damage: 6, attackSpeed: 35, projectile: 'missile', critChance: 0.05, critMultiplier: 2, splashRadius: 45, burnDamage: 2, render: {"shapes":[{"type":"box","width":40,"height":8,"depth":40,"x":0,"y":4,"z":0,"color":"#555555"},{"type":"cylinder","size":32,"height":10,"x":0,"y":13,"z":0,"color":"#444444"},{"type":"box","width":24,"height":14,"depth":30,"x":0,"y":25,"z":0,"color":"#3A3A3A"},{"type":"cylinder","size":8,"height":34,"x":-8,"y":30,"z":8,"rotationX":90,"color":"#2A2A2A"},{"type":"cylinder","size":8,"height":34,"x":8,"y":30,"z":8,"rotationX":90,"color":"#2A2A2A"},{"type":"cylinder","size":6,"height":18,"x":-8,"y":30,"z":-6,"rotationX":90,"color":"#C63A3A"},{"type":"cylinder","size":6,"height":18,"x":8,"y":30,"z":-6,"rotationX":90,"color":"#C63A3A"},{"type":"cone","size":6,"height":8,"x":-8,"y":30,"z":-18,"rotationX":-90,"color":"#D14A4A"},{"type":"cone","size":6,"height":8,"x":8,"y":30,"z":-18,"rotationX":-90,"color":"#D14A4A"}]} },
+            chrono: { title: 'Chrono Defibrilator', info: 'Projectiles explode in AoE and slow.', cost: 100, population: 3, range: 90, damage: 2, attackSpeed: 50, projectile: 'cryoMist', critMultiplier: 1, splashRadius: 30, slowEffect: 0.7, render: {"shapes":[{"type":"torus","size":36,"tubeSize":4,"x":0,"y":16,"z":0,"rotationX":60,"color":"#50D0FF"},{"type":"torus","size":36,"tubeSize":4,"x":0,"y":16,"z":0,"rotationY":60,"color":"#50D0FF"},{"type":"cylinder","size":22,"height":10,"x":0,"y":5,"z":0,"color":"#333333"},{"type":"cylinder","size":16,"height":14,"x":0,"y":17,"z":0,"color":"#222222"},{"type":"sphere","size":12,"x":0,"y":16,"z":0,"color":"#A0E6FF"},{"type":"tetrahedron","size":10,"x":0,"y":16,"z":0,"rotationY":45,"color":"#203040"},{"type":"cone","size":8,"height":16,"x":0,"y":32,"z":0,"rotationX":180,"color":"#444444"},{"type":"box","width":38,"height":4,"depth":38,"x":0,"y":2,"z":0,"color":"#555555"},{"type":"sphere","size":4,"x":14,"y":12,"z":14,"color":"#C0FFFF"},{"type":"sphere","size":4,"x":-14,"y":12,"z":14,"color":"#C0FFFF"},{"type":"sphere","size":4,"x":14,"y":12,"z":-14,"color":"#C0FFFF"},{"type":"sphere","size":4,"x":-14,"y":12,"z":-14,"color":"#C0FFFF"}]} },
+        },
+        enemies:  {
+            zombie: { hp: 30, speed: 0.8, value: 5, essence: 10, drawOffsetY: -12, render: {"shapes":[{"type":"sphere","size":16,"color":"#60A060","x":0,"y":20,"z":0},{"type":"box","width":20,"height":24,"depth":10,"color":"#506050","x":0,"y":0,"z":0},{"type":"sphere","size":5,"color":"#FFFFFF","x":4,"y":22,"z":7},{"type":"sphere","size":5,"color":"#FFFFFF","x":-4,"y":22,"z":7},{"type":"sphere","size":2,"color":"#000000","x":4,"y":22,"z":8},{"type":"sphere","size":2,"color":"#000000","x":-4,"y":22,"z":8},{"type":"cylinder","size":4,"height":20,"color":"#60A060","x":8,"y":5,"z":10,"rotationX":90,"rotationZ":15},{"type":"cylinder","size":4,"height":20,"color":"#60A060","x":-8,"y":5,"z":10,"rotationX":90,"rotationZ":-15},{"type":"cylinder","size":4,"height":24,"color":"#60A060","x":5,"y":-12,"z":0,"rotationZ":0},{"type":"cylinder","size":4,"height":24,"color":"#60A060","x":-5,"y":-12,"z":0,"rotationZ":0}]} },
+            skeleton: { hp: 20, speed: 1.2, value: 7, essence: 12, drawOffsetY: -12, render: {"shapes":[{"type":"sphere","size":14,"color":"#E0DED8","x":0,"y":20,"z":0},{"type":"box","width":16,"height":20,"depth":8,"color":"#CFCBC0","x":0,"y":0,"z":0},{"type":"sphere","size":3,"color":"#000000","x":4,"y":21,"z":5},{"type":"sphere","size":3,"color":"#000000","x":-4,"y":21,"z":5},{"type":"cylinder","size":3,"height":18,"color":"#E0DED8","x":8,"y":5,"z":10,"rotationX":90,"rotationZ":15},{"type":"cylinder","size":3,"height":18,"color":"#E0DED8","x":-8,"y":5,"z":10,"rotationX":90,"rotationZ":-15},{"type":"sphere","size":5,"color":"#E0DED8","x":8,"y":5,"z":20},{"type":"sphere","size":5,"color":"#E0DED8","x":-8,"y":5,"z":20},{"type":"cylinder","size":3,"height":22,"color":"#E0DED8","x":5,"y":-10,"z":0,"rotationZ":0},{"type":"cylinder","size":3,"height":22,"color":"#E0DED8","x":-5,"y":-10,"z":0,"rotationZ":0},{"type":"sphere","size":5,"color":"#E0DED8","x":5,"y":-22,"z":0},{"type":"sphere","size":5,"color":"#E0DED8","x":-5,"y":-22,"z":0}]} },
+            ghost: { hp: 15, speed: 1.5, value: 10, essence: 15, drawOffsetY: -12, render: {"shapes":[{"type":"sphere","size":16,"color":"#C2E8F7","x":0,"y":15,"z":0},{"type":"sphere","size":14,"color":"#D8F0F9","x":0,"y":5,"z":0},{"type":"sphere","size":12,"color":"#E5F6FC","x":0,"y":-5,"z":0},{"type":"cone","size":8,"height":14,"color":"#E5F6FC","x":6,"y":-10,"z":0,"rotationX":180},{"type":"cone","size":8,"height":14,"color":"#E5F6FC","x":-6,"y":-10,"z":0,"rotationX":180},{"type":"cone","size":8,"height":14,"color":"#E5F6FC","x":0,"y":-10,"z":0,"rotationX":180},{"type":"sphere","size":4,"color":"#1A1A1A","x":4,"y":15,"z":7},{"type":"sphere","size":4,"color":"#1A1A1A","x":-4,"y":15,"z":7},{"type":"sphere","size":8,"color":"#1A1A1A","x":0,"y":12,"z":4,"rotationX":45,"rotationY":0,"rotationZ":0}]} },
+            wraith: { hp: 25, speed: 1.8, value: 12, essence: 18, dodgeChance: 0.2, drawOffsetY: -12, render: {"shapes":[{"type":"sphere","size":16,"color":"#3A6A8A","x":0,"y":12,"z":0},{"type":"sphere","size":8,"color":"#FFFFFF","x":0,"y":12,"z":6},{"type":"sphere","size":4,"color":"#000000","x":0,"y":12,"z":8.5},{"type":"cylinder","size":6,"height":4,"color":"#2A5A7A","x":-8,"y":10,"z":0,"rotationZ":30},{"type":"cylinder","size":6,"height":4,"color":"#2A5A7A","x":8,"y":10,"z":0,"rotationZ":-30}]} },
+            bloodBeast: { hp: 50, speed: 0.6, value: 15, essence: 20, regen: 0.5, drawOffsetY: -12, render: {"shapes":[{"type":"box","width":26,"height":20,"depth":24,"color":"#8B4513","x":0,"y":2,"z":0},{"type":"sphere","size":18,"color":"#A52A2A","x":0,"y":18,"z":0},{"type":"cylinder","size":8,"height":14,"color":"#8B4513","x":16,"y":6,"z":0,"rotationZ":45},{"type":"cylinder","size":8,"height":14,"color":"#8B4513","x":-16,"y":6,"z":0,"rotationZ":-45},{"type":"sphere","size":9,"color":"#A52A2A","x":16,"y":0,"z":0},{"type":"sphere","size":9,"color":"#A52A2A","x":-16,"y":0,"z":0},{"type":"cylinder","size":8,"height":16,"color":"#8B4513","x":10,"y":-10,"z":0,"rotationZ":0},{"type":"cylinder","size":8,"height":16,"color":"#8B4513","x":-10,"y":-10,"z":0,"rotationZ":0},{"type":"sphere","size":6,"color":"#FFFFFF","x":5,"y":20,"z":8},{"type":"sphere","size":6,"color":"#FFFFFF","x":-5,"y":20,"z":8},{"type":"sphere","size":3,"color":"#000000","x":5,"y":20,"z":10},{"type":"sphere","size":3,"color":"#000000","x":-5,"y":20,"z":10},{"type":"cone","size":6,"height":12,"color":"#8B4513","x":-12,"y":24,"z":0,"rotationZ":45},{"type":"cone","size":6,"height":12,"color":"#8B4513","x":12,"y":24,"z":0,"rotationZ":-45}]} },
+            banshee: { hp: 20, speed: 1.4, value: 8, essence: 14, screamDamage: 5, drawOffsetY: -12, render: {"shapes":[{"type":"sphere","size":12,"color":"#BCA9DF","x":0,"y":18,"z":0},{"type":"cone","size":16,"height":30,"color":"#9F8AC7","x":0,"y":0,"z":0,"rotationX":180},{"type":"sphere","size":4,"color":"#FF3366","x":4,"y":18,"z":5},{"type":"sphere","size":4,"color":"#FF3366","x":-4,"y":18,"z":5},{"type":"cylinder","size":3,"height":16,"color":"#BCA9DF","x":8,"y":10,"z":10,"rotationX":90,"rotationZ":30},{"type":"cylinder","size":3,"height":16,"color":"#BCA9DF","x":-8,"y":10,"z":10,"rotationX":90,"rotationZ":-30},{"type":"cylinder","size":2,"height":12,"color":"#BCA9DF","x":3,"y":15,"z":-10,"rotationX":-40},{"type":"cylinder","size":2,"height":12,"color":"#BCA9DF","x":-3,"y":15,"z":-10,"rotationX":-40},{"type":"sphere","size":8,"color":"#000000","x":0,"y":14,"z":6,"rotationX":45},{"type":"sphere","size":6,"color":"#BCA9DF","x":15,"y":0,"z":0},{"type":"sphere","size":6,"color":"#BCA9DF","x":-15,"y":0,"z":0},{"type":"sphere","size":6,"color":"#BCA9DF","x":0,"y":0,"z":-15}]} },
+            trex: { info: 'T-Rex', hp: 40, speed: 1.5, value: 10, essence: 15, render: {"shapes":[{"type":"box","width":12,"height":25,"depth":12,"x":0,"y":22,"z":0,"rotationX":35,"color":"#5D8233"},{"type":"box","width":12,"height":10,"depth":16,"x":0,"y":37,"z":12,"color":"#5D8233"},{"type":"box","width":10,"height":4,"depth":14,"x":0,"y":29,"z":14,"color":"#4E6C2A"},{"type":"box","width":8,"height":1,"depth":1,"x":0,"y":31,"z":20,"color":"#FFFFFF"},{"type":"box","width":1,"height":2,"depth":1,"x":-3,"y":31,"z":20,"color":"#FFFFFF"},{"type":"box","width":1,"height":2,"depth":1,"x":0,"y":31,"z":20,"color":"#FFFFFF"},{"type":"box","width":1,"height":2,"depth":1,"x":3,"y":31,"z":20,"color":"#FFFFFF"},{"type":"sphere","size":3,"x":-7,"y":42,"z":14,"color":"#FFFF00"},{"type":"sphere","size":1.5,"x":-7,"y":42,"z":15,"color":"#000000"},{"type":"sphere","size":3,"x":7,"y":42,"z":14,"color":"#FFFF00"},{"type":"sphere","size":1.5,"x":7,"y":42,"z":15,"color":"#000000"},{"type":"box","width":6,"height":4,"depth":14,"x":0,"y":18,"z":-18,"rotationX":-20,"color":"#5D8233"},{"type":"box","width":4,"height":3,"depth":10,"x":0,"y":15,"z":-30,"rotationX":-10,"color":"#5D8233"},{"type":"box","width":5,"height":16,"depth":5,"x":6,"y":10,"z":0,"color":"#4E6C2A"},{"type":"box","width":5,"height":16,"depth":5,"x":-6,"y":10,"z":0,"color":"#4E6C2A"},{"type":"box","width":7,"height":2,"depth":9,"x":6,"y":0,"z":0,"color":"#4E6C2A"},{"type":"box","width":7,"height":2,"depth":9,"x":-6,"y":0,"z":0,"color":"#4E6C2A"},{"type":"box","width":3,"height":5,"depth":3,"x":8,"y":26,"z":0,"rotationX":-40,"color":"#4E6C2A"},{"type":"box","width":3,"height":5,"depth":3,"x":-8,"y":26,"z":0,"rotationX":-40,"color":"#4E6C2A"},{"type":"box","width":2,"height":2,"depth":1,"x":8,"y":24,"z":3,"color":"#A0A0A0"},{"type":"box","width":2,"height":2,"depth":1,"x":-8,"y":24,"z":3,"color":"#A0A0A0"},{"type":"cone","size":4,"height":6,"x":0,"y":35,"z":-2,"rotationX":-60,"color":"#536026"},{"type":"cone","size":4,"height":6,"x":0,"y":28,"z":-8,"rotationX":-75,"color":"#436026"},{"type":"cone","size":3,"height":4,"x":0,"y":22,"z":-20,"rotationX":-25,"color":"#436026"},{"type":"cone","size":2,"height":3,"x":0,"y":18,"z":-28,"rotationX":-25,"color":"#436026"}]} },
+            stegosaurus: { info: 'Stegosaurus', speed: 1, hp: 30, essence: 10, value: 5, render: {"shapes":[{"type":"box","width":24,"height":12,"depth":32,"x":0,"y":18,"z":0,"color":"#5D8233"},{"type":"box","width":16,"height":12,"depth":22,"x":0,"y":28,"z":24,"color":"#5D8233"},{"type":"box","width":14,"height":5,"depth":20,"x":0,"y":23,"z":26,"color":"#4E6C2A"},{"type":"box","width":12,"height":2,"depth":1,"x":0,"y":23,"z":36,"color":"#FFFFFF"},{"type":"box","width":1,"height":3,"depth":1,"x":-4,"y":22,"z":35,"color":"#FFFFFF"},{"type":"box","width":1,"height":3,"depth":1,"x":-2,"y":22,"z":35,"color":"#FFFFFF"},{"type":"box","width":1,"height":3,"depth":1,"x":0,"y":22,"z":35,"color":"#FFFFFF"},{"type":"box","width":1,"height":3,"depth":1,"x":2,"y":22,"z":35,"color":"#FFFFFF"},{"type":"box","width":1,"height":3,"depth":1,"x":4,"y":22,"z":35,"color":"#FFFFFF"},{"type":"sphere","size":4,"x":-6,"y":32,"z":28,"color":"#FFFF00"},{"type":"sphere","size":2,"x":-6,"y":32,"z":29,"color":"#000000"},{"type":"sphere","size":4,"x":6,"y":32,"z":28,"color":"#FFFF00"},{"type":"sphere","size":2,"x":6,"y":32,"z":29,"color":"#000000"},{"type":"box","width":8,"height":6,"depth":20,"x":0,"y":16,"z":-20,"color":"#5D8233"},{"type":"box","width":6,"height":4,"depth":16,"x":0,"y":15,"z":-38,"rotationY":0,"color":"#5D8233"},{"type":"box","width":6,"height":12,"depth":6,"x":10,"y":10,"z":10,"color":"#4E6C2A"},{"type":"box","width":6,"height":12,"depth":6,"x":10,"y":10,"z":-10,"color":"#4E6C2A"},{"type":"box","width":6,"height":12,"depth":6,"x":-10,"y":10,"z":10,"color":"#4E6C2A"},{"type":"box","width":6,"height":12,"depth":6,"x":-10,"y":10,"z":-10,"color":"#4E6C2A"},{"type":"box","width":8,"height":3,"depth":10,"x":10,"y":3,"z":12,"color":"#4E6C2A"},{"type":"box","width":8,"height":3,"depth":10,"x":10,"y":3,"z":-12,"color":"#4E6C2A"},{"type":"box","width":8,"height":3,"depth":10,"x":-10,"y":3,"z":12,"color":"#4E6C2A"},{"type":"box","width":8,"height":3,"depth":10,"x":-10,"y":3,"z":-12,"color":"#4E6C2A"},{"type":"box","width":4,"height":6,"depth":4,"x":12,"y":20,"z":10,"color":"#4E6C2A"},{"type":"box","width":4,"height":6,"depth":4,"x":-12,"y":20,"z":10,"color":"#4E6C2A"},{"type":"box","width":3,"height":3,"depth":1,"x":12,"y":20,"z":13,"color":"#A0A0A0"},{"type":"box","width":3,"height":3,"depth":1,"x":-12,"y":20,"z":13,"color":"#A0A0A0"},{"type":"cone","size":6,"height":8,"x":0,"y":24,"z":0,"rotationX":-90,"color":"#436026"},{"type":"cone","size":6,"height":8,"x":0,"y":24,"z":-10,"rotationX":-90,"color":"#436026"},{"type":"cone","size":5,"height":6,"x":0,"y":24,"z":-20,"rotationX":-90,"color":"#436026"},{"type":"cone","size":4,"height":5,"x":0,"y":20,"z":-30,"rotationX":-90,"color":"#436026"}]} },
+            dragon: { info: 'Dragon', hp: 500, speed: 0.5, essence: 50, value: 50, boss: true, render: {"shapes":[{"type":"box","width":18,"height":10,"depth":28,"x":0,"y":20,"z":-4,"rotationX":15,"color":"#8B0000"},{"type":"box","width":14,"height":8,"depth":20,"x":0,"y":30,"z":18,"rotationX":-10,"color":"#8B0000"},{"type":"box","width":12,"height":6,"depth":16,"x":0,"y":40,"z":30,"rotationX":-20,"color":"#8B0000"},{"type":"cone","size":10,"height":20,"x":0,"y":42,"z":42,"rotationX":90,"color":"#8B0000"},{"type":"box","width":12,"height":6,"depth":16,"x":0,"y":14,"z":-24,"rotationX":-5,"color":"#8B0000"},{"type":"box","width":8,"height":4,"depth":20,"x":0,"y":10,"z":-42,"rotationX":-5,"color":"#8B0000"},{"type":"cone","size":6,"height":12,"x":0,"y":8,"z":-54,"rotationX":-90,"color":"#8B0000"},{"type":"box","width":22,"height":10,"depth":18,"x":0,"y":26,"z":0,"rotationX":-5,"color":"#8B0000"},{"type":"sphere","size":8,"x":0,"y":46,"z":34,"color":"#A52A2A"},{"type":"sphere","size":3,"x":-4,"y":48,"z":36,"color":"#FFFF00"},{"type":"sphere","size":1.5,"x":-4,"y":48,"z":37,"color":"#000000"},{"type":"sphere","size":3,"x":4,"y":48,"z":36,"color":"#FFFF00"},{"type":"sphere","size":1.5,"x":4,"y":48,"z":37,"color":"#000000"},{"type":"box","width":5,"height":3,"depth":10,"x":0,"y":40,"z":40,"color":"#A52A2A"},{"type":"box","width":4,"height":2,"depth":1,"x":0,"y":42,"z":46,"color":"#FFFFFF"},{"type":"box","width":1,"height":2,"depth":1,"x":-2,"y":40,"z":46,"color":"#FFFFFF"},{"type":"box","width":1,"height":2,"depth":1,"x":0,"y":40,"z":46,"color":"#FFFFFF"},{"type":"box","width":1,"height":2,"depth":1,"x":2,"y":40,"z":46,"color":"#FFFFFF"},{"type":"box","width":5,"height":12,"depth":5,"x":10,"y":10,"z":0,"color":"#8B0000"},{"type":"box","width":5,"height":12,"depth":5,"x":-10,"y":10,"z":0,"color":"#8B0000"},{"type":"box","width":5,"height":12,"depth":5,"x":10,"y":12,"z":-16,"color":"#8B0000"},{"type":"box","width":5,"height":12,"depth":5,"x":-10,"y":12,"z":-16,"color":"#8B0000"},{"type":"box","width":7,"height":2,"depth":7,"x":10,"y":4,"z":0,"color":"#8B0000"},{"type":"box","width":7,"height":2,"depth":7,"x":-10,"y":4,"z":0,"color":"#8B0000"},{"type":"box","width":7,"height":2,"depth":7,"x":10,"y":6,"z":-16,"color":"#8B0000"},{"type":"box","width":7,"height":2,"depth":7,"x":-10,"y":6,"z":-16,"color":"#8B0000"},{"type":"cone","size":6,"height":10,"x":0,"y":36,"z":10,"rotationX":-20,"color":"#A52A2A"},{"type":"cone","size":6,"height":10,"x":0,"y":34,"z":-8,"rotationX":-32,"color":"#A52A2A"},{"type":"cone","size":5,"height":8,"x":0,"y":22,"z":-24,"rotationX":-75,"color":"#A52A2A"},{"type":"cone","size":4,"height":6,"x":0,"y":16,"z":-38,"rotationX":-75,"color":"#A52A2A"},{"type":"box","width":20,"height":1,"depth":28,"x":18,"y":24,"z":-4,"rotationY":15,"rotationZ":12,"color":"#A52A2A"},{"type":"box","width":20,"height":1,"depth":28,"x":-18,"y":24,"z":-4,"rotationY":-15,"rotationZ":-12,"color":"#A52A2A"},{"type":"box","width":18,"height":1,"depth":24,"x":18,"y":27,"z":-4,"rotationY":15,"rotationZ":24,"color":"#A52A2A"},{"type":"box","width":18,"height":1,"depth":24,"x":-18,"y":27,"z":-4,"rotationY":-15,"rotationZ":-24,"color":"#A52A2A"},{"type":"box","width":16,"height":1,"depth":20,"x":18,"y":30,"z":-4,"rotationY":15,"rotationZ":36,"color":"#A52A2A"},{"type":"box","width":16,"height":1,"depth":20,"x":-18,"y":30,"z":-4,"rotationY":-15,"rotationZ":-36,"color":"#A52A2A"}]} },
+        },
+        upgrades: {
+            // Bat Swarm Upgrades
+            sentryFrenzy: { desc: '+25% Attack Speed', value: .75 },
+            sentryIntelligence: { desc: '+15% Damage and +10% Range', damage: 1.15, range: 1.1 },
+            dematerializeSentry: { desc: 'Heal 0.5% Core HP per hit', leech: 0.005 },
 
-function resetGame() {
-    game.reset();
-}
+            // Necromancer Upgrades
+            necroSummon: { desc: '10% chance to raise a skeleton when killing an enemy', summonChance: 1.1 },
+            necroMastery: { desc: '+20% Range and projectiles pierce one additional enemy', range: 1.2, piercing: 1 },
 
-window.onload = main; // Or attach to a start button
+            // Shadow Turret Upgrades
+            shadowPierce: { desc: 'Projectiles pierce 2 additional enemies', piercing: 2 },
+            shadowReach: { desc: '+30% Range', range: 1.3 },
+            shadowCrit: { desc: '+10% Critical Chance', critChance: 0.1 },
+
+            // Soul Pyre Upgrades
+            pyreBurn: { desc: '+50% Burn Damage', burnDamage: 1 },
+            pyreBlaze: { desc: '+20% Damage and +10% Attack Speed', damage: 1.2, attackSpeed: 1.1 },
+            pyreSoul: { desc: '+10% splash radius', splashRadius: 1.1 },
+
+            // Mist Shrine Upgrades
+            mistSlow: { desc: 'Slow effect increased by 20%', slowEffect: 0.8 },
+            mistSpread: { desc: '+25% Range and +1 Piercing', range: 1.25, piercing: 1 },
+
+            // Global Upgrades
+            bloodEff: { desc: 'Towers cost 15% less Blood Shards', value: 0.85 },
+            bloodCore: { desc: 'Increase max Core HP by 20% and heal 30 HP', maxHpMultiplier: 1.2, healAmount: 30 },
+            bloodHarvest: { desc: 'Gain 25% more Blood Shards from enemies', value: 1.25 },
+            essenceExtraction: { desc: 'Gain 25% more Essence from enemies', value: 1.25 },
+            bloodFrenzy: { desc: 'All towers deal 20% more damage', damageMultiplier: 1.2 },
+            bloodRegeneration: { desc: 'All healing effects are 25% more effective', healingMultiplier: 1.25 },
+            essenceOverflow: { desc: 'Gain 10% more Essence when above 50% Core HP', value: 1.1 },
+            darkResilience: { desc: 'Towers take 20% less damage from enemy abilities', towerDamageReduction: 0.8 }
+        },
+        effects: {
+            slow: { id: 'slow', title: 'Slow', desc: 'Target is slowed', stat: 'speed', lifeTime: 100 }
+        }
+    }
+    const effects = {
+        slow: (stats, additiveStats, multiplicitiveStats, slowAmount) => {
+            stats[gameConfig.effects.slow.stat] *= slowAmount;
+        }
+    }
+    const upgrades = [
+        // Bat Swarm Upgrades
+        new Upgrade(
+            'sentryFrenzy',
+            'Sentry Frenzy',
+            'Sentry Swarm: ' + gameConfig.upgrades.sentryFrenzy.desc,
+            '🦇',
+            'sentry',
+            (state) => true,
+            (stats, additiveStats, multiplicitiveStats) => {
+                multiplicitiveStats['attackSpeed'].push(gameConfig.upgrades.sentryFrenzy.value);
+            }
+        ),
+        new Upgrade(
+            'sentryIntelligence',
+            'Sentry Intelligence',
+            'Sentry Swarm: ' + gameConfig.upgrades.sentryIntelligence.desc,
+            '🦇',
+            'sentry',
+            (state) => true,
+            (stats, additiveStats, multiplicitiveStats) => {            
+                multiplicitiveStats['damage'].push(gameConfig.upgrades.sentryIntelligence.damage);
+                multiplicitiveStats['range'].push(gameConfig.upgrades.sentryIntelligence.range);        
+            }
+        ),
+
+        // Necromancer Upgrades
+        new Upgrade(
+            'necroSummon',
+            'Raise Dead',
+            'Necromancer: ' + gameConfig.upgrades.necroSummon.desc,
+            '💀',
+            'fabricator',
+            (state) => true,
+            (stats, additiveStats, multiplicitiveStats) => {
+                stats.summonChance = 1;
+                if(!additiveStats.summonChance) additiveStats.summonChance = [];
+                additiveStats['summonChance'].push(gameConfig.upgrades.necroSummon.summonChance);
+            }
+        ),
+
+        // Shadow Turret Upgrades
+        new Upgrade(
+            'shadowReach',
+            'Extended Darkness',
+            'Shadow Turret: ' + gameConfig.upgrades.shadowReach.desc,
+            '📏',
+            'shadowTurret',
+            (state) => true,
+            (stats, additiveStats, multiplicitiveStats) => {
+                additiveStats['range'].push(gameConfig.upgrades.shadowReach.range);
+            }
+        ),
+
+        // Soul Pyre Upgrades
+        new Upgrade(
+            'pyreSoul',
+            'Radiant Soul',
+            'Soul Pyre: ' + gameConfig.upgrades.pyreSoul.desc,
+            '💉',
+            'soulPyre',
+            (state) => true,
+            (stats, additiveStats, multiplicitiveStats) => {
+                additiveStats['splashRadius'].push(gameConfig.upgrades.pyreSoul.splashRadius);
+            }
+        ),
+
+        // Mist Shrine Upgrades
+        new Upgrade(
+            'mistSlow',
+            'Chilling Mist',
+            'Mist Shrine: ' + gameConfig.upgrades.mistSlow.desc,
+            '❄️',
+            'mistShrine',
+            (state) => true,
+            (stats, additiveStats, multiplicitiveStats) => {
+                multiplicitiveStats['slowEffect'].push(gameConfig.upgrades.mistSlow.slowEffect);
+            }
+        ),
+        // Global Upgrades
+        new Upgrade(
+            'homeReinforcement',
+            'Reinforcement',
+            gameConfig.upgrades.bloodCore.desc,
+            '🛡️',
+            'global',
+            (state) => true,
+            (stats) => {
+                stats.maxBloodCoreHP *= gameConfig.upgrades.bloodCore.maxHpMultiplier;
+            },
+            (state) => {
+                state.bloodCoreHP = Math.min(state.stats.maxBloodCoreHP, state.bloodCoreHP + gameConfig.upgrades.bloodCore.healAmount);
+            }
+        ),
+        new Upgrade(
+            'essenceExtraction',
+            'Essence Extraction',
+            gameConfig.upgrades.essenceExtraction.desc,
+            '🔮',
+            'global',
+            (state) => true,
+            (stats) => {
+                stats.essenceMultiplier *= gameConfig.upgrades.essenceExtraction.value;
+            }
+        ),
+        new Upgrade(
+            'essenceOverflow',
+            'Essence Overflow',
+            gameConfig.upgrades.essenceOverflow.desc,
+            '🔮',
+            'global',
+            (state) => state.bloodCoreHP > state.stats.maxBloodCoreHP / 2,
+            (stats) => {
+                stats.essenceMultiplier *= gameConfig.upgrades.essenceOverflow.value;
+            }
+        ),
+
+    ];
+
+    const game = new Game();  
+    async function main() {  
+        await game.init();
+        document.getElementById('startGameBtn').removeAttribute('style');
+        document.getElementById('startGameBtn').addEventListener('click', (e) => {    
+            game.state.isPaused = false;
+            e.target.setAttribute('style','display:none;');
+        });
+        document.querySelector("#gameOverMenu .menu-button").addEventListener("click", (e) => {
+            game.reset();
+        });
+        
+        document.querySelector("#victoryMenu .menu-button").addEventListener("click", (e) => {
+            game.reset();
+        });
+    }
+
+    function resetGame() {
+        game.reset();
+    }
+
+    window.onload = main; // Or attach to a start button
 </script>
 	
 	
