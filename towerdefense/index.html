@@ -2626,7 +2626,6 @@ canvas {
             if(!typeArr) typeArr = allTypes.normal;    
             let type = typeArr[Math.floor(Math.random() * typeArr.length)];
          
-            type = "zombie";
             let stats = gameConfig.enemies[type];
             stats.hp *= 1 + (.01 * this.state.wave);
             let entity = new Entity(this, 0, 0);
