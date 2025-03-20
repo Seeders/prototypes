@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Tower Defense Config Editor</title>
+    <title>Game Config Editor</title>
       
     <style>
         body {
@@ -38,12 +38,12 @@
             overflow-y: auto;
         }
         
-        .tower-list {
+        .object-list {
             flex: 1;
             overflow-y: auto;
         }
         
-        .tower-item {
+        .object-item {
             padding: 10px;
             margin-bottom: 5px;
             background-color: #333;
@@ -52,11 +52,11 @@
             transition: background-color 0.2s;
         }
         
-        .tower-item:hover {
+        .object-item:hover {
             background-color: #444;
         }
         
-        .tower-item.selected {
+        .object-item.selected {
             background-color: #505050;
             border-left: 4px solid #a0f;
         }
@@ -307,7 +307,7 @@
             flex-direction: column;
         }
 
-        .type-selector .tower-item {
+        .type-selector .object-item {
             flex: 1;
             text-align: center;
             padding: 8px 5px;
@@ -462,11 +462,11 @@
     <div class="container">
         <div class="sidebar">
             <h2>Editor</h2>
-            <div class="tower-list" id="tower-list">
-                <!-- Tower list will be dynamically populated -->
+            <div class="object-list" id="object-list">
+                <!-- Object list will be dynamically populated -->
             </div>
             <div style="margin-top: auto; padding-top: 10px;">
-                <button class="primary" id="add-tower-btn" style="width: 100%;">Add New Tower</button>
+                <button class="primary" id="add-object-btn" style="width: 100%;">Add New Object</button>
                 <button id="import-export-btn" style="width: 100%; margin-top: 10px;">Import/Export Config</button>
             </div>
         </div>
@@ -475,12 +475,12 @@
             <div id="graphics-container">
                 <div id="graphics-sidebar">
                     <div id="toolbar">
-                        <button id="add-shape">Add Shape</button>
-                        <button id="duplicate-shape">Duplicate</button>
-                        <button id="delete-shape" class="button-danger">Delete</button>
-                        <button id="scale-all">Scale All</button>
-                        <button id="move-all">Move All</button>
-                        <button id="generate-isometric">Isometric Sprites</button> 
+                        <button id="add-shape" class="small-btn">Add Shape</button>
+                        <button id="duplicate-shape" class="small-btn">Duplicate</button>
+                        <button id="scale-all" class="small-btn">Scale All</button>
+                        <button id="move-all" class="small-btn">Move All</button>
+                        <button id="generate-isometric" class="small-btn">Isometric Sprites</button> 
+                        <button id="delete-shape" class="small-btn button-danger">Delete</button>
                     </div>
                     <div id="shape-list"></div>                    
                 </div>
@@ -703,7 +703,7 @@
         };
         // Cache DOM elements
         const elements = {
-            towerList: document.getElementById('tower-list'),
+            towerList: document.getElementById('object-list'),
             editor: document.getElementById('editor'),
             previewCanvas: document.getElementById('preview-canvas'),
             gridDisplay: document.getElementById('grid-display'),
@@ -742,7 +742,7 @@
                         <div class="type-selector">`;
             
             state.objectTypeDefinitions.forEach(type => {
-                html += `<div class="tower-item ${state.selectedType === type.id ? 'selected' : ''}" data-type="${type.id}">${type.name}</div>`;
+                html += `<div class="object-item ${state.selectedType === type.id ? 'selected' : ''}" data-type="${type.id}">${type.name}</div>`;
             });
             
             html += `</div>
@@ -762,14 +762,14 @@
             // Add objects of the selected type
             Object.keys(state.objectTypes[state.selectedType] || {}).forEach(objId => {
                 const objectItem = document.createElement('div');
-                objectItem.className = `tower-item ${state.selectedObject === objId ? 'selected' : ''}`;
+                objectItem.className = `object-item ${state.selectedObject === objId ? 'selected' : ''}`;
                 objectItem.textContent = objId;
                 objectItem.addEventListener('click', () => selectObject(objId));
                 elements.towerList.appendChild(objectItem);
             });
             
             // Add event listeners for type selection
-            document.querySelectorAll('.type-selector .tower-item').forEach(item => {
+            document.querySelectorAll('.type-selector .object-item').forEach(item => {
                 item.addEventListener('click', () => {
                     state.selectedType = item.dataset.type;
                     state.selectedObject = null;
@@ -1145,7 +1145,7 @@
             document.getElementById('import-btn').addEventListener('click', importConfig);
             
             // New object handling
-            document.getElementById('add-tower-btn').addEventListener('click', () => {
+            document.getElementById('add-object-btn').addEventListener('click', () => {
                 elements.newObjectIdInput.value = '';
                 elements.newObjectNameInput.value = '';
                 updateNewObjectModal();
@@ -1363,7 +1363,7 @@
         // Update HTML for sidebar buttons
         function updateSidebarButtons() {
             const singularType = getSingularType(state.selectedType);
-            document.getElementById('add-tower-btn').textContent = `Add New ${singularType}`;
+            document.getElementById('add-object-btn').textContent = `Add New ${singularType}`;
             document.getElementById('import-export-btn').textContent = `Import/Export ${getPluralType(state.selectedType)}`;
         }
 
@@ -1748,7 +1748,11 @@
         }
         // Select a shape
         function selectShape(index) {
-            selectedShapeIndex = index;
+            if(selectedShapeIndex == index) {
+                selectedShapeIndex = -1;   
+            } else {
+                selectedShapeIndex = index;
+            }
             updateShapeList();
             highlightSelectedShape();
         }
@@ -2008,7 +2012,11 @@
                 shapeItem.appendChild(position);
                 
                 shapeItem.addEventListener('click', () => {
-                    selectedShapeIndex = index;
+                    if( selectedShapeIndex == index) {
+                        selectedShapeIndex = -1;
+                    } else {
+                        selectedShapeIndex = index;
+                    }
                     updateShapeList();
                     highlightSelectedShape();
                     
