@@ -475,14 +475,18 @@
             <div id="graphics-container">
                 <div id="graphics-sidebar">
                     <div id="toolbar">
+                        <button id="add-animation" class="small-btn">Add Animation</button>
+                        <button id="add-frame" class="small-btn">Add Frame</button>
+                        <button id="duplicate-frame" class="small-btn">Duplicate Frame</button>
+                        <button id="delete-frame" class="small-btn button-danger">Delete Frame</button>
                         <button id="add-shape" class="small-btn">Add Shape</button>
                         <button id="duplicate-shape" class="small-btn">Duplicate</button>
                         <button id="scale-all" class="small-btn">Scale All</button>
                         <button id="move-all" class="small-btn">Move All</button>
-                        <button id="generate-isometric" class="small-btn">Isometric Sprites</button> 
+                        <button id="generate-isometric" class="small-btn">Isometric Sprites</button>
                         <button id="delete-shape" class="small-btn button-danger">Delete</button>
                     </div>
-                    <div id="shape-list"></div>                    
+                    <div id="shape-list"></div>
                 </div>
                 <div id="canvas-container">
                     <canvas id="canvas"></canvas>
@@ -492,7 +496,6 @@
                         <div><small>Controls: Left-click to select, Drag to rotate, Right-drag to pan, Scroll to zoom</small></div>
                     </div>
                 </div>
-                
                 <div id="graphics-rightbar">
                     <div id="inspector"></div>
                     <div id="json-editor" style="display: none">
@@ -655,47 +658,48 @@
             objectPosition: { x: 300, y: 120 }
         };
         // Default sample data - expand with enemy and projectile types
-        const DEFAULT_CONFIG = {
+        const DEFAULT_CONFIG = {            
             projectiles: {
-                plasmaBolt: { hitEffectType: 'plasma', render: {"shapes":[{"type":"sphere","size":6,"x":0,"y":24,"z":0,"rotationX":90,"color":"#ee6060"}]} },
-                nanoOrb: { render: {"shapes":[{"type":"sphere","size":6,"x":0,"y":5,"z":0,"rotationX":90,"color":"#ee6060"}]} },
-                neutronFragment: { render: {"shapes":[{"type":"sphere","size":6,"x":0,"y":25,"z":0,"rotationX":90,"color":"#ee6060"}]} },
-                missile: { hitEffectType: 'fire', render: {"shapes":[{"type":"cylinder","size":5,"color":"#888888","x":0,"y":24,"z":-1.3812500000000014,"rotationX":90,"rotationY":0,"rotationZ":0,"height":25},{"type":"cone","size":5,"color":"#ff1117","x":0,"y":24,"z":13.618749999999999,"rotationX":90,"rotationY":0,"rotationZ":0,"height":5},{"type":"cone","size":2.5,"color":"#ff1117","x":0,"y":24,"z":-13.881250000000001,"rotationX":90,"rotationY":0,"rotationZ":0,"height":2.5},{"type":"cylinder","size":6.25,"color":"#888888","x":0,"y":24,"z":-11.131250000000001,"rotationX":90,"rotationY":0,"rotationZ":0,"height":5},{"type":"box","size":5,"color":"#888888","x":0,"y":27,"z":-11.631250000000001,"rotationX":45,"rotationY":0,"rotationZ":0,"width":0.25,"height":2.5,"depth":8.5},{"type":"box","size":5,"color":"#888888","x":0,"y":21,"z":-11.631250000000001,"rotationX":-45,"rotationY":0,"rotationZ":0,"width":0.25,"height":2.5,"depth":8.5},{"type":"box","size":5,"color":"#888888","x":-3,"y":24,"z":-11.631250000000001,"rotationX":0,"rotationY":45,"rotationZ":90,"width":0.25,"height":2.5,"depth":8.5},{"type":"box","size":5,"color":"#888888","x":3,"y":24,"z":-11.631250000000001,"rotationX":0,"rotationY":-45,"rotationZ":-90,"width":0.25,"height":2.5,"depth":8.5}]} },
-                cryoMist: {  hitEffectType: 'ice', render: {"shapes":[{"type":"sphere","size":6,"x":0,"y":25,"z":0,"rotationX":90,"color":"#6060ee"}]} },
+                plasmaBolt: { hitEffectType: 'plasma', render: {"animations":{"idle":[{"shapes":[{"type":"sphere","size":6,"x":0,"y":24,"z":0,"rotationX":90,"color":"#ee6060"}]} ] } } },
+                nanoOrb: { render: {"animations":{"idle":[{"shapes":[{"type":"sphere","size":6,"x":0,"y":5,"z":0,"rotationX":90,"color":"#ee6060"}]} ] } } },
+                neutronFragment: { render: {"animations":{"idle":[{"shapes":[{"type":"sphere","size":6,"x":0,"y":25,"z":0,"rotationX":90,"color":"#ee6060"}]} ] } } },
+                missile: { hitEffectType: 'fire', render: {"animations":{"idle":[{"shapes":[{"type":"cylinder","size":5,"color":"#888888","x":0,"y":24,"z":-1.3812500000000014,"rotationX":90,"rotationY":0,"rotationZ":0,"height":25},{"type":"cone","size":5,"color":"#ff1117","x":0,"y":24,"z":13.618749999999999,"rotationX":90,"rotationY":0,"rotationZ":0,"height":5},{"type":"cone","size":2.5,"color":"#ff1117","x":0,"y":24,"z":-13.881250000000001,"rotationX":90,"rotationY":0,"rotationZ":0,"height":2.5},{"type":"cylinder","size":6.25,"color":"#888888","x":0,"y":24,"z":-11.131250000000001,"rotationX":90,"rotationY":0,"rotationZ":0,"height":5},{"type":"box","size":5,"color":"#888888","x":0,"y":27,"z":-11.631250000000001,"rotationX":45,"rotationY":0,"rotationZ":0,"width":0.25,"height":2.5,"depth":8.5},{"type":"box","size":5,"color":"#888888","x":0,"y":21,"z":-11.631250000000001,"rotationX":-45,"rotationY":0,"rotationZ":0,"width":0.25,"height":2.5,"depth":8.5},{"type":"box","size":5,"color":"#888888","x":-3,"y":24,"z":-11.631250000000001,"rotationX":0,"rotationY":45,"rotationZ":90,"width":0.25,"height":2.5,"depth":8.5},{"type":"box","size":5,"color":"#888888","x":3,"y":24,"z":-11.631250000000001,"rotationX":0,"rotationY":-45,"rotationZ":-90,"width":0.25,"height":2.5,"depth":8.5}]} ] } } },
+                cryoMist: {  hitEffectType: 'ice', render: {"animations":{"idle":[{"shapes":[{"type":"sphere","size":6,"x":0,"y":25,"z":0,"rotationX":90,"color":"#6060ee"}]} ] } } },
                 lightning: { customRenderer: 'lightning', hitEffectType: 'electric' },
             },
             towers: 
             {
-                keep: { title: 'Citadel', mineAmt: 1, attackSpeed: 50, render: {"shapes":[{"type":"box","width":40,"height":12,"depth":40,"color":"#8B8B8B","x":0,"y":6,"z":0},{"type":"box","width":32,"height":20,"depth":32,"color":"#A0A0A0","x":0,"y":22,"z":0},{"type":"sphere","width":24,"height":16,"depth":24,"color":"#C0C0C0","x":0,"y":32,"z":0,"size":24},{"type":"cylinder","size":12,"height":22,"color":"#D8D8D8","x":0,"y":42,"z":0},{"type":"cone","size":14,"height":20,"color":"#4169E1","x":0,"y":62,"z":0},{"type":"cylinder","size":6,"height":30,"color":"#C0C0C0","x":16,"y":22,"z":16},{"type":"cylinder","size":6,"height":30,"color":"#C0C0C0","x":-16,"y":22,"z":16},{"type":"cylinder","size":6,"height":30,"color":"#C0C0C0","x":16,"y":22,"z":-16},{"type":"cylinder","size":6,"height":30,"color":"#C0C0C0","x":-16,"y":22,"z":-16},{"type":"cone","size":8,"height":10,"color":"#4169E1","x":16,"y":42,"z":16},{"type":"cone","size":8,"height":10,"color":"#4169E1","x":-16,"y":42,"z":16},{"type":"cone","size":8,"height":10,"color":"#4169E1","x":16,"y":42,"z":-16},{"type":"cone","size":8,"height":10,"color":"#4169E1","x":-16,"y":42,"z":-16},{"type":"box","width":44,"height":4,"depth":44,"color":"#696969","x":0,"y":2,"z":0}]} },
-                sentry: { title: 'Photon Sentry', info: 'Defensive attack sentry.', cost: 25, population: 1, range: 120, damage: 2, attackSpeed: 20, projectile: 'plasmaBolt', critChance: 0.05, critMultiplier: 1.5, render: {"shapes":[{"type":"cylinder","size":12,"height":4,"color":"#696969","x":0,"y":0,"z":0},{"type":"cylinder","size":10,"height":26,"color":"#8B8B8B","x":0,"y":15,"z":0},{"type":"cylinder","size":12,"height":4,"color":"#696969","x":0,"y":30,"z":0},{"type":"cylinder","size":6,"height":14,"color":"#A9A9A9","x":0,"y":38,"z":0},{"type":"sphere","size":8,"color":"#CD7F32","x":0,"y":38,"z":0},{"type":"cylinder","size":2,"height":12,"color":"#A9A9A9","x":0,"y":40,"z":0,"rotationX":90},{"type":"sphere","size":3,"color":"#FF4500","x":0,"y":40,"z":6},{"type":"box","width":3,"height":5,"depth":3,"color":"#696969","x":4,"y":32,"z":4},{"type":"box","width":3,"height":5,"depth":3,"color":"#696969","x":-4,"y":32,"z":4},{"type":"box","width":3,"height":5,"depth":3,"color":"#696969","x":4,"y":32,"z":-4},{"type":"box","width":3,"height":5,"depth":3,"color":"#696969","x":-4,"y":32,"z":-4}]} },
-                fusionCore: { title: 'Fusion Core', info: 'Creates additional energy every second.', cost: 50, population: 1, attackSpeed: 50, critMultiplier: 1, mineAmt: 1, render: {"shapes":[{"type":"cylinder","size":24,"height":8,"color":"#3A3A3A","x":0,"y":0,"z":0},{"type":"cylinder","size":20,"height":12,"color":"#555555","x":0,"y":10,"z":0},{"type":"sphere","size":14,"color":"#4B0082","x":0,"y":22,"z":0},{"type":"torus","size":22,"tubeSize":2,"color":"#00BFFF","x":0,"y":22,"z":0,"rotationX":30},{"type":"torus","size":22,"tubeSize":2,"color":"#00BFFF","x":0,"y":22,"z":0,"rotationX":105,"rotationZ":45},{"type":"cylinder","size":4,"height":10,"color":"#666666","x":12,"y":6,"z":12},{"type":"cylinder","size":4,"height":10,"color":"#666666","x":-12,"y":6,"z":12},{"type":"cylinder","size":4,"height":10,"color":"#666666","x":12,"y":6,"z":-12},{"type":"cylinder","size":4,"height":10,"color":"#666666","x":-12,"y":6,"z":-12},{"type":"box","width":8,"height":4,"depth":8,"color":"#555555","x":16,"y":2,"z":0},{"type":"box","width":8,"height":4,"depth":8,"color":"#555555","x":-16,"y":2,"z":0},{"type":"box","width":8,"height":4,"depth":8,"color":"#555555","x":0,"y":2,"z":16},{"type":"box","width":8,"height":4,"depth":8,"color":"#555555","x":0,"y":2,"z":-16},{"type":"sphere","size":3,"color":"#00FFFF","x":12,"y":12,"z":12},{"type":"sphere","size":3,"color":"#00FFFF","x":-12,"y":12,"z":12},{"type":"sphere","size":3,"color":"#00FFFF","x":12,"y":12,"z":-12},{"type":"sphere","size":3,"color":"#00FFFF","x":-12,"y":12,"z":-12}]} },
-                barracks: { title: 'Barracks', info: 'Provides 5 additional max population.', cost: 100, attackSpeed: 1000, critChance: 0.1, critMultiplier: 2, supply: 5, render: {"shapes":[{"type":"box","width":40,"height":4,"depth":40,"color":"#303040","x":0,"y":2,"z":0},{"type":"box","width":36,"height":12,"depth":36,"color":"#404050","x":0,"y":10,"z":0},{"type":"box","width":40,"height":2,"depth":40,"color":"#505060","x":0,"y":17,"z":0},{"type":"cylinder","size":12,"height":12,"color":"#2288cc","x":-16,"y":24,"z":0},{"type":"torus","size":12,"tubeSize":1,"color":"#44aaff","x":-16,"y":24,"z":0,"rotationX":90},{"type":"torus","size":12,"tubeSize":1,"color":"#44aaff","x":-16,"y":28,"z":0,"rotationX":90},{"type":"torus","size":12,"tubeSize":1,"color":"#44aaff","x":-16,"y":20,"z":0,"rotationX":90},{"type":"cylinder","size":12,"height":12,"color":"#2288cc","x":16,"y":24,"z":0},{"type":"torus","size":12,"tubeSize":1,"color":"#44aaff","x":16,"y":24,"z":0,"rotationX":90},{"type":"torus","size":12,"tubeSize":1,"color":"#44aaff","x":16,"y":28,"z":0,"rotationX":90},{"type":"torus","size":12,"tubeSize":1,"color":"#44aaff","x":16,"y":20,"z":0,"rotationX":90},{"type":"cylinder","size":16,"height":6,"color":"#333333","x":0,"y":20,"z":0},{"type":"cylinder","size":14,"height":2,"color":"#444444","x":0,"y":24,"z":0},{"type":"cylinder","size":12,"height":2,"color":"#2288cc","x":0,"y":26,"z":0},{"type":"box","width":6,"height":6,"depth":6,"color":"#cc2200","x":-14,"y":9,"z":-14},{"type":"box","width":6,"height":6,"depth":6,"color":"#cc6600","x":0,"y":9,"z":-14},{"type":"box","width":6,"height":6,"depth":6,"color":"#ccaa00","x":14,"y":9,"z":-14},{"type":"sphere","size":3,"color":"#44aaff","x":0,"y":28,"z":0},{"type":"box","width":40,"height":1,"depth":24,"color":"#444455","x":0,"y":18.5,"z":0},{"type":"cylinder","size":2,"height":4,"color":"#aa0000","x":-18,"y":20.5,"z":-8},{"type":"cylinder","size":2,"height":4,"color":"#aa0000","x":18,"y":20.5,"z":-8},{"type":"cylinder","size":2,"height":4,"color":"#aa0000","x":-18,"y":20.5,"z":8},{"type":"cylinder","size":2,"height":4,"color":"#aa0000","x":18,"y":20.5,"z":8}]} },
-                fabricator: { title: 'Fabricator', info: 'Can be upgraded to summon drones from defeated enemies.', summonType: 'drone', cost: 200, population: 4, range: 150, damage: 8, attackSpeed: 30, projectile: 'nanoOrb', piercing: 1, critChance: 0.15, critMultiplier: 1.8, render: {"shapes":[{"type":"box","width":40,"height":6,"depth":40,"x":0,"y":3,"z":0,"color":"#303030"},{"type":"cylinder","size":36,"height":14,"x":0,"y":13,"z":0,"color":"#505050"},{"type":"cylinder","size":28,"height":4,"x":0,"y":22,"z":0,"color":"#202020"},{"type":"cylinder","size":24,"height":16,"x":0,"y":32,"z":0,"color":"#404040"},{"type":"torus","size":20,"tubeSize":2,"x":0,"y":26,"z":0,"color":"#00FFAA"},{"type":"sphere","size":14,"x":0,"y":32,"z":0,"color":"#80FFD0"},{"type":"box","width":6,"height":28,"depth":6,"x":16,"y":22,"z":16,"color":"#303030"},{"type":"box","width":6,"height":28,"depth":6,"x":-16,"y":22,"z":16,"color":"#303030"},{"type":"box","width":6,"height":28,"depth":6,"x":16,"y":22,"z":-16,"color":"#303030"},{"type":"box","width":6,"height":28,"depth":6,"x":-16,"y":22,"z":-16,"color":"#303030"},{"type":"sphere","size":4,"x":16,"y":38,"z":16,"color":"#00FFAA"},{"type":"sphere","size":4,"x":-16,"y":38,"z":16,"color":"#00FFAA"},{"type":"sphere","size":4,"x":16,"y":38,"z":-16,"color":"#00FFAA"},{"type":"sphere","size":4,"x":-16,"y":38,"z":-16,"color":"#00FFAA"},{"type":"cylinder","size":10,"height":4,"x":0,"y":42,"z":0,"color":"#606060"},{"type":"cylinder","size":6,"height":8,"x":0,"y":48,"z":0,"color":"#505050"},{"type":"torus","size":8,"tubeSize":1,"x":0,"y":46,"z":0,"rotationX":90,"color":"#00FFAA"},{"type":"torus","size":4,"tubeSize":1,"x":0,"y":32,"z":0,"rotationX":30,"rotationY":45,"color":"#00FFFF"},{"type":"torus","size":4,"tubeSize":1,"x":0,"y":32,"z":0,"rotationX":120,"rotationY":45,"color":"#00FFFF"},{"type":"sphere","size":2,"x":6,"y":32,"z":0,"color":"#FFFFFF"},{"type":"sphere","size":2,"x":-6,"y":32,"z":0,"color":"#FFFFFF"},{"type":"sphere","size":2,"x":0,"y":32,"z":6,"color":"#FFFFFF"},{"type":"sphere","size":2,"x":0,"y":32,"z":-6,"color":"#FFFFFF"}]} },
-                drone: { title: 'Drone', info: 'Raise the dead.', drawOffsetY: -12, population: 1, range: 80, damage: 5, attackSpeed: 30, projectile: 'neutronFragment', critMultiplier: 1, lifeSpan: 500, render: {"shapes":[{"type":"sphere","size":10,"x":0,"y":10,"z":0,"color":"#3D3D3D"},{"type":"torus","size":12,"tubeSize":2,"x":0,"y":10,"z":0,"rotationX":90,"color":"#00FFAA"},{"type":"torus","size":12,"tubeSize":2,"x":0,"y":10,"z":0,"rotationY":90,"color":"#00FFAA"},{"type":"cylinder","size":4,"height":2,"x":0,"y":16,"z":0,"color":"#505050"},{"type":"sphere","size":3,"x":0,"y":18,"z":0,"color":"#00FFDD"},{"type":"cylinder","size":16,"height":1,"x":0,"y":8,"z":0,"rotationX":90,"rotationY":0,"color":"#404040"},{"type":"cylinder","size":16,"height":1,"x":0,"y":8,"z":0,"rotationX":90,"rotationY":90,"color":"#404040"},{"type":"cylinder","size":4,"height":1,"x":14,"y":8,"z":14,"color":"#505050"},{"type":"cylinder","size":4,"height":1,"x":-14,"y":8,"z":14,"color":"#505050"},{"type":"cylinder","size":4,"height":1,"x":14,"y":8,"z":-14,"color":"#505050"},{"type":"cylinder","size":4,"height":1,"x":-14,"y":8,"z":-14,"color":"#505050"},{"type":"torus","size":6,"tubeSize":1,"x":14,"y":9,"z":14,"rotationX":90,"color":"#00FFAA"},{"type":"torus","size":6,"tubeSize":1,"x":-14,"y":9,"z":14,"rotationX":90,"color":"#00FFAA"},{"type":"torus","size":6,"tubeSize":1,"x":14,"y":9,"z":-14,"rotationX":90,"color":"#00FFAA"},{"type":"torus","size":6,"tubeSize":1,"x":-14,"y":9,"z":-14,"rotationX":90,"color":"#00FFAA"},{"type":"cylinder","size":1,"height":4,"x":0,"y":6,"z":0,"color":"#00FFDD"},{"type":"sphere","size":2,"x":0,"y":4,"z":0,"color":"#00FFAA"},{"type":"sphere","size":1,"x":5,"y":10,"z":0,"color":"#FFFFFF"},{"type":"sphere","size":1,"x":-5,"y":10,"z":0,"color":"#FFFFFF"},{"type":"sphere","size":1,"x":0,"y":10,"z":5,"color":"#FFFFFF"},{"type":"sphere","size":1,"x":0,"y":10,"z":-5,"color":"#FFFFFF"}]} },
-                teslaCoil: { title: 'Tesla Coil', info: 'Projectiles chain between enemies.', projectileStartOffsetY: 24, cost: 70, population: 3, range: 100, damage: 10, attackSpeed: 25, projectile: 'lightning', piercing: 2, critChance: 0.1, critMultiplier: 1.7, render: {"shapes":[{"type":"cylinder","size":16,"height":4,"color":"#555555","x":0,"y":2,"z":0},{"type":"cylinder","size":12,"height":8,"color":"#777777","x":0,"y":8,"z":0},{"type":"cylinder","size":10,"height":20,"color":"#333333","x":0,"y":22,"z":0},{"type":"cylinder","size":12,"height":3,"color":"#444444","x":0,"y":33.5,"z":0},{"type":"sphere","size":14,"color":"#66bbff","x":0,"y":42,"z":0},{"type":"torus","size":20,"tubeSize":1.6,"color":"#66bbff","x":0,"y":18,"z":0,"rotationX":90},{"type":"torus","size":18,"tubeSize":1.6,"color":"#4499ff","x":0,"y":24,"z":0,"rotationX":90},{"type":"torus","size":16,"tubeSize":1.6,"color":"#2277ff","x":0,"y":30,"z":0,"rotationX":90},{"type":"cone","size":6,"height":16,"color":"#888888","x":7,"y":34,"z":0,"rotationZ":-90},{"type":"cone","size":6,"height":16,"color":"#888888","x":-7,"y":34,"z":0,"rotationZ":90},{"type":"cone","size":6,"height":16,"color":"#888888","x":0,"y":34,"z":7,"rotationX":90},{"type":"cone","size":6,"height":16,"color":"#888888","x":0,"y":34,"z":-7,"rotationX":-90},{"type":"box","width":3,"height":14,"depth":3,"color":"#888888","x":6,"y":16,"z":6,"rotationY":45},{"type":"box","width":3,"height":14,"depth":3,"color":"#888888","x":-6,"y":16,"z":6,"rotationY":-45},{"type":"box","width":3,"height":14,"depth":3,"color":"#888888","x":6,"y":16,"z":-6,"rotationY":-45},{"type":"box","width":3,"height":14,"depth":3,"color":"#888888","x":-6,"y":16,"z":-6,"rotationY":45},{"type":"cylinder","size":2,"height":1,"color":"#66bbff","x":0,"y":36,"z":0}]} },
-                missileLauncher: { title: 'Missile Launcher', info: 'Projectiles explode in an AoE.', cost: 90, population: 3, range: 90, damage: 6, attackSpeed: 35, projectile: 'missile', critChance: 0.05, critMultiplier: 2, splashRadius: 45, burnDamage: 2, render: {"shapes":[{"type":"box","width":40,"height":8,"depth":40,"x":0,"y":4,"z":0,"color":"#555555"},{"type":"cylinder","size":32,"height":10,"x":0,"y":13,"z":0,"color":"#444444"},{"type":"box","width":24,"height":14,"depth":30,"x":0,"y":25,"z":0,"color":"#3A3A3A"},{"type":"cylinder","size":8,"height":34,"x":-8,"y":30,"z":8,"rotationX":90,"color":"#2A2A2A"},{"type":"cylinder","size":8,"height":34,"x":8,"y":30,"z":8,"rotationX":90,"color":"#2A2A2A"},{"type":"cylinder","size":6,"height":18,"x":-8,"y":30,"z":-6,"rotationX":90,"color":"#7f7f7f"},{"type":"cylinder","size":6,"height":18,"x":8,"y":30,"z":-6,"rotationX":90,"color":"#7f7f7f"},{"type":"cone","size":6,"height":8,"x":-8,"y":30,"z":-18,"rotationX":-90,"color":"#D14A4A"},{"type":"cone","size":6,"height":8,"x":8,"y":30,"z":-18,"rotationX":-90,"color":"#D14A4A"}]} },
-                chrono: { title: 'Chrono Defibrilator', info: 'Projectiles explode in AoE and slow.', cost: 100, population: 3, range: 90, damage: 2, attackSpeed: 50, projectile: 'cryoMist', critMultiplier: 1, splashRadius: 30, slowEffect: 0.7, render: {"shapes":[{"type":"torus","size":36,"tubeSize":4,"x":0,"y":16,"z":0,"rotationX":60,"color":"#50D0FF"},{"type":"torus","size":36,"tubeSize":4,"x":0,"y":16,"z":0,"rotationY":60,"color":"#50D0FF"},{"type":"cylinder","size":22,"height":10,"x":0,"y":5,"z":0,"color":"#333333"},{"type":"cylinder","size":16,"height":14,"x":0,"y":17,"z":0,"color":"#222222"},{"type":"sphere","size":12,"x":0,"y":16,"z":0,"color":"#A0E6FF"},{"type":"tetrahedron","size":10,"x":0,"y":16,"z":0,"rotationY":45,"color":"#203040"},{"type":"cone","size":8,"height":16,"x":0,"y":32,"z":0,"rotationX":180,"color":"#444444"},{"type":"box","width":38,"height":4,"depth":38,"x":0,"y":2,"z":0,"color":"#555555"},{"type":"sphere","size":4,"x":14,"y":12,"z":14,"color":"#C0FFFF"},{"type":"sphere","size":4,"x":-14,"y":12,"z":14,"color":"#C0FFFF"},{"type":"sphere","size":4,"x":14,"y":12,"z":-14,"color":"#C0FFFF"},{"type":"sphere","size":4,"x":-14,"y":12,"z":-14,"color":"#C0FFFF"}]} },
+                keep: { title: 'Citadel', mineAmt: 1, attackSpeed: 50, render: { animations: { idle: [ { "shapes":[{"type":"box","width":40,"height":12,"depth":40,"color":"#8B8B8B","x":0,"y":6,"z":0},{"type":"box","width":32,"height":20,"depth":32,"color":"#A0A0A0","x":0,"y":22,"z":0},{"type":"sphere","width":24,"height":16,"depth":24,"color":"#C0C0C0","x":0,"y":32,"z":0,"size":24},{"type":"cylinder","size":12,"height":22,"color":"#D8D8D8","x":0,"y":42,"z":0},{"type":"cone","size":14,"height":20,"color":"#4169E1","x":0,"y":62,"z":0},{"type":"cylinder","size":6,"height":30,"color":"#C0C0C0","x":16,"y":22,"z":16},{"type":"cylinder","size":6,"height":30,"color":"#C0C0C0","x":-16,"y":22,"z":16},{"type":"cylinder","size":6,"height":30,"color":"#C0C0C0","x":16,"y":22,"z":-16},{"type":"cylinder","size":6,"height":30,"color":"#C0C0C0","x":-16,"y":22,"z":-16},{"type":"cone","size":8,"height":10,"color":"#4169E1","x":16,"y":42,"z":16},{"type":"cone","size":8,"height":10,"color":"#4169E1","x":-16,"y":42,"z":16},{"type":"cone","size":8,"height":10,"color":"#4169E1","x":16,"y":42,"z":-16},{"type":"cone","size":8,"height":10,"color":"#4169E1","x":-16,"y":42,"z":-16},{"type":"box","width":44,"height":4,"depth":44,"color":"#696969","x":0,"y":2,"z":0}]} ] } } },
+                sentry: { title: 'Photon Sentry', info: 'Defensive attack sentry.', cost: 25, population: 1, range: 120, damage: 2, attackSpeed: 20, projectile: 'plasmaBolt', critChance: 0.05, critMultiplier: 1.5,render: {"animations":{"idle":[{"shapes":[{"type":"cylinder","size":12,"height":4,"color":"#696969","x":0,"y":0,"z":0},{"type":"cylinder","size":10,"height":26,"color":"#8B8B8B","x":0,"y":15,"z":0},{"type":"cylinder","size":12,"height":4,"color":"#696969","x":0,"y":30,"z":0},{"type":"cylinder","size":6,"height":14,"color":"#A9A9A9","x":0,"y":38,"z":0},{"type":"sphere","size":8,"color":"#CD7F32","x":0,"y":38,"z":0},{"type":"cylinder","size":2,"height":12,"color":"#A9A9A9","x":0,"y":40,"z":0,"rotationX":90},{"type":"sphere","size":3,"color":"#FF4500","x":0,"y":40,"z":6},{"type":"box","width":3,"height":5,"depth":3,"color":"#696969","x":4,"y":32,"z":4},{"type":"box","width":3,"height":5,"depth":3,"color":"#696969","x":-4,"y":32,"z":4},{"type":"box","width":3,"height":5,"depth":3,"color":"#696969","x":4,"y":32,"z":-4},{"type":"box","width":3,"height":5,"depth":3,"color":"#696969","x":-4,"y":32,"z":-4}]} ] } } },
+                fusionCore: { title: 'Fusion Core', info: 'Creates additional energy every second.', cost: 50, population: 1, attackSpeed: 50, critMultiplier: 1, mineAmt: 1, render: {"animations":{"idle":[{"shapes":[{"type":"cylinder","size":24,"height":8,"color":"#3A3A3A","x":0,"y":0,"z":0},{"type":"cylinder","size":20,"height":12,"color":"#555555","x":0,"y":10,"z":0},{"type":"sphere","size":14,"color":"#4B0082","x":0,"y":22,"z":0},{"type":"torus","size":22,"tubeSize":2,"color":"#00BFFF","x":0,"y":22,"z":0,"rotationX":30},{"type":"torus","size":22,"tubeSize":2,"color":"#00BFFF","x":0,"y":22,"z":0,"rotationX":105,"rotationZ":45},{"type":"cylinder","size":4,"height":10,"color":"#666666","x":12,"y":6,"z":12},{"type":"cylinder","size":4,"height":10,"color":"#666666","x":-12,"y":6,"z":12},{"type":"cylinder","size":4,"height":10,"color":"#666666","x":12,"y":6,"z":-12},{"type":"cylinder","size":4,"height":10,"color":"#666666","x":-12,"y":6,"z":-12},{"type":"box","width":8,"height":4,"depth":8,"color":"#555555","x":16,"y":2,"z":0},{"type":"box","width":8,"height":4,"depth":8,"color":"#555555","x":-16,"y":2,"z":0},{"type":"box","width":8,"height":4,"depth":8,"color":"#555555","x":0,"y":2,"z":16},{"type":"box","width":8,"height":4,"depth":8,"color":"#555555","x":0,"y":2,"z":-16},{"type":"sphere","size":3,"color":"#00FFFF","x":12,"y":12,"z":12},{"type":"sphere","size":3,"color":"#00FFFF","x":-12,"y":12,"z":12},{"type":"sphere","size":3,"color":"#00FFFF","x":12,"y":12,"z":-12},{"type":"sphere","size":3,"color":"#00FFFF","x":-12,"y":12,"z":-12}]} ] } } },
+                barracks: { title: 'Barracks', info: 'Provides 5 additional max population.', cost: 100, attackSpeed: 1000, critChance: 0.1, critMultiplier: 2, supply: 5, render: {"animations":{"idle":[{"shapes":[{"type":"box","width":40,"height":4,"depth":40,"color":"#303040","x":0,"y":2,"z":0},{"type":"box","width":36,"height":12,"depth":36,"color":"#404050","x":0,"y":10,"z":0},{"type":"box","width":40,"height":2,"depth":40,"color":"#505060","x":0,"y":17,"z":0},{"type":"cylinder","size":12,"height":12,"color":"#2288cc","x":-16,"y":24,"z":0},{"type":"torus","size":12,"tubeSize":1,"color":"#44aaff","x":-16,"y":24,"z":0,"rotationX":90},{"type":"torus","size":12,"tubeSize":1,"color":"#44aaff","x":-16,"y":28,"z":0,"rotationX":90},{"type":"torus","size":12,"tubeSize":1,"color":"#44aaff","x":-16,"y":20,"z":0,"rotationX":90},{"type":"cylinder","size":12,"height":12,"color":"#2288cc","x":16,"y":24,"z":0},{"type":"torus","size":12,"tubeSize":1,"color":"#44aaff","x":16,"y":24,"z":0,"rotationX":90},{"type":"torus","size":12,"tubeSize":1,"color":"#44aaff","x":16,"y":28,"z":0,"rotationX":90},{"type":"torus","size":12,"tubeSize":1,"color":"#44aaff","x":16,"y":20,"z":0,"rotationX":90},{"type":"cylinder","size":16,"height":6,"color":"#333333","x":0,"y":20,"z":0},{"type":"cylinder","size":14,"height":2,"color":"#444444","x":0,"y":24,"z":0},{"type":"cylinder","size":12,"height":2,"color":"#2288cc","x":0,"y":26,"z":0},{"type":"box","width":6,"height":6,"depth":6,"color":"#cc2200","x":-14,"y":9,"z":-14},{"type":"box","width":6,"height":6,"depth":6,"color":"#cc6600","x":0,"y":9,"z":-14},{"type":"box","width":6,"height":6,"depth":6,"color":"#ccaa00","x":14,"y":9,"z":-14},{"type":"sphere","size":3,"color":"#44aaff","x":0,"y":28,"z":0},{"type":"box","width":40,"height":1,"depth":24,"color":"#444455","x":0,"y":18.5,"z":0},{"type":"cylinder","size":2,"height":4,"color":"#aa0000","x":-18,"y":20.5,"z":-8},{"type":"cylinder","size":2,"height":4,"color":"#aa0000","x":18,"y":20.5,"z":-8},{"type":"cylinder","size":2,"height":4,"color":"#aa0000","x":-18,"y":20.5,"z":8},{"type":"cylinder","size":2,"height":4,"color":"#aa0000","x":18,"y":20.5,"z":8}]} ] } } },
+                fabricator: { title: 'Fabricator', info: 'Can be upgraded to summon drones from defeated enemies.', summonType: 'drone', cost: 200, population: 4, range: 150, damage: 8, attackSpeed: 30, projectile: 'nanoOrb', piercing: 1, critChance: 0.15, critMultiplier: 1.8, render: {"animations":{"idle":[{"shapes":[{"type":"box","width":40,"height":6,"depth":40,"x":0,"y":3,"z":0,"color":"#303030"},{"type":"cylinder","size":36,"height":14,"x":0,"y":13,"z":0,"color":"#505050"},{"type":"cylinder","size":28,"height":4,"x":0,"y":22,"z":0,"color":"#202020"},{"type":"cylinder","size":24,"height":16,"x":0,"y":32,"z":0,"color":"#404040"},{"type":"torus","size":20,"tubeSize":2,"x":0,"y":26,"z":0,"color":"#00FFAA"},{"type":"sphere","size":14,"x":0,"y":32,"z":0,"color":"#80FFD0"},{"type":"box","width":6,"height":28,"depth":6,"x":16,"y":22,"z":16,"color":"#303030"},{"type":"box","width":6,"height":28,"depth":6,"x":-16,"y":22,"z":16,"color":"#303030"},{"type":"box","width":6,"height":28,"depth":6,"x":16,"y":22,"z":-16,"color":"#303030"},{"type":"box","width":6,"height":28,"depth":6,"x":-16,"y":22,"z":-16,"color":"#303030"},{"type":"sphere","size":4,"x":16,"y":38,"z":16,"color":"#00FFAA"},{"type":"sphere","size":4,"x":-16,"y":38,"z":16,"color":"#00FFAA"},{"type":"sphere","size":4,"x":16,"y":38,"z":-16,"color":"#00FFAA"},{"type":"sphere","size":4,"x":-16,"y":38,"z":-16,"color":"#00FFAA"},{"type":"cylinder","size":10,"height":4,"x":0,"y":42,"z":0,"color":"#606060"},{"type":"cylinder","size":6,"height":8,"x":0,"y":48,"z":0,"color":"#505050"},{"type":"torus","size":8,"tubeSize":1,"x":0,"y":46,"z":0,"rotationX":90,"color":"#00FFAA"},{"type":"torus","size":4,"tubeSize":1,"x":0,"y":32,"z":0,"rotationX":30,"rotationY":45,"color":"#00FFFF"},{"type":"torus","size":4,"tubeSize":1,"x":0,"y":32,"z":0,"rotationX":120,"rotationY":45,"color":"#00FFFF"},{"type":"sphere","size":2,"x":6,"y":32,"z":0,"color":"#FFFFFF"},{"type":"sphere","size":2,"x":-6,"y":32,"z":0,"color":"#FFFFFF"},{"type":"sphere","size":2,"x":0,"y":32,"z":6,"color":"#FFFFFF"},{"type":"sphere","size":2,"x":0,"y":32,"z":-6,"color":"#FFFFFF"}]} ] } } },
+                drone: { title: 'Drone', info: 'Raise the dead.', drawOffsetY: -12, population: 1, range: 80, damage: 5, attackSpeed: 30, projectile: 'neutronFragment', critMultiplier: 1, lifeSpan: 500, render: {"animations":{"idle":[{"shapes":[{"type":"sphere","size":10,"x":0,"y":10,"z":0,"color":"#3D3D3D"},{"type":"torus","size":12,"tubeSize":2,"x":0,"y":10,"z":0,"rotationX":90,"color":"#00FFAA"},{"type":"torus","size":12,"tubeSize":2,"x":0,"y":10,"z":0,"rotationY":90,"color":"#00FFAA"},{"type":"cylinder","size":4,"height":2,"x":0,"y":16,"z":0,"color":"#505050"},{"type":"sphere","size":3,"x":0,"y":18,"z":0,"color":"#00FFDD"},{"type":"cylinder","size":16,"height":1,"x":0,"y":8,"z":0,"rotationX":90,"rotationY":0,"color":"#404040"},{"type":"cylinder","size":16,"height":1,"x":0,"y":8,"z":0,"rotationX":90,"rotationY":90,"color":"#404040"},{"type":"cylinder","size":4,"height":1,"x":14,"y":8,"z":14,"color":"#505050"},{"type":"cylinder","size":4,"height":1,"x":-14,"y":8,"z":14,"color":"#505050"},{"type":"cylinder","size":4,"height":1,"x":14,"y":8,"z":-14,"color":"#505050"},{"type":"cylinder","size":4,"height":1,"x":-14,"y":8,"z":-14,"color":"#505050"},{"type":"torus","size":6,"tubeSize":1,"x":14,"y":9,"z":14,"rotationX":90,"color":"#00FFAA"},{"type":"torus","size":6,"tubeSize":1,"x":-14,"y":9,"z":14,"rotationX":90,"color":"#00FFAA"},{"type":"torus","size":6,"tubeSize":1,"x":14,"y":9,"z":-14,"rotationX":90,"color":"#00FFAA"},{"type":"torus","size":6,"tubeSize":1,"x":-14,"y":9,"z":-14,"rotationX":90,"color":"#00FFAA"},{"type":"cylinder","size":1,"height":4,"x":0,"y":6,"z":0,"color":"#00FFDD"},{"type":"sphere","size":2,"x":0,"y":4,"z":0,"color":"#00FFAA"},{"type":"sphere","size":1,"x":5,"y":10,"z":0,"color":"#FFFFFF"},{"type":"sphere","size":1,"x":-5,"y":10,"z":0,"color":"#FFFFFF"},{"type":"sphere","size":1,"x":0,"y":10,"z":5,"color":"#FFFFFF"},{"type":"sphere","size":1,"x":0,"y":10,"z":-5,"color":"#FFFFFF"}]} ] } } },
+                teslaCoil: { title: 'Tesla Coil', info: 'Projectiles chain between enemies.', projectileStartOffsetY: 24, cost: 70, population: 3, range: 100, damage: 10, attackSpeed: 25, projectile: 'lightning', piercing: 2, critChance: 0.1, critMultiplier: 1.7, render: {"animations":{"idle":[{"shapes":[{"type":"cylinder","size":16,"height":4,"color":"#555555","x":0,"y":2,"z":0},{"type":"cylinder","size":12,"height":8,"color":"#777777","x":0,"y":8,"z":0},{"type":"cylinder","size":10,"height":20,"color":"#333333","x":0,"y":22,"z":0},{"type":"cylinder","size":12,"height":3,"color":"#444444","x":0,"y":33.5,"z":0},{"type":"sphere","size":14,"color":"#66bbff","x":0,"y":42,"z":0},{"type":"torus","size":20,"tubeSize":1.6,"color":"#66bbff","x":0,"y":18,"z":0,"rotationX":90},{"type":"torus","size":18,"tubeSize":1.6,"color":"#4499ff","x":0,"y":24,"z":0,"rotationX":90},{"type":"torus","size":16,"tubeSize":1.6,"color":"#2277ff","x":0,"y":30,"z":0,"rotationX":90},{"type":"cone","size":6,"height":16,"color":"#888888","x":7,"y":34,"z":0,"rotationZ":-90},{"type":"cone","size":6,"height":16,"color":"#888888","x":-7,"y":34,"z":0,"rotationZ":90},{"type":"cone","size":6,"height":16,"color":"#888888","x":0,"y":34,"z":7,"rotationX":90},{"type":"cone","size":6,"height":16,"color":"#888888","x":0,"y":34,"z":-7,"rotationX":-90},{"type":"box","width":3,"height":14,"depth":3,"color":"#888888","x":6,"y":16,"z":6,"rotationY":45},{"type":"box","width":3,"height":14,"depth":3,"color":"#888888","x":-6,"y":16,"z":6,"rotationY":-45},{"type":"box","width":3,"height":14,"depth":3,"color":"#888888","x":6,"y":16,"z":-6,"rotationY":-45},{"type":"box","width":3,"height":14,"depth":3,"color":"#888888","x":-6,"y":16,"z":-6,"rotationY":45},{"type":"cylinder","size":2,"height":1,"color":"#66bbff","x":0,"y":36,"z":0}]} ] } } },
+                missileLauncher: { title: 'Missile Launcher', info: 'Projectiles explode in an AoE.', cost: 90, population: 3, range: 90, damage: 6, attackSpeed: 35, projectile: 'missile', critChance: 0.05, critMultiplier: 2, splashRadius: 45, burnDamage: 2, render: {"animations":{"idle":[{"shapes":[{"type":"box","width":40,"height":8,"depth":40,"x":0,"y":4,"z":0,"color":"#555555"},{"type":"cylinder","size":32,"height":10,"x":0,"y":13,"z":0,"color":"#444444"},{"type":"box","width":24,"height":14,"depth":30,"x":0,"y":25,"z":0,"color":"#3A3A3A"},{"type":"cylinder","size":8,"height":34,"x":-8,"y":30,"z":8,"rotationX":90,"color":"#2A2A2A"},{"type":"cylinder","size":8,"height":34,"x":8,"y":30,"z":8,"rotationX":90,"color":"#2A2A2A"},{"type":"cylinder","size":6,"height":18,"x":-8,"y":30,"z":-6,"rotationX":90,"color":"#7f7f7f"},{"type":"cylinder","size":6,"height":18,"x":8,"y":30,"z":-6,"rotationX":90,"color":"#7f7f7f"},{"type":"cone","size":6,"height":8,"x":-8,"y":30,"z":-18,"rotationX":-90,"color":"#D14A4A"},{"type":"cone","size":6,"height":8,"x":8,"y":30,"z":-18,"rotationX":-90,"color":"#D14A4A"}]} ] } } },
+                chrono: { title: 'Chrono Defibrilator', info: 'Projectiles explode in AoE and slow.', cost: 100, population: 3, range: 90, damage: 2, attackSpeed: 50, projectile: 'cryoMist', critMultiplier: 1, splashRadius: 30, slowEffect: 0.7, render: {"animations":{"idle":[{"shapes":[{"type":"torus","size":36,"tubeSize":4,"x":0,"y":16,"z":0,"rotationX":60,"color":"#50D0FF"},{"type":"torus","size":36,"tubeSize":4,"x":0,"y":16,"z":0,"rotationY":60,"color":"#50D0FF"},{"type":"cylinder","size":22,"height":10,"x":0,"y":5,"z":0,"color":"#333333"},{"type":"cylinder","size":16,"height":14,"x":0,"y":17,"z":0,"color":"#222222"},{"type":"sphere","size":12,"x":0,"y":16,"z":0,"color":"#A0E6FF"},{"type":"tetrahedron","size":10,"x":0,"y":16,"z":0,"rotationY":45,"color":"#203040"},{"type":"cone","size":8,"height":16,"x":0,"y":32,"z":0,"rotationX":180,"color":"#444444"},{"type":"box","width":38,"height":4,"depth":38,"x":0,"y":2,"z":0,"color":"#555555"},{"type":"sphere","size":4,"x":14,"y":12,"z":14,"color":"#C0FFFF"},{"type":"sphere","size":4,"x":-14,"y":12,"z":14,"color":"#C0FFFF"},{"type":"sphere","size":4,"x":14,"y":12,"z":-14,"color":"#C0FFFF"},{"type":"sphere","size":4,"x":-14,"y":12,"z":-14,"color":"#C0FFFF"}]} ] } } },
             },
             enemies:  {
-                zombie: { hp: 30, speed: 0.8, value: 5, essence: 10, render: {"shapes":[{"type":"sphere","size":16,"color":"#60A060","x":0,"y":43,"z":0},{"type":"cylinder","width":20,"height":24,"depth":10,"color":"#506050","x":0,"y":24,"z":0,"size":16},{"type":"sphere","size":5,"color":"#FFFFFF","x":4,"y":45,"z":7},{"type":"sphere","size":5,"color":"#FFFFFF","x":-4,"y":45,"z":7},{"type":"sphere","size":2,"color":"#000000","x":4,"y":45,"z":9},{"type":"sphere","size":2,"color":"#000000","x":-4,"y":45,"z":9},{"type":"cylinder","size":4,"height":20,"color":"#60A060","x":8,"y":29,"z":10,"rotationX":90,"rotationZ":15},{"type":"cylinder","size":4,"height":20,"color":"#60A060","x":-8,"y":29,"z":10,"rotationX":90,"rotationZ":-15},{"type":"cylinder","size":4,"height":24,"color":"#60A060","x":5,"y":12,"z":0,"rotationZ":0},{"type":"cylinder","size":4,"height":24,"color":"#60A060","x":-5,"y":12,"z":0,"rotationZ":0,"rotationX":0}]} },
-                skeleton: { hp: 20, speed: 1.2, value: 7, essence: 12, render: {"shapes":[{"type":"sphere","size":14,"color":"#E0DED8","x":0,"y":40,"z":0},{"type":"box","width":16,"height":20,"depth":8,"color":"#CFCBC0","x":0,"y":24,"z":0},{"type":"sphere","size":3,"color":"#000000","x":4,"y":41,"z":5},{"type":"sphere","size":3,"color":"#000000","x":-4,"y":41,"z":5},{"type":"cylinder","size":3,"height":18,"color":"#E0DED8","x":8,"y":29,"z":10,"rotationX":90,"rotationZ":15},{"type":"cylinder","size":3,"height":18,"color":"#E0DED8","x":-8,"y":29,"z":10,"rotationX":90,"rotationZ":-15},{"type":"sphere","size":5,"color":"#E0DED8","x":6,"y":29,"z":20},{"type":"sphere","size":5,"color":"#E0DED8","x":-6,"y":29,"z":20},{"type":"cylinder","size":3,"height":22,"color":"#E0DED8","x":5,"y":14,"z":0,"rotationZ":0},{"type":"cylinder","size":3,"height":22,"color":"#E0DED8","x":-5,"y":14,"z":0,"rotationZ":0},{"type":"sphere","size":5,"color":"#E0DED8","x":5,"y":2,"z":0},{"type":"sphere","size":5,"color":"#E0DED8","x":-5,"y":2,"z":0}]} },
-                ghost: { hp: 15, speed: 1.5, value: 10, essence: 15, render: {"shapes":[{"type":"sphere","size":16,"color":"#C2E8F7","x":0,"y":31,"z":0},{"type":"sphere","size":14,"color":"#D8F0F9","x":0,"y":21,"z":0},{"type":"sphere","size":12,"color":"#E5F6FC","x":0,"y":11,"z":0},{"type":"cone","size":8,"height":14,"color":"#E5F6FC","x":6,"y":6,"z":0,"rotationX":180},{"type":"cone","size":8,"height":14,"color":"#E5F6FC","x":-6,"y":6,"z":0,"rotationX":180},{"type":"cone","size":8,"height":14,"color":"#E5F6FC","x":0,"y":6,"z":0,"rotationX":180},{"type":"sphere","size":4,"color":"#1A1A1A","x":4,"y":31,"z":7},{"type":"sphere","size":4,"color":"#1A1A1A","x":-4,"y":31,"z":7},{"type":"sphere","size":8,"color":"#1A1A1A","x":0,"y":28,"z":4,"rotationX":45,"rotationY":0,"rotationZ":0}]} },
-                wraith: { hp: 25, speed: 1.8, value: 12, essence: 18, dodgeChance: 0.2, render: {"shapes":[{"type":"sphere","size":16,"color":"#3A6A8A","x":0,"y":24,"z":0},{"type":"sphere","size":8,"color":"#FFFFFF","x":0,"y":24,"z":6},{"type":"sphere","size":4,"color":"#000000","x":0,"y":24,"z":8.5},{"type":"cylinder","size":6,"height":4,"color":"#2A5A7A","x":-8,"y":22,"z":0,"rotationZ":30},{"type":"cylinder","size":6,"height":4,"color":"#2A5A7A","x":8,"y":22,"z":0,"rotationZ":-30}]} },
-                bloodBeast: { hp: 50, speed: 0.6, value: 15, essence: 20, regen: 0.5, render: {"shapes":[{"type":"sphere","width":26,"height":20,"depth":24,"color":"#A52A2A","x":0,"y":20,"z":0,"size":28},{"type":"sphere","size":18,"color":"#A52A2A","x":0,"y":36,"z":0},{"type":"cylinder","size":8,"height":14,"color":"#8B4513","x":16,"y":24,"z":0,"rotationZ":45},{"type":"cylinder","size":8,"height":14,"color":"#8B4513","x":-16,"y":24,"z":0,"rotationZ":-45},{"type":"sphere","size":9,"color":"#A52A2A","x":22,"y":18,"z":0},{"type":"sphere","size":9,"color":"#A52A2A","x":-22,"y":18,"z":0},{"type":"cylinder","size":8,"height":16,"color":"#8B4513","x":10,"y":8,"z":0,"rotationZ":0},{"type":"cylinder","size":8,"height":16,"color":"#8B4513","x":-10,"y":8,"z":0,"rotationZ":0},{"type":"sphere","size":6,"color":"#FFFFFF","x":5,"y":38,"z":8},{"type":"sphere","size":6,"color":"#FFFFFF","x":-5,"y":38,"z":8},{"type":"sphere","size":3,"color":"#000000","x":5,"y":38,"z":10},{"type":"sphere","size":3,"color":"#000000","x":-5,"y":38,"z":10},{"type":"cone","size":6,"height":12,"color":"#8B4513","x":-10,"y":42,"z":0,"rotationZ":45},{"type":"cone","size":6,"height":12,"color":"#8B4513","x":10,"y":42,"z":0,"rotationZ":-45}]} },
-                banshee: { hp: 20, speed: 1.4, value: 8, essence: 14, screamDamage: 5, render: {"shapes":[{"type":"sphere","size":12,"color":"#BCA9DF","x":0,"y":36,"z":2},{"type":"cone","size":16,"height":30,"color":"#9F8AC7","x":0,"y":18,"z":0,"rotationX":180},{"type":"sphere","size":4,"color":"#FF3366","x":4,"y":36,"z":7},{"type":"sphere","size":4,"color":"#FF3366","x":-4,"y":36,"z":7},{"type":"cylinder","size":3,"height":16,"color":"#BCA9DF","x":-8,"y":28,"z":10,"rotationX":90,"rotationZ":30},{"type":"cylinder","size":3,"height":16,"color":"#BCA9DF","x":8,"y":28,"z":10,"rotationX":90,"rotationZ":-30},{"type":"cylinder","size":2,"height":12,"color":"#BCA9DF","x":3,"y":33,"z":-10,"rotationX":-40},{"type":"cylinder","size":2,"height":12,"color":"#BCA9DF","x":-3,"y":33,"z":-10,"rotationX":-40},{"type":"sphere","size":6,"color":"#000000","x":0,"y":32,"z":7.8,"rotationX":45},{"type":"sphere","size":6,"color":"#BCA9DF","x":15,"y":18,"z":0},{"type":"sphere","size":6,"color":"#BCA9DF","x":-15,"y":18,"z":0},{"type":"sphere","size":6,"color":"#BCA9DF","x":0,"y":18,"z":-15}]} },
-                trex: { info: 'T-Rex', hp: 40, speed: 1.5, value: 10, essence: 15, render: {"shapes":[{"type":"box","width":12,"height":25,"depth":12,"x":0,"y":22.6,"z":-2.6,"rotationX":46,"color":"#5D8233"},{"type":"box","width":12,"height":10,"depth":16,"x":0,"y":37,"z":12,"color":"#5D8233"},{"type":"box","width":10,"height":4,"depth":14,"x":0,"y":29,"z":14,"color":"#4E6C2A"},{"type":"box","width":8,"height":1,"depth":1,"x":0,"y":31,"z":20,"color":"#FFFFFF"},{"type":"box","width":1,"height":2,"depth":1,"x":-3,"y":31,"z":20,"color":"#FFFFFF"},{"type":"box","width":1,"height":2,"depth":1,"x":0,"y":31,"z":20,"color":"#FFFFFF"},{"type":"box","width":1,"height":2,"depth":1,"x":3,"y":31,"z":20,"color":"#FFFFFF"},{"type":"sphere","size":3,"x":-7,"y":42,"z":14,"color":"#FFFF00"},{"type":"sphere","size":1.5,"x":-7,"y":42,"z":15,"color":"#000000"},{"type":"sphere","size":3,"x":7,"y":42,"z":14,"color":"#FFFF00"},{"type":"sphere","size":1.5,"x":7,"y":42,"z":15,"color":"#000000"},{"type":"box","width":6,"height":4,"depth":14,"x":0,"y":18,"z":-17.9,"rotationX":-20,"color":"#5D8233"},{"type":"box","width":4,"height":3,"depth":10,"x":0,"y":15,"z":-30,"rotationX":-10,"color":"#5D8233"},{"type":"box","width":5,"height":16,"depth":5,"x":6,"y":10,"z":0,"color":"#4E6C2A"},{"type":"box","width":5,"height":16,"depth":5,"x":-6,"y":10,"z":0,"color":"#4E6C2A"},{"type":"box","width":7,"height":2,"depth":9,"x":6,"y":1,"z":0,"color":"#4E6C2A"},{"type":"box","width":7,"height":2,"depth":9,"x":-6,"y":1,"z":0,"color":"#4E6C2A"},{"type":"box","width":3,"height":5,"depth":3,"x":8,"y":26,"z":0,"rotationX":-40,"color":"#4E6C2A"},{"type":"box","width":3,"height":5,"depth":3,"x":-8,"y":26,"z":0,"rotationX":-40,"color":"#4E6C2A"},{"type":"box","width":2,"height":2,"depth":1,"x":8,"y":24,"z":3,"color":"#A0A0A0"},{"type":"box","width":2,"height":2,"depth":1,"x":-8,"y":24,"z":3,"color":"#A0A0A0"},{"type":"cone","size":4,"height":6,"x":0,"y":35,"z":-2,"rotationX":-60,"color":"#536026"},{"type":"cone","size":4,"height":6,"x":0,"y":28,"z":-8,"rotationX":-75,"color":"#436026"},{"type":"cone","size":3,"height":4,"x":0,"y":22,"z":-20,"rotationX":-25,"color":"#436026"},{"type":"cone","size":2,"height":3,"x":0,"y":18,"z":-28,"rotationX":-25,"color":"#436026"}]} },
-                stegosaurus: { info: 'Stegosaurus', speed: 1, hp: 30, essence: 10, value: 5, render: {"shapes":[{"type":"box","width":24,"height":12,"depth":32,"x":0,"y":18,"z":0,"color":"#5D8233"},{"type":"box","width":16,"height":12,"depth":22,"x":0,"y":28,"z":24,"color":"#5D8233"},{"type":"box","width":14,"height":5,"depth":20,"x":0,"y":23,"z":26,"color":"#4E6C2A"},{"type":"box","width":12,"height":2,"depth":1,"x":0,"y":23,"z":36,"color":"#FFFFFF"},{"type":"box","width":1,"height":3,"depth":1,"x":-4,"y":22,"z":35,"color":"#FFFFFF"},{"type":"box","width":1,"height":3,"depth":1,"x":-2,"y":22,"z":35,"color":"#FFFFFF"},{"type":"box","width":1,"height":3,"depth":1,"x":0,"y":22,"z":35,"color":"#FFFFFF"},{"type":"box","width":1,"height":3,"depth":1,"x":2,"y":22,"z":35,"color":"#FFFFFF"},{"type":"box","width":1,"height":3,"depth":1,"x":4,"y":22,"z":35,"color":"#FFFFFF"},{"type":"sphere","size":4,"x":-9,"y":32,"z":28,"color":"#FFFF00"},{"type":"sphere","size":2,"x":-10,"y":32,"z":29,"color":"#000000"},{"type":"sphere","size":4,"x":9,"y":32,"z":28,"color":"#FFFF00"},{"type":"sphere","size":2,"x":10,"y":32,"z":29,"color":"#000000"},{"type":"box","width":8,"height":6,"depth":20,"x":0,"y":16,"z":-20,"color":"#5D8233"},{"type":"box","width":6,"height":4,"depth":16,"x":0,"y":15,"z":-38,"rotationY":0,"color":"#5D8233"},{"type":"box","width":6,"height":12,"depth":6,"x":10,"y":10,"z":10,"color":"#4E6C2A"},{"type":"box","width":6,"height":12,"depth":6,"x":10,"y":10,"z":-10,"color":"#4E6C2A"},{"type":"box","width":6,"height":12,"depth":6,"x":-10,"y":10,"z":10,"color":"#4E6C2A"},{"type":"box","width":6,"height":12,"depth":6,"x":-10,"y":10,"z":-10,"color":"#4E6C2A"},{"type":"box","width":8,"height":3,"depth":10,"x":10,"y":3,"z":12,"color":"#4E6C2A"},{"type":"box","width":8,"height":3,"depth":10,"x":10,"y":3,"z":-8,"color":"#4E6C2A"},{"type":"box","width":8,"height":3,"depth":10,"x":-10,"y":3,"z":12,"color":"#4E6C2A"},{"type":"box","width":8,"height":3,"depth":10,"x":-10,"y":3,"z":-8,"color":"#4E6C2A"},{"type":"box","width":4,"height":6,"depth":4,"x":12,"y":20,"z":10,"color":"#4E6C2A"},{"type":"box","width":4,"height":6,"depth":4,"x":-12,"y":20,"z":10,"color":"#4E6C2A"},{"type":"box","width":3,"height":3,"depth":1,"x":12,"y":20,"z":13,"color":"#A0A0A0"},{"type":"box","width":3,"height":3,"depth":1,"x":-12,"y":20,"z":13,"color":"#A0A0A0"},{"type":"cone","size":6,"height":8,"x":0,"y":27,"z":0,"rotationX":0,"color":"#436026"},{"type":"cone","size":6,"height":8,"x":0,"y":26,"z":-10,"rotationX":0,"color":"#436026"},{"type":"cone","size":5,"height":6,"x":0,"y":22,"z":-24,"rotationX":0,"color":"#436026"},{"type":"cone","size":4,"height":5,"x":0,"y":20,"z":-36,"rotationX":0,"color":"#436026"},{"type":"cone","size":6,"height":8,"x":0,"y":34,"z":20,"rotationX":0,"color":"#436026"}]} },
-                dragon: { info: 'Dragon', hp: 500, speed: 0.5, essence: 50, value: 50, boss: true, render: {"shapes":[{"type":"box","width":18,"height":10,"depth":28,"x":0,"y":20,"z":-6.4,"rotationX":-19,"color":"#8B0000"},{"type":"box","width":14,"height":8,"depth":20,"x":0,"y":30,"z":18,"rotationX":-10,"color":"#8B0000"},{"type":"box","width":12,"height":6,"depth":16,"x":0,"y":40,"z":30,"rotationX":-20,"color":"#8B0000"},{"type":"cone","size":10,"height":20,"x":0,"y":42,"z":42,"rotationX":90,"color":"#8B0000"},{"type":"box","width":12,"height":6,"depth":16,"x":0,"y":14,"z":-24,"rotationX":-5,"color":"#8B0000"},{"type":"box","width":8,"height":4,"depth":20,"x":0,"y":10,"z":-42,"rotationX":-5,"color":"#8B0000"},{"type":"cone","size":6,"height":12,"x":0,"y":8,"z":-54,"rotationX":-90,"color":"#8B0000"},{"type":"box","width":22,"height":10,"depth":18,"x":0,"y":26,"z":0,"rotationX":-14,"color":"#8B0000"},{"type":"sphere","size":8,"x":0,"y":46,"z":34,"color":"#A52A2A"},{"type":"sphere","size":3,"x":-4,"y":48,"z":36,"color":"#FFFF00"},{"type":"sphere","size":1.5,"x":-4,"y":48,"z":37,"color":"#000000"},{"type":"sphere","size":3,"x":4,"y":48,"z":36,"color":"#FFFF00"},{"type":"sphere","size":1.5,"x":4,"y":48,"z":37,"color":"#000000"},{"type":"box","width":5,"height":3,"depth":10,"x":0,"y":40,"z":40,"color":"#A52A2A"},{"type":"box","width":4,"height":2,"depth":1,"x":0,"y":42,"z":46,"color":"#FFFFFF"},{"type":"box","width":1,"height":2,"depth":1,"x":-2,"y":40,"z":46,"color":"#FFFFFF"},{"type":"box","width":1,"height":2,"depth":1,"x":0,"y":40,"z":46,"color":"#FFFFFF"},{"type":"box","width":1,"height":2,"depth":1,"x":2,"y":40,"z":46,"color":"#FFFFFF"},{"type":"box","width":5,"height":12,"depth":5,"x":10,"y":12,"z":0,"color":"#8B0000"},{"type":"box","width":5,"height":12,"depth":5,"x":-10,"y":12,"z":0,"color":"#8B0000"},{"type":"box","width":5,"height":12,"depth":5,"x":10,"y":12,"z":-16,"color":"#8B0000"},{"type":"box","width":5,"height":12,"depth":5,"x":-10,"y":12,"z":-16,"color":"#8B0000"},{"type":"box","width":7,"height":2,"depth":7,"x":10,"y":5,"z":0,"color":"#8B0000"},{"type":"box","width":7,"height":2,"depth":7,"x":-10,"y":5,"z":0,"color":"#8B0000"},{"type":"box","width":7,"height":2,"depth":7,"x":10,"y":6,"z":-16,"color":"#8B0000"},{"type":"box","width":7,"height":2,"depth":7,"x":-10,"y":6,"z":-16,"color":"#8B0000"},{"type":"cone","size":6,"height":10,"x":0,"y":36,"z":10,"rotationX":-20,"color":"#A52A2A"},{"type":"cone","size":6,"height":10,"x":0,"y":34,"z":-8,"rotationX":-32,"color":"#A52A2A"},{"type":"cone","size":5,"height":8,"x":0,"y":22,"z":-24,"rotationX":-75,"color":"#A52A2A"},{"type":"cone","size":4,"height":6,"x":0,"y":16,"z":-38,"rotationX":-75,"color":"#A52A2A"},{"type":"box","width":20,"height":1,"depth":28,"x":18,"y":24,"z":-4,"rotationY":15,"rotationZ":12,"color":"#A52A2A"},{"type":"box","width":20,"height":1,"depth":28,"x":-18,"y":24,"z":-4,"rotationY":-15,"rotationZ":-12,"color":"#A52A2A"},{"type":"box","width":18,"height":1,"depth":24,"x":18,"y":27,"z":-4,"rotationY":15,"rotationZ":24,"color":"#A52A2A"},{"type":"box","width":18,"height":1,"depth":24,"x":-18,"y":27,"z":-4,"rotationY":-15,"rotationZ":-24,"color":"#A52A2A"},{"type":"box","width":16,"height":1,"depth":20,"x":18,"y":30,"z":-4,"rotationY":15,"rotationZ":36,"color":"#A52A2A"},{"type":"box","width":16,"height":1,"depth":20,"x":-18,"y":30,"z":-4,"rotationY":-15,"rotationZ":-36,"color":"#A52A2A"}]} },
-                pterodactyl: { info: 'Pterodactyl', speed: 2, value: 10, hp: 5, essence: 5, render: {"shapes":[{"type":"cylinder","size":7.199999999999999,"height":14.399999999999999,"x":0,"y":47.48726562500001,"z":-2.3686718749999995,"color":"#7d6d5e","rotationX":90,"rotationZ":0},{"type":"cylinder","size":2.88,"height":12,"x":0,"y":49.294765625,"z":9.631328125000001,"color":"#7D6B5D","rotationX":45,"rotationZ":0},{"type":"cone","size":2.4,"height":10.56,"x":0,"y":52.76726562500002,"z":15.871328125,"color":"#7D6B5D","rotationX":120,"rotationZ":0},{"type":"cone","size":0.96,"height":9.6,"x":0,"y":59.48726562500001,"z":13.471328125,"color":"#6D5D4D","rotationX":0,"rotationZ":0},{"type":"box","width":24,"height":0.48,"depth":9.6,"x":-12,"y":47.48726562500001,"z":-2.3686718749999995,"color":"#8D7B6D","rotationY":0,"rotationZ":15},{"type":"box","width":24,"height":0.48,"depth":9.6,"x":12,"y":47.48726562500001,"z":-2.3686718749999995,"color":"#8D7B6D","rotationY":0,"rotationZ":-15},{"type":"box","width":4,"height":0.24,"depth":2,"x":-12,"y":47,"z":3,"color":"#8D7B6D","rotationY":90,"rotationZ":15},{"type":"box","width":10,"height":0.24,"depth":6,"x":25,"y":43.2,"z":-4.1,"color":"#8D7B6D","rotationY":40,"rotationZ":-30,"rotationX":16},{"type":"cone","size":1.92,"height":12,"x":0,"y":47.48726562500001,"z":-16.851171875000002,"color":"#7D6B5D","rotationX":-90,"rotationZ":0},{"type":"box","width":5.76,"height":0.48,"depth":4.8,"x":0,"y":47.48726562500001,"z":-19.648671875,"color":"#8D7B6D","rotationX":0,"rotationZ":0},{"type":"cylinder","size":0.72,"height":5.76,"x":-2.4,"y":42.68726562500001,"z":-4.768671874999999,"color":"#6D5D4D","rotationX":20,"rotationZ":0},{"type":"cylinder","size":0.72,"height":5.76,"x":2.4,"y":42.68726562500001,"z":-4.768671874999999,"color":"#6D5D4D","rotationX":20,"rotationZ":0},{"type":"cone","size":1.44,"height":2.4,"x":-2.4,"y":40.04726562500001,"z":-4.851171875,"color":"#6D5D4D","rotationX":-60,"rotationZ":0},{"type":"cone","size":1.44,"height":2.4,"x":2.4,"y":40.04726562500001,"z":-4.851171875,"color":"#6D5D4D","rotationX":-60,"rotationZ":0},{"type":"sphere","size":0.72,"x":-0.96,"y":54.68726562500001,"z":15.391328125000001,"color":"#000000"},{"type":"sphere","size":0.72,"x":0.96,"y":54.68726562500001,"z":15.391328125000001,"color":"#000000"},{"type":"box","width":4,"height":0.24,"depth":2,"x":12,"y":47,"z":3,"color":"#8D7B6D","rotationY":90,"rotationZ":15},{"type":"box","width":10,"height":0.24,"depth":6,"x":-25,"y":43.2,"z":-4.1,"color":"#8D7B6D","rotationY":-40,"rotationZ":30,"rotationX":16}]} },
-            },
+                zombie: { hp: 30, speed: 0.8, value: 5, essence: 10, render: {"animations":{"idle":[{"shapes":[{"type":"sphere","size":16,"color":"#60A060","x":0,"y":43,"z":0},{"type":"cylinder","width":20,"height":24,"depth":10,"color":"#506050","x":0,"y":24,"z":0,"size":16},{"type":"sphere","size":5,"color":"#FFFFFF","x":4,"y":45,"z":7},{"type":"sphere","size":5,"color":"#FFFFFF","x":-4,"y":45,"z":7},{"type":"sphere","size":2,"color":"#000000","x":4,"y":45,"z":9},{"type":"sphere","size":2,"color":"#000000","x":-4,"y":45,"z":9},{"type":"cylinder","size":4,"height":20,"color":"#60A060","x":8,"y":29,"z":10,"rotationX":90,"rotationZ":0},{"type":"cylinder","size":4,"height":20,"color":"#60A060","x":-8,"y":29,"z":10,"rotationX":90,"rotationZ":0},{"type":"cylinder","size":4,"height":24,"color":"#60A060","x":5,"y":12,"z":0,"rotationZ":0},{"type":"cylinder","size":4,"height":24,"color":"#60A060","x":-5,"y":12,"z":0,"rotationZ":0,"rotationX":0}]}],"walk":[{"shapes":[{"type":"sphere","size":16,"color":"#60A060","x":0,"y":43,"z":0},{"type":"cylinder","width":20,"height":24,"depth":10,"color":"#506050","x":0,"y":24,"z":0,"size":16},{"type":"sphere","size":5,"color":"#FFFFFF","x":4,"y":45,"z":7},{"type":"sphere","size":5,"color":"#FFFFFF","x":-4,"y":45,"z":7},{"type":"sphere","size":2,"color":"#000000","x":4,"y":45,"z":9},{"type":"sphere","size":2,"color":"#000000","x":-4,"y":45,"z":9},{"type":"cylinder","size":4,"height":20,"color":"#60A060","x":8,"y":29,"z":10,"rotationX":90,"rotationZ":15},{"type":"cylinder","size":4,"height":20,"color":"#60A060","x":-8,"y":29,"z":10,"rotationX":90,"rotationZ":-15},{"type":"cylinder","size":4,"height":24,"color":"#60A060","x":5,"y":12,"z":0,"rotationZ":0,"rotationX":-15},{"type":"cylinder","size":4,"height":24,"color":"#60A060","x":-5,"y":12,"z":0,"rotationZ":0,"rotationX":15}]},{"shapes":[{"type":"sphere","size":16,"color":"#60A060","x":0,"y":43,"z":0},{"type":"cylinder","width":20,"height":24,"depth":10,"color":"#506050","x":0,"y":24,"z":0,"size":16},{"type":"sphere","size":5,"color":"#FFFFFF","x":4,"y":45,"z":7},{"type":"sphere","size":5,"color":"#FFFFFF","x":-4,"y":45,"z":7},{"type":"sphere","size":2,"color":"#000000","x":4,"y":45,"z":9},{"type":"sphere","size":2,"color":"#000000","x":-4,"y":45,"z":9},{"type":"cylinder","size":4,"height":20,"color":"#60A060","x":8,"y":29,"z":10,"rotationX":90,"rotationZ":0},{"type":"cylinder","size":4,"height":20,"color":"#60A060","x":-8,"y":29,"z":10,"rotationX":90,"rotationZ":0},{"type":"cylinder","size":4,"height":24,"color":"#60A060","x":5,"y":12,"z":0,"rotationZ":0,"rotationX":0},{"type":"cylinder","size":4,"height":24,"color":"#60A060","x":-5,"y":12,"z":0,"rotationZ":0,"rotationX":0}]},{"shapes":[{"type":"sphere","size":16,"color":"#60A060","x":0,"y":43,"z":0},{"type":"cylinder","width":20,"height":24,"depth":10,"color":"#506050","x":0,"y":24,"z":0,"size":16},{"type":"sphere","size":5,"color":"#FFFFFF","x":4,"y":45,"z":7},{"type":"sphere","size":5,"color":"#FFFFFF","x":-4,"y":45,"z":7},{"type":"sphere","size":2,"color":"#000000","x":4,"y":45,"z":9},{"type":"sphere","size":2,"color":"#000000","x":-4,"y":45,"z":9},{"type":"cylinder","size":4,"height":20,"color":"#60A060","x":8,"y":29,"z":10,"rotationX":90,"rotationZ":-15},{"type":"cylinder","size":4,"height":20,"color":"#60A060","x":-8,"y":29,"z":10,"rotationX":90,"rotationZ":15},{"type":"cylinder","size":4,"height":24,"color":"#60A060","x":5,"y":12,"z":0,"rotationZ":0,"rotationX":15},{"type":"cylinder","size":4,"height":24,"color":"#60A060","x":-5,"y":12,"z":0,"rotationZ":0,"rotationX":-15}]},{"shapes":[{"type":"sphere","size":16,"color":"#60A060","x":0,"y":43,"z":0},{"type":"cylinder","width":20,"height":24,"depth":10,"color":"#506050","x":0,"y":24,"z":0,"size":16},{"type":"sphere","size":5,"color":"#FFFFFF","x":4,"y":45,"z":7},{"type":"sphere","size":5,"color":"#FFFFFF","x":-4,"y":45,"z":7},{"type":"sphere","size":2,"color":"#000000","x":4,"y":45,"z":9},{"type":"sphere","size":2,"color":"#000000","x":-4,"y":45,"z":9},{"type":"cylinder","size":4,"height":20,"color":"#60A060","x":8,"y":29,"z":10,"rotationX":90,"rotationZ":0},{"type":"cylinder","size":4,"height":20,"color":"#60A060","x":-8,"y":29,"z":10,"rotationX":90,"rotationZ":0},{"type":"cylinder","size":4,"height":24,"color":"#60A060","x":5,"y":12,"z":0,"rotationZ":0,"rotationX":0},{"type":"cylinder","size":4,"height":24,"color":"#60A060","x":-5,"y":12,"z":0,"rotationZ":0,"rotationX":0}]}]}} },
+                skeleton: { hp: 20, speed: 1.2, value: 7, essence: 12, render: {"animations":{"idle":[{"shapes":[{"type":"sphere","size":14,"color":"#E0DED8","x":0,"y":40,"z":0},{"type":"box","width":16,"height":20,"depth":8,"color":"#CFCBC0","x":0,"y":24,"z":0},{"type":"sphere","size":3,"color":"#000000","x":4,"y":41,"z":5},{"type":"sphere","size":3,"color":"#000000","x":-4,"y":41,"z":5},{"type":"cylinder","size":3,"height":18,"color":"#E0DED8","x":8,"y":29,"z":10,"rotationX":90,"rotationZ":15},{"type":"cylinder","size":3,"height":18,"color":"#E0DED8","x":-8,"y":29,"z":10,"rotationX":90,"rotationZ":-15},{"type":"sphere","size":5,"color":"#E0DED8","x":6,"y":29,"z":20},{"type":"sphere","size":5,"color":"#E0DED8","x":-6,"y":29,"z":20},{"type":"cylinder","size":3,"height":22,"color":"#E0DED8","x":5,"y":14,"z":0,"rotationZ":0},{"type":"cylinder","size":3,"height":22,"color":"#E0DED8","x":-5,"y":14,"z":0,"rotationZ":0},{"type":"sphere","size":5,"color":"#E0DED8","x":5,"y":2,"z":0},{"type":"sphere","size":5,"color":"#E0DED8","x":-5,"y":2,"z":0}]} ] } } },
+                ghost: { hp: 15, speed: 1.5, value: 10, essence: 15, render: {"animations":{"idle":[{"shapes":[{"type":"sphere","size":16,"color":"#C2E8F7","x":0,"y":31,"z":0},{"type":"sphere","size":14,"color":"#D8F0F9","x":0,"y":21,"z":0},{"type":"sphere","size":12,"color":"#E5F6FC","x":0,"y":11,"z":0},{"type":"cone","size":8,"height":14,"color":"#E5F6FC","x":6,"y":6,"z":0,"rotationX":180},{"type":"cone","size":8,"height":14,"color":"#E5F6FC","x":-6,"y":6,"z":0,"rotationX":180},{"type":"cone","size":8,"height":14,"color":"#E5F6FC","x":0,"y":6,"z":0,"rotationX":180},{"type":"sphere","size":4,"color":"#1A1A1A","x":4,"y":31,"z":7},{"type":"sphere","size":4,"color":"#1A1A1A","x":-4,"y":31,"z":7},{"type":"sphere","size":8,"color":"#1A1A1A","x":0,"y":28,"z":4,"rotationX":45,"rotationY":0,"rotationZ":0}]} ] } } },
+                wraith: { hp: 25, speed: 1.8, value: 12, essence: 18, dodgeChance: 0.2, render: {"animations":{"idle":[{"shapes":[{"type":"sphere","size":16,"color":"#3A6A8A","x":0,"y":24,"z":0},{"type":"sphere","size":8,"color":"#FFFFFF","x":0,"y":24,"z":6},{"type":"sphere","size":4,"color":"#000000","x":0,"y":24,"z":8.5},{"type":"cylinder","size":6,"height":4,"color":"#2A5A7A","x":-8,"y":22,"z":0,"rotationZ":30},{"type":"cylinder","size":6,"height":4,"color":"#2A5A7A","x":8,"y":22,"z":0,"rotationZ":-30}]} ] } } },
+                bloodBeast: { hp: 50, speed: 0.6, value: 15, essence: 20, regen: 0.5, render: {"animations":{"idle":[{"shapes":[{"type":"sphere","width":26,"height":20,"depth":24,"color":"#A52A2A","x":0,"y":20,"z":0,"size":28},{"type":"sphere","size":18,"color":"#A52A2A","x":0,"y":36,"z":0},{"type":"cylinder","size":8,"height":14,"color":"#8B4513","x":16,"y":24,"z":0,"rotationZ":45},{"type":"cylinder","size":8,"height":14,"color":"#8B4513","x":-16,"y":24,"z":0,"rotationZ":-45},{"type":"sphere","size":9,"color":"#A52A2A","x":22,"y":18,"z":0},{"type":"sphere","size":9,"color":"#A52A2A","x":-22,"y":18,"z":0},{"type":"cylinder","size":8,"height":16,"color":"#8B4513","x":10,"y":8,"z":0,"rotationZ":0},{"type":"cylinder","size":8,"height":16,"color":"#8B4513","x":-10,"y":8,"z":0,"rotationZ":0},{"type":"sphere","size":6,"color":"#FFFFFF","x":5,"y":38,"z":8},{"type":"sphere","size":6,"color":"#FFFFFF","x":-5,"y":38,"z":8},{"type":"sphere","size":3,"color":"#000000","x":5,"y":38,"z":10},{"type":"sphere","size":3,"color":"#000000","x":-5,"y":38,"z":10},{"type":"cone","size":6,"height":12,"color":"#8B4513","x":-10,"y":42,"z":0,"rotationZ":45},{"type":"cone","size":6,"height":12,"color":"#8B4513","x":10,"y":42,"z":0,"rotationZ":-45}]} ] } } },
+                banshee: { hp: 20, speed: 1.4, value: 8, essence: 14, screamDamage: 5, render: {"animations":{"idle":[{"shapes":[{"type":"sphere","size":12,"color":"#BCA9DF","x":0,"y":36,"z":2},{"type":"cone","size":16,"height":30,"color":"#9F8AC7","x":0,"y":18,"z":0,"rotationX":180},{"type":"sphere","size":4,"color":"#FF3366","x":4,"y":36,"z":7},{"type":"sphere","size":4,"color":"#FF3366","x":-4,"y":36,"z":7},{"type":"cylinder","size":3,"height":16,"color":"#BCA9DF","x":-8,"y":28,"z":10,"rotationX":90,"rotationZ":30},{"type":"cylinder","size":3,"height":16,"color":"#BCA9DF","x":8,"y":28,"z":10,"rotationX":90,"rotationZ":-30},{"type":"cylinder","size":2,"height":12,"color":"#BCA9DF","x":3,"y":33,"z":-10,"rotationX":-40},{"type":"cylinder","size":2,"height":12,"color":"#BCA9DF","x":-3,"y":33,"z":-10,"rotationX":-40},{"type":"sphere","size":6,"color":"#000000","x":0,"y":32,"z":7.8,"rotationX":45},{"type":"sphere","size":6,"color":"#BCA9DF","x":15,"y":18,"z":0},{"type":"sphere","size":6,"color":"#BCA9DF","x":-15,"y":18,"z":0},{"type":"sphere","size":6,"color":"#BCA9DF","x":0,"y":18,"z":-15}]} ] } } },
+                trex: { info: 'T-Rex', hp: 40, speed: 1.5, value: 10, essence: 15, render: {"animations":{"idle":[{"shapes":[{"type":"box","width":12,"height":25,"depth":12,"x":0,"y":22.6,"z":-2.6,"rotationX":46,"color":"#5D8233"},{"type":"box","width":12,"height":10,"depth":16,"x":0,"y":37,"z":12,"color":"#5D8233"},{"type":"box","width":10,"height":4,"depth":14,"x":0,"y":29,"z":14,"color":"#4E6C2A"},{"type":"box","width":8,"height":1,"depth":1,"x":0,"y":31,"z":20,"color":"#FFFFFF"},{"type":"box","width":1,"height":2,"depth":1,"x":-3,"y":31,"z":20,"color":"#FFFFFF"},{"type":"box","width":1,"height":2,"depth":1,"x":0,"y":31,"z":20,"color":"#FFFFFF"},{"type":"box","width":1,"height":2,"depth":1,"x":3,"y":31,"z":20,"color":"#FFFFFF"},{"type":"sphere","size":3,"x":-7,"y":42,"z":14,"color":"#FFFF00"},{"type":"sphere","size":1.5,"x":-7,"y":42,"z":15,"color":"#000000"},{"type":"sphere","size":3,"x":7,"y":42,"z":14,"color":"#FFFF00"},{"type":"sphere","size":1.5,"x":7,"y":42,"z":15,"color":"#000000"},{"type":"box","width":6,"height":4,"depth":14,"x":0,"y":18,"z":-17.9,"rotationX":-20,"color":"#5D8233"},{"type":"box","width":4,"height":3,"depth":10,"x":0,"y":15,"z":-30,"rotationX":-10,"color":"#5D8233"},{"type":"box","width":5,"height":16,"depth":5,"x":6,"y":10,"z":0,"color":"#4E6C2A"},{"type":"box","width":5,"height":16,"depth":5,"x":-6,"y":10,"z":0,"color":"#4E6C2A"},{"type":"box","width":7,"height":2,"depth":9,"x":6,"y":1,"z":0,"color":"#4E6C2A"},{"type":"box","width":7,"height":2,"depth":9,"x":-6,"y":1,"z":0,"color":"#4E6C2A"},{"type":"box","width":3,"height":5,"depth":3,"x":8,"y":26,"z":0,"rotationX":-40,"color":"#4E6C2A"},{"type":"box","width":3,"height":5,"depth":3,"x":-8,"y":26,"z":0,"rotationX":-40,"color":"#4E6C2A"},{"type":"box","width":2,"height":2,"depth":1,"x":8,"y":24,"z":3,"color":"#A0A0A0"},{"type":"box","width":2,"height":2,"depth":1,"x":-8,"y":24,"z":3,"color":"#A0A0A0"},{"type":"cone","size":4,"height":6,"x":0,"y":35,"z":-2,"rotationX":-60,"color":"#536026"},{"type":"cone","size":4,"height":6,"x":0,"y":28,"z":-8,"rotationX":-75,"color":"#436026"},{"type":"cone","size":3,"height":4,"x":0,"y":22,"z":-20,"rotationX":-25,"color":"#436026"},{"type":"cone","size":2,"height":3,"x":0,"y":18,"z":-28,"rotationX":-25,"color":"#436026"}]} ] } } },
+                stegosaurus: { info: 'Stegosaurus', speed: 1, hp: 30, essence: 10, value: 5, render: {"animations":{"idle":[{"shapes":[{"type":"box","width":24,"height":12,"depth":32,"x":0,"y":18,"z":0,"color":"#5D8233"},{"type":"box","width":16,"height":12,"depth":22,"x":0,"y":28,"z":24,"color":"#5D8233"},{"type":"box","width":14,"height":5,"depth":20,"x":0,"y":23,"z":26,"color":"#4E6C2A"},{"type":"box","width":12,"height":2,"depth":1,"x":0,"y":23,"z":36,"color":"#FFFFFF"},{"type":"box","width":1,"height":3,"depth":1,"x":-4,"y":22,"z":35,"color":"#FFFFFF"},{"type":"box","width":1,"height":3,"depth":1,"x":-2,"y":22,"z":35,"color":"#FFFFFF"},{"type":"box","width":1,"height":3,"depth":1,"x":0,"y":22,"z":35,"color":"#FFFFFF"},{"type":"box","width":1,"height":3,"depth":1,"x":2,"y":22,"z":35,"color":"#FFFFFF"},{"type":"box","width":1,"height":3,"depth":1,"x":4,"y":22,"z":35,"color":"#FFFFFF"},{"type":"sphere","size":4,"x":-9,"y":32,"z":28,"color":"#FFFF00"},{"type":"sphere","size":2,"x":-10,"y":32,"z":29,"color":"#000000"},{"type":"sphere","size":4,"x":9,"y":32,"z":28,"color":"#FFFF00"},{"type":"sphere","size":2,"x":10,"y":32,"z":29,"color":"#000000"},{"type":"box","width":8,"height":6,"depth":20,"x":0,"y":16,"z":-20,"color":"#5D8233"},{"type":"box","width":6,"height":4,"depth":16,"x":0,"y":15,"z":-38,"rotationY":0,"color":"#5D8233"},{"type":"box","width":6,"height":12,"depth":6,"x":10,"y":10,"z":10,"color":"#4E6C2A"},{"type":"box","width":6,"height":12,"depth":6,"x":10,"y":10,"z":-10,"color":"#4E6C2A"},{"type":"box","width":6,"height":12,"depth":6,"x":-10,"y":10,"z":10,"color":"#4E6C2A"},{"type":"box","width":6,"height":12,"depth":6,"x":-10,"y":10,"z":-10,"color":"#4E6C2A"},{"type":"box","width":8,"height":3,"depth":10,"x":10,"y":3,"z":12,"color":"#4E6C2A"},{"type":"box","width":8,"height":3,"depth":10,"x":10,"y":3,"z":-8,"color":"#4E6C2A"},{"type":"box","width":8,"height":3,"depth":10,"x":-10,"y":3,"z":12,"color":"#4E6C2A"},{"type":"box","width":8,"height":3,"depth":10,"x":-10,"y":3,"z":-8,"color":"#4E6C2A"},{"type":"box","width":4,"height":6,"depth":4,"x":12,"y":20,"z":10,"color":"#4E6C2A"},{"type":"box","width":4,"height":6,"depth":4,"x":-12,"y":20,"z":10,"color":"#4E6C2A"},{"type":"box","width":3,"height":3,"depth":1,"x":12,"y":20,"z":13,"color":"#A0A0A0"},{"type":"box","width":3,"height":3,"depth":1,"x":-12,"y":20,"z":13,"color":"#A0A0A0"},{"type":"cone","size":6,"height":8,"x":0,"y":27,"z":0,"rotationX":0,"color":"#436026"},{"type":"cone","size":6,"height":8,"x":0,"y":26,"z":-10,"rotationX":0,"color":"#436026"},{"type":"cone","size":5,"height":6,"x":0,"y":22,"z":-24,"rotationX":0,"color":"#436026"},{"type":"cone","size":4,"height":5,"x":0,"y":20,"z":-36,"rotationX":0,"color":"#436026"},{"type":"cone","size":6,"height":8,"x":0,"y":34,"z":20,"rotationX":0,"color":"#436026"}]} ] } } },
+                dragon: { info: 'Dragon', hp: 500, speed: 0.5, essence: 50, value: 50, boss: true, render: {"animations":{"idle":[{"shapes":[{"type":"box","width":18,"height":10,"depth":28,"x":0,"y":20,"z":-6.4,"rotationX":-19,"color":"#8B0000"},{"type":"box","width":14,"height":8,"depth":20,"x":0,"y":30,"z":18,"rotationX":-10,"color":"#8B0000"},{"type":"box","width":12,"height":6,"depth":16,"x":0,"y":40,"z":30,"rotationX":-20,"color":"#8B0000"},{"type":"cone","size":10,"height":20,"x":0,"y":42,"z":42,"rotationX":90,"color":"#8B0000"},{"type":"box","width":12,"height":6,"depth":16,"x":0,"y":14,"z":-24,"rotationX":-5,"color":"#8B0000"},{"type":"box","width":8,"height":4,"depth":20,"x":0,"y":10,"z":-42,"rotationX":-5,"color":"#8B0000"},{"type":"cone","size":6,"height":12,"x":0,"y":8,"z":-54,"rotationX":-90,"color":"#8B0000"},{"type":"box","width":22,"height":10,"depth":18,"x":0,"y":26,"z":0,"rotationX":-14,"color":"#8B0000"},{"type":"sphere","size":8,"x":0,"y":46,"z":34,"color":"#A52A2A"},{"type":"sphere","size":3,"x":-4,"y":48,"z":36,"color":"#FFFF00"},{"type":"sphere","size":1.5,"x":-4,"y":48,"z":37,"color":"#000000"},{"type":"sphere","size":3,"x":4,"y":48,"z":36,"color":"#FFFF00"},{"type":"sphere","size":1.5,"x":4,"y":48,"z":37,"color":"#000000"},{"type":"box","width":5,"height":3,"depth":10,"x":0,"y":40,"z":40,"color":"#A52A2A"},{"type":"box","width":4,"height":2,"depth":1,"x":0,"y":42,"z":46,"color":"#FFFFFF"},{"type":"box","width":1,"height":2,"depth":1,"x":-2,"y":40,"z":46,"color":"#FFFFFF"},{"type":"box","width":1,"height":2,"depth":1,"x":0,"y":40,"z":46,"color":"#FFFFFF"},{"type":"box","width":1,"height":2,"depth":1,"x":2,"y":40,"z":46,"color":"#FFFFFF"},{"type":"box","width":5,"height":12,"depth":5,"x":10,"y":12,"z":0,"color":"#8B0000"},{"type":"box","width":5,"height":12,"depth":5,"x":-10,"y":12,"z":0,"color":"#8B0000"},{"type":"box","width":5,"height":12,"depth":5,"x":10,"y":12,"z":-16,"color":"#8B0000"},{"type":"box","width":5,"height":12,"depth":5,"x":-10,"y":12,"z":-16,"color":"#8B0000"},{"type":"box","width":7,"height":2,"depth":7,"x":10,"y":5,"z":0,"color":"#8B0000"},{"type":"box","width":7,"height":2,"depth":7,"x":-10,"y":5,"z":0,"color":"#8B0000"},{"type":"box","width":7,"height":2,"depth":7,"x":10,"y":6,"z":-16,"color":"#8B0000"},{"type":"box","width":7,"height":2,"depth":7,"x":-10,"y":6,"z":-16,"color":"#8B0000"},{"type":"cone","size":6,"height":10,"x":0,"y":36,"z":10,"rotationX":-20,"color":"#A52A2A"},{"type":"cone","size":6,"height":10,"x":0,"y":34,"z":-8,"rotationX":-32,"color":"#A52A2A"},{"type":"cone","size":5,"height":8,"x":0,"y":22,"z":-24,"rotationX":-75,"color":"#A52A2A"},{"type":"cone","size":4,"height":6,"x":0,"y":16,"z":-38,"rotationX":-75,"color":"#A52A2A"},{"type":"box","width":20,"height":1,"depth":28,"x":18,"y":24,"z":-4,"rotationY":15,"rotationZ":12,"color":"#A52A2A"},{"type":"box","width":20,"height":1,"depth":28,"x":-18,"y":24,"z":-4,"rotationY":-15,"rotationZ":-12,"color":"#A52A2A"},{"type":"box","width":18,"height":1,"depth":24,"x":18,"y":27,"z":-4,"rotationY":15,"rotationZ":24,"color":"#A52A2A"},{"type":"box","width":18,"height":1,"depth":24,"x":-18,"y":27,"z":-4,"rotationY":-15,"rotationZ":-24,"color":"#A52A2A"},{"type":"box","width":16,"height":1,"depth":20,"x":18,"y":30,"z":-4,"rotationY":15,"rotationZ":36,"color":"#A52A2A"},{"type":"box","width":16,"height":1,"depth":20,"x":-18,"y":30,"z":-4,"rotationY":-15,"rotationZ":-36,"color":"#A52A2A"}]} ] } } },
+                pterodactyl: { info: 'Pterodactyl', speed: 2, value: 10, hp: 5, essence: 5, render: {"animations":{"idle":[{"shapes":[{"type":"cylinder","size":7.199999999999999,"height":14.399999999999999,"x":0,"y":47.48726562500001,"z":-2.3686718749999995,"color":"#7d6d5e","rotationX":90,"rotationZ":0},{"type":"cylinder","size":2.88,"height":12,"x":0,"y":49.294765625,"z":9.631328125000001,"color":"#7D6B5D","rotationX":45,"rotationZ":0},{"type":"cone","size":2.4,"height":10.56,"x":0,"y":52.76726562500002,"z":15.871328125,"color":"#7D6B5D","rotationX":120,"rotationZ":0},{"type":"cone","size":0.96,"height":9.6,"x":0,"y":59.48726562500001,"z":13.471328125,"color":"#6D5D4D","rotationX":0,"rotationZ":0},{"type":"box","width":24,"height":0.48,"depth":9.6,"x":-12,"y":47.48726562500001,"z":-2.3686718749999995,"color":"#8D7B6D","rotationY":0,"rotationZ":15},{"type":"box","width":24,"height":0.48,"depth":9.6,"x":12,"y":47.48726562500001,"z":-2.3686718749999995,"color":"#8D7B6D","rotationY":0,"rotationZ":-15},{"type":"box","width":4,"height":0.24,"depth":2,"x":-12,"y":47,"z":3,"color":"#8D7B6D","rotationY":90,"rotationZ":15},{"type":"box","width":10,"height":0.24,"depth":6,"x":25,"y":43.2,"z":-4.1,"color":"#8D7B6D","rotationY":40,"rotationZ":-30,"rotationX":16},{"type":"cone","size":1.92,"height":12,"x":0,"y":47.48726562500001,"z":-16.851171875000002,"color":"#7D6B5D","rotationX":-90,"rotationZ":0},{"type":"box","width":5.76,"height":0.48,"depth":4.8,"x":0,"y":47.48726562500001,"z":-19.648671875,"color":"#8D7B6D","rotationX":0,"rotationZ":0},{"type":"cylinder","size":0.72,"height":5.76,"x":-2.4,"y":42.68726562500001,"z":-4.768671874999999,"color":"#6D5D4D","rotationX":20,"rotationZ":0},{"type":"cylinder","size":0.72,"height":5.76,"x":2.4,"y":42.68726562500001,"z":-4.768671874999999,"color":"#6D5D4D","rotationX":20,"rotationZ":0},{"type":"cone","size":1.44,"height":2.4,"x":-2.4,"y":40.04726562500001,"z":-4.851171875,"color":"#6D5D4D","rotationX":-60,"rotationZ":0},{"type":"cone","size":1.44,"height":2.4,"x":2.4,"y":40.04726562500001,"z":-4.851171875,"color":"#6D5D4D","rotationX":-60,"rotationZ":0},{"type":"sphere","size":0.72,"x":-0.96,"y":54.68726562500001,"z":15.391328125000001,"color":"#000000"},{"type":"sphere","size":0.72,"x":0.96,"y":54.68726562500001,"z":15.391328125000001,"color":"#000000"},{"type":"box","width":4,"height":0.24,"depth":2,"x":12,"y":47,"z":3,"color":"#8D7B6D","rotationY":90,"rotationZ":15},{"type":"box","width":10,"height":0.24,"depth":6,"x":-25,"y":43.2,"z":-4.1,"color":"#8D7B6D","rotationY":-40,"rotationZ":30,"rotationX":16}]} ] } } },
+            }, 
+
             environment: {
-                tree: { info: 'Tree', render: {"shapes":[{"type":"cylinder","size":5,"color":"#733f17","x":0,"y":5,"z":0,"rotationX":0,"rotationY":0,"rotationZ":0,"height":10},{"type":"cone","size":20,"color":"#018314","x":0,"y":25,"z":0,"rotationX":0,"rotationY":0,"rotationZ":0,"height":30},{"type":"cone","size":17.5,"color":"#018314","x":0,"y":30,"z":0,"rotationX":0,"rotationY":0,"rotationZ":0,"height":20},{"type":"cone","size":7.5,"color":"#018314","x":0,"y":37.5,"z":0,"rotationX":0,"rotationY":0,"rotationZ":0,"height":7.5}]} },
-                rock: { info: 'Rock', render: {"shapes":[{"type":"tetrahedron","size":16,"color":"#666666","x":3.5,"y":2,"z":2.5,"rotationX":50,"rotationY":140,"rotationZ":10},{"type":"tetrahedron","size":12,"color":"#5b5b5b","x":10.5,"y":2,"z":7.5,"rotationX":50,"rotationY":150,"rotationZ":10}]} },
+                tree: { info: 'Tree', render: {"animations":{"idle":[{"shapes":[{"type":"cylinder","size":5,"color":"#733f17","x":0,"y":5,"z":0,"rotationX":0,"rotationY":0,"rotationZ":0,"height":10},{"type":"cone","size":20,"color":"#018314","x":0,"y":25,"z":0,"rotationX":0,"rotationY":0,"rotationZ":0,"height":30},{"type":"cone","size":17.5,"color":"#018314","x":0,"y":30,"z":0,"rotationX":0,"rotationY":0,"rotationZ":0,"height":20},{"type":"cone","size":7.5,"color":"#018314","x":0,"y":37.5,"z":0,"rotationX":0,"rotationY":0,"rotationZ":0,"height":7.5}]} ] } } },
+                rock: { info: 'Rock', render: {"animations":{"idle":[{"shapes":[{"type":"tetrahedron","size":16,"color":"#666666","x":3.5,"y":2,"z":2.5,"rotationX":50,"rotationY":140,"rotationZ":10},{"type":"tetrahedron","size":12,"color":"#5b5b5b","x":10.5,"y":2,"z":7.5,"rotationX":50,"rotationY":150,"rotationZ":10}]} ] } } }
             }
         };
         // Cache DOM elements
         const elements = {
-            towerList: document.getElementById('object-list'),
+            objectList: document.getElementById('object-list'),
             editor: document.getElementById('editor'),
             previewCanvas: document.getElementById('preview-canvas'),
             gridDisplay: document.getElementById('grid-display'),
@@ -749,7 +753,7 @@
         // Replace renderTowerList function
         function renderObjectList() {
             // Add type selector
-            elements.towerList.innerHTML = renderTypeSelector();
+            elements.objectList.innerHTML = renderTypeSelector();
             
             // Add objects of the selected type
             Object.keys(state.objectTypes[state.selectedType] || {}).forEach(objId => {
@@ -757,7 +761,7 @@
                 objectItem.className = `object-item ${state.selectedObject === objId ? 'selected' : ''}`;
                 objectItem.textContent = objId;
                 objectItem.addEventListener('click', () => selectObject(objId));
-                elements.towerList.appendChild(objectItem);
+                elements.objectList.appendChild(objectItem);
             });
             
             // Add event listeners for type selection
@@ -769,6 +773,11 @@
                     renderEditor();
                     renderPreview();
                     updateSidebarButtons();
+                    let objects = state.objectTypes[state.selectedType];
+                    for(let objectType in objects) {                 
+                        selectObject(objectType);
+                        break;                 
+                    }
                 });
             });
             
@@ -1394,8 +1403,12 @@
     (function() {
         // Global variables
         let camera, scene, renderer, controls;
-        let renderData = { shapes: [] };
+        let renderData = { animations: { "idle": [{ shapes: [] }] } }; // Default to an empty idle animation
         let selectedShapeIndex = -1;
+
+        let currentAnimation = "idle"; // Current animation type
+        let currentFrame = 0; // Current frame index within the animation
+
         let raycaster = new THREE.Raycaster();
         let mouse = new THREE.Vector2();
         let selectedOutline, originalMaterials = new Map();
@@ -1460,208 +1473,130 @@
             document.getElementById('isometric-modal').classList.add('show');
         }
 
-        // Generate isometric sprites
         function generateIsometricSprites() {
             const frustumSize = parseFloat(document.getElementById('iso-frustum').value) || 48;
             const cameraDistance = parseFloat(document.getElementById('iso-distance').value) || 100;
             const size = parseFloat(document.getElementById('iso-size').value) || 64;
-            const aspect = 1; // Square images for simplicity
+            const aspect = 1;
             const tempRenderer = new THREE.WebGLRenderer({ antialias: false, alpha: true });
             tempRenderer.setSize(size, size);
-            // Hide the modal
             document.getElementById('isometric-modal').classList.remove('show');
-            // Create a temporary canvas for rendering
+
             const renderTarget = new THREE.WebGLRenderTarget(size, size);
             const cameras = [
-                new THREE.OrthographicCamera(-frustumSize * aspect, frustumSize * aspect, frustumSize, -frustumSize, 0.1, 1000), // Front
-                new THREE.OrthographicCamera(-frustumSize * aspect, frustumSize * aspect, frustumSize, -frustumSize, 0.1, 1000), // Left
-                new THREE.OrthographicCamera(-frustumSize * aspect, frustumSize * aspect, frustumSize, -frustumSize, 0.1, 1000), // Right
-                new THREE.OrthographicCamera(-frustumSize * aspect, frustumSize * aspect, frustumSize, -frustumSize, 0.1, 1000)  // Back
+                new THREE.OrthographicCamera(-frustumSize * aspect, frustumSize * aspect, frustumSize, -frustumSize, 0.1, 1000),
+                new THREE.OrthographicCamera(-frustumSize * aspect, frustumSize * aspect, frustumSize, -frustumSize, 0.1, 1000),
+                new THREE.OrthographicCamera(-frustumSize * aspect, frustumSize * aspect, frustumSize, -frustumSize, 0.1, 1000),
+                new THREE.OrthographicCamera(-frustumSize * aspect, frustumSize * aspect, frustumSize, -frustumSize, 0.1, 1000)
             ];
-
-            
-            // Create scene and lights
-            const scene = new THREE.Scene();
-            const light = new THREE.AmbientLight(0xffffff, 5);
-            scene.add(light);
-
-            // Create objects from JSON and add to scene
-            createObjectsFromJSON(renderData, scene);
-           
-
-            // Position each camera at different angles
-            cameras[0].position.set(cameraDistance, cameraDistance, cameraDistance); // Front
-            cameras[1].position.set(-cameraDistance, cameraDistance, cameraDistance); // Left
-            cameras[2].position.set(cameraDistance, cameraDistance, -cameraDistance); // Right
-            cameras[3].position.set(-cameraDistance, cameraDistance, -cameraDistance); // Back
-
+            cameras[0].position.set(cameraDistance, cameraDistance, cameraDistance);
+            cameras[1].position.set(-cameraDistance, cameraDistance, cameraDistance);
+            cameras[2].position.set(cameraDistance, cameraDistance, -cameraDistance);
+            cameras[3].position.set(-cameraDistance, cameraDistance, -cameraDistance);
             cameras.forEach(camera => camera.lookAt(0, 0, 0));
 
-            // Capture images
-            const sprites = [];
-            for (const camera of cameras) {
-                tempRenderer.setRenderTarget(renderTarget);
-                tempRenderer.render(scene, camera);
+            const sprites = {};
+            for (const animType in renderData.animations) {
+                sprites[animType] = [];
+                renderData.animations[animType].forEach(frame => {
+                    const scene = new THREE.Scene();
+                    const light = new THREE.AmbientLight(0xffffff, 5);
+                    scene.add(light);
+                    createObjectsFromJSON(frame, scene);
 
-                // Read pixels from render target
-                const buffer = new Uint8Array(size * size * 4);
-                tempRenderer.readRenderTargetPixels(renderTarget, 0, 0, size, size, buffer);
-
-                // Flip the buffer vertically
-                const flippedBuffer = new Uint8Array(size * size * 4);
-                for (let y = 0; y < size; y++) {
-                    const srcRowStart = y * size * 4;
-                    const destRowStart = (size - 1 - y) * size * 4;
-                    flippedBuffer.set(buffer.subarray(srcRowStart, srcRowStart + size * 4), destRowStart);
-                }
-                // Create a canvas to display the image
-                const canvas = document.createElement('canvas');
-                canvas.width = size;
-                canvas.height = size;
-                const ctx = canvas.getContext('2d');
-                const imageData = ctx.createImageData(size, size);
-                imageData.data.set(flippedBuffer);
-                ctx.putImageData(imageData, 0, 0);
-
-                sprites.push(canvas.toDataURL());
+                    const frameSprites = [];
+                    for (const camera of cameras) {
+                        tempRenderer.setRenderTarget(renderTarget);
+                        tempRenderer.render(scene, camera);
+                        const buffer = new Uint8Array(size * size * 4);
+                        tempRenderer.readRenderTargetPixels(renderTarget, 0, 0, size, size, buffer);
+                        const flippedBuffer = new Uint8Array(size * size * 4);
+                        for (let y = 0; y < size; y++) {
+                            const srcRowStart = y * size * 4;
+                            const destRowStart = (size - 1 - y) * size * 4;
+                            flippedBuffer.set(buffer.subarray(srcRowStart, srcRowStart + size * 4), destRowStart);
+                        }
+                        const canvas = document.createElement('canvas');
+                        canvas.width = size;
+                        canvas.height = size;
+                        const ctx = canvas.getContext('2d');
+                        const imageData = ctx.createImageData(size, size);
+                        imageData.data.set(flippedBuffer);
+                        ctx.putImageData(imageData, 0, 0);
+                        frameSprites.push(canvas.toDataURL());
+                    }
+                    sprites[animType].push(frameSprites);
+                });
             }
 
-            // Reset renderer
             tempRenderer.setRenderTarget(null);
             tempRenderer.dispose();
             renderTarget.dispose();
-            // Display the sprites
             displayIsometricSprites(sprites);
         }
 
-        // Display the generated isometric sprites
         function displayIsometricSprites(sprites) {
             const modal = document.createElement('div');
             modal.style.cssText = `
-                position: fixed;
-                top: 0;
-                left: 0;
-                width: 100%;
-                height: 100%;
-                background-color: rgba(0, 0, 0, 0.7);
-                z-index: 1000;
-                display: flex;
-                align-items: center;
-                justify-content: center;
+                position: fixed; top: 0; left: 0; width: 100%; height: 100%; 
+                background-color: rgba(0, 0, 0, 0.7); z-index: 1000; 
+                display: flex; align-items: center; justify-content: center;
             `;
-
             const content = document.createElement('div');
             content.style.cssText = `
-                background: #333;
-                padding: 20px;
-                border-radius: 8px;
-                max-width: 80%;
-                max-height: 80%;
-                overflow: auto;
-                text-align: center;
+                background: #333; padding: 20px; border-radius: 8px; 
+                max-width: 80%; max-height: 80%; overflow: auto;
             `;
 
-            const title = document.createElement('h3');
-            title.textContent = 'Isometric Sprites';
-            title.style.color = '#e0e0e0';
-            content.appendChild(title);
+            for (const animType in sprites) {
+                const animSection = document.createElement('div');
+                const title = document.createElement('h3');
+                title.textContent = `${animType} Animation`;
+                title.style.color = '#e0e0e0';
+                animSection.appendChild(title);
 
-            const grid = document.createElement('div');
-            grid.style.cssText = `
-                display: grid;
-                grid-template-columns: repeat(2, 1fr);
-                gap: 10px;
-                margin-top: 20px;
-            `;
-
-            sprites.forEach((src, index) => {
-                const img = document.createElement('img');
-                img.src = src;
-                img.style.maxWidth = '100%';
-                img.alt = `Isometric View ${index + 1}`;
-                grid.appendChild(img);
-            });
+                const grid = document.createElement('div');
+                grid.style.cssText = `display: grid; grid-template-columns: repeat(4, 1fr); gap: 5px; margin: 10px 0;`;
+                sprites[animType].forEach(frame => {
+                    frame.forEach(src => {
+                        const img = document.createElement('img');
+                        img.src = src;
+                        img.style.maxWidth = '100%';
+                        grid.appendChild(img);
+                    });
+                });
+                animSection.appendChild(grid);
+                content.appendChild(animSection);
+            }
 
             const closeButton = document.createElement('button');
             closeButton.textContent = 'Close';
             closeButton.style.cssText = `
-                margin-top: 20px;
-                padding: 8px 16px;
-                background-color: #4CAF50;
-                color: #fff;
-                border: none;
-                border-radius: 6px;
-                cursor: pointer;
+                margin-top: 20px; padding: 8px 16px; background-color: #4CAF50; 
+                color: #fff; border: none; border-radius: 6px; cursor: pointer;
             `;
             closeButton.addEventListener('click', () => document.body.removeChild(modal));
-
-            content.appendChild(grid);
             content.appendChild(closeButton);
             modal.appendChild(content);
             document.body.appendChild(modal);
         }
-        // Add this function
-        function scaleAllShapes() {
-            if (renderData.shapes.length === 0) return;
-            
-            const scaleFactor = parseFloat(prompt("Enter scale factor (e.g. 2 for double size, 0.5 for half size):", "1"));
-            
-            if (isNaN(scaleFactor) || scaleFactor <= 0) {
-                alert("Please enter a valid positive number");
-                return;
-            }
-            
-            // Calculate the center point of all shapes (this will be our scaling origin)
-            let centerX = 0, centerY = 0, centerZ = 0;
-            renderData.shapes.forEach(shape => {
-                centerX += shape.x || 0;
-                centerY += shape.y || 0;
-                centerZ += shape.z || 0;
-            });
-            
-            centerX /= renderData.shapes.length;
-            centerY /= renderData.shapes.length;
-            centerZ /= renderData.shapes.length;
-            
-            // Scale each shape's dimensions and adjust positions relative to center
-            renderData.shapes.forEach(shape => {
-                // Scale dimensions
-                if (shape.size) shape.size *= scaleFactor;
-                if (shape.width) shape.width *= scaleFactor;
-                if (shape.height) shape.height *= scaleFactor;
-                if (shape.depth) shape.depth *= scaleFactor;
-                if (shape.tubeSize) shape.tubeSize *= scaleFactor;
-                
-                // Scale positions relative to center point
-                shape.x = centerX + ((shape.x || 0) - centerX) * scaleFactor;
-                shape.y = centerY + ((shape.y || 0) - centerY) * scaleFactor;
-                shape.z = centerZ + ((shape.z || 0) - centerZ) * scaleFactor;
-            });
-            
-            renderShapes(renderData, { scene });
-            updateShapeList();
-        }
         // Initialize event listeners
         function initEventListeners() {
-            // Add shape button
-            document.getElementById('add-shape').addEventListener('click', addNewShape);
-            
-            // Duplicate shape button
-            document.getElementById('duplicate-shape').addEventListener('click', duplicateSelectedShape);
-            
-            // Delete shape button
-            document.getElementById('delete-shape').addEventListener('click', deleteSelectedShape);
-            
-                        
-            document.getElementById('scale-all').addEventListener('click', scaleAllShapes);
-            
+            document.getElementById('add-shape').addEventListener('click', addNewShape);            
+            document.getElementById('duplicate-shape').addEventListener('click', duplicateSelectedShape);         
+            document.getElementById('delete-shape').addEventListener('click', deleteSelectedShape);                           
+            document.getElementById('scale-all').addEventListener('click', scaleAllShapes);            
             document.getElementById('move-all').addEventListener('click', moveAllShapes);
-
             document.getElementById('generate-isometric').addEventListener('click', showIsometricModal);
+            document.getElementById('add-animation').addEventListener('click', addNewAnimation);
+            document.getElementById('add-frame').addEventListener('click', addNewFrame);
+            document.getElementById('duplicate-frame').addEventListener('click', duplicateFrame);
+            document.getElementById('delete-frame').addEventListener('click', deleteFrame);
             document.body.addEventListener('viewObject', (event) => {
                 renderData = event.detail;
                 document.getElementById('json-content').value =  JSON.stringify(renderData, null, 2);
-                selectedShapeIndex = renderData.shapes.length > 0 ? 0 : -1;                
+                currentAnimation = "idle";
+                selectedShapeIndex = renderData.animations.idle[0].shapes.length > 0 ? 0 : -1;                
                 renderShapes(renderData, { scene }, false);
                 updateShapeList();
             });
@@ -1726,25 +1661,10 @@
             });
             document.getElementById('iso-generate').addEventListener('click', generateIsometricSprites);
         }
-        // Add this function
-        function moveAllShapes() {
-            if (renderData.shapes.length === 0) return;
-            
-            // Show the modal
-            document.getElementById('move-modal').classList.add('show');
-            
-            // Reset values
-            document.getElementById('move-x').value = '0';
-            document.getElementById('move-y').value = '0';
-            document.getElementById('move-z').value = '0';
-        }
+        
         // Select a shape
         function selectShape(index) {
-            if(selectedShapeIndex == index) {
-                selectedShapeIndex = -1;   
-            } else {
-                selectedShapeIndex = index;
-            }
+            selectedShapeIndex = (selectedShapeIndex === index) ? -1 : index;
             updateShapeList();
             highlightSelectedShape();
         }
@@ -1767,7 +1687,7 @@
             originalMaterials.clear();
             
             // If no shape is selected, return
-            if (selectedShapeIndex < 0 || selectedShapeIndex >= renderData.shapes.length) {
+            if (selectedShapeIndex < 0 || selectedShapeIndex >= renderData.animations.idle[0].shapes.length) {
                 return;
             }
   
@@ -1804,7 +1724,85 @@
                 scene.add(outline);
             }
         }
-        
+        function addNewShape() {
+            const newShape = {
+                type: 'cube',
+                size: 2,
+                color: '#3498db',
+                x: 0,
+                y: 0,
+                z: 0,
+                rotationX: 0,
+                rotationY: 0,
+                rotationZ: 0
+            };
+            renderData.animations[currentAnimation][currentFrame].shapes.push(newShape);
+            selectedShapeIndex = renderData.animations[currentAnimation][currentFrame].shapes.length - 1;
+            renderShapes(renderData, { scene });
+            updateShapeList();
+        }
+
+        function duplicateSelectedShape() {
+            if (selectedShapeIndex >= 0) {
+                const originalShape = renderData.animations[currentAnimation][currentFrame].shapes[selectedShapeIndex];
+                const newShape = JSON.parse(JSON.stringify(originalShape));
+                renderData.animations[currentAnimation][currentFrame].shapes.push(newShape);
+                selectedShapeIndex = renderData.animations[currentAnimation][currentFrame].shapes.length - 1;
+                renderShapes(renderData, { scene });
+                updateShapeList();
+            }
+        }
+
+        function deleteSelectedShape() {
+            if (selectedShapeIndex >= 0) {
+                renderData.animations[currentAnimation][currentFrame].shapes.splice(selectedShapeIndex, 1);
+                if (renderData.animations[currentAnimation][currentFrame].shapes.length > 0) {
+                    selectedShapeIndex = Math.min(selectedShapeIndex, renderData.animations[currentAnimation][currentFrame].shapes.length - 1);
+                } else {
+                    selectedShapeIndex = -1;
+                }
+                renderShapes(renderData, { scene });
+                updateShapeList();
+            }
+        }
+
+        function scaleAllShapes() {
+            if (renderData.animations[currentAnimation][currentFrame].shapes.length === 0) return;
+            const scaleFactor = parseFloat(prompt("Enter scale factor (e.g. 2 for double size, 0.5 for half size):", "1"));
+            if (isNaN(scaleFactor) || scaleFactor <= 0) {
+                alert("Please enter a valid positive number");
+                return;
+            }
+            let centerX = 0, centerY = 0, centerZ = 0;
+            renderData.animations[currentAnimation][currentFrame].shapes.forEach(shape => {
+                centerX += shape.x || 0;
+                centerY += shape.y || 0;
+                centerZ += shape.z || 0;
+            });
+            centerX /= renderData.animations[currentAnimation][currentFrame].shapes.length;
+            centerY /= renderData.animations[currentAnimation][currentFrame].shapes.length;
+            centerZ /= renderData.animations[currentAnimation][currentFrame].shapes.length;
+            renderData.animations[currentAnimation][currentFrame].shapes.forEach(shape => {
+                if (shape.size) shape.size *= scaleFactor;
+                if (shape.width) shape.width *= scaleFactor;
+                if (shape.height) shape.height *= scaleFactor;
+                if (shape.depth) shape.depth *= scaleFactor;
+                if (shape.tubeSize) shape.tubeSize *= scaleFactor;
+                shape.x = centerX + ((shape.x || 0) - centerX) * scaleFactor;
+                shape.y = centerY + ((shape.y || 0) - centerY) * scaleFactor;
+                shape.z = centerZ + ((shape.z || 0) - centerZ) * scaleFactor;
+            });
+            renderShapes(renderData, { scene });
+            updateShapeList();
+        }
+
+        function moveAllShapes() {
+            if (renderData.animations[currentAnimation][currentFrame].shapes.length === 0) return;
+            document.getElementById('move-modal').classList.add('show');
+            document.getElementById('move-x').value = '0';
+            document.getElementById('move-y').value = '0';
+            document.getElementById('move-z').value = '0';
+        }
         // Animation loop
         function animate() {
             requestAnimationFrame(animate);
@@ -1892,12 +1890,11 @@
                 directionalLight.name = 'dir-light';
                 scene.add(directionalLight);
             }
-            createObjectsFromJSON(renderData, scene);
-           
-      
+            const currentShapes = renderData.animations[currentAnimation][currentFrame];
+            createObjectsFromJSON(currentShapes, scene);
             
             // Update shape count
-            document.getElementById('shape-count').textContent = renderData.shapes.length;
+            document.getElementById('shape-count').textContent = currentShapes.shapes.length;
             
             // Update the JSON editor
             document.getElementById('json-content').value = JSON.stringify(renderData, null, 2);
@@ -1918,110 +1915,125 @@
             highlightSelectedShape();
         }
         
-        // Add a new shape
-        function addNewShape() {
-            const newShape = {
-                type: 'cube',
-                size: 2,
-                color: '#3498db',
-                x: 0,
-                y: 0,
-                z: 0,
-                rotationX: 0,
-                rotationY: 0,
-                rotationZ: 0
-            };
-            
-            renderData.shapes.push(newShape);
-            selectedShapeIndex = renderData.shapes.length - 1;
-            
+        function addNewAnimation() {
+            const animName = prompt("Enter animation name:", `anim${Object.keys(renderData.animations).length + 1}`);
+            if (animName && !renderData.animations[animName]) {
+                renderData.animations[animName] = [{ shapes: [] }];
+                currentAnimation = animName;
+                currentFrame = 0;
+                renderShapes(renderData, { scene });
+                updateShapeList();
+            }
+        }
+
+        function addNewFrame() {
+            const currentShapes = renderData.animations[currentAnimation][currentFrame];
+            const newFrame = { shapes: JSON.parse(JSON.stringify(currentShapes.shapes)) }; // Deep copy
+            renderData.animations[currentAnimation].push(newFrame);
+            currentFrame = renderData.animations[currentAnimation].length - 1;
             renderShapes(renderData, { scene });
             updateShapeList();
         }
-        
-        // Duplicate the selected shape
-        function duplicateSelectedShape() {
-            if (selectedShapeIndex >= 0) {
-                const originalShape = renderData.shapes[selectedShapeIndex];
-                const newShape = JSON.parse(JSON.stringify(originalShape));
-                                
-                renderData.shapes.push(newShape);
-                selectedShapeIndex = renderData.shapes.length - 1;
-                
+
+        function duplicateFrame() {
+            if (renderData.animations[currentAnimation].length > 0) {
+                const currentShapes = renderData.animations[currentAnimation][currentFrame];
+                const newFrame = { shapes: JSON.parse(JSON.stringify(currentShapes.shapes)) };
+                renderData.animations[currentAnimation].splice(currentFrame + 1, 0, newFrame);
+                currentFrame++;
                 renderShapes(renderData, { scene });
                 updateShapeList();
             }
         }
-        
-        // Delete the selected shape
-        function deleteSelectedShape() {
-            if (selectedShapeIndex >= 0) {
-                renderData.shapes.splice(selectedShapeIndex, 1);
-                
-                if (renderData.shapes.length > 0) {
-                    selectedShapeIndex = Math.min(selectedShapeIndex, renderData.shapes.length - 1);
-                } else {
-                    selectedShapeIndex = -1;
-                }
-                
+
+        function deleteFrame() {
+            if (renderData.animations[currentAnimation].length > 1) {
+                renderData.animations[currentAnimation].splice(currentFrame, 1);
+                currentFrame = Math.min(currentFrame, renderData.animations[currentAnimation].length - 1);
                 renderShapes(renderData, { scene });
                 updateShapeList();
             }
         }
-        
         // Update the shape list in the sidebar
         function updateShapeList() {
             const shapeList = document.getElementById('shape-list');
             shapeList.innerHTML = '';
-            
-            if (renderData.shapes.length === 0) {
+
+            // Animation selector
+            const animSelector = document.createElement('select');
+            animSelector.style.marginBottom = '10px';
+            Object.keys(renderData.animations).forEach(anim => {
+                const option = document.createElement('option');
+                option.value = anim;
+                option.textContent = anim;
+                if (anim === currentAnimation) option.selected = true;
+                animSelector.appendChild(option);
+            });
+            animSelector.addEventListener('change', () => {
+                currentAnimation = animSelector.value;
+                currentFrame = 0;
+                selectedShapeIndex = -1;
+                renderShapes(renderData, { scene });
+                updateShapeList();
+            });
+            shapeList.appendChild(animSelector);
+
+            // Frame list
+            const frameList = document.createElement('div');
+            frameList.style.marginBottom = '10px';
+            renderData.animations[currentAnimation].forEach((frame, index) => {
+                const frameItem = document.createElement('div');
+                frameItem.textContent = `Frame ${index + 1}`;
+                frameItem.style.padding = '5px';
+                frameItem.style.cursor = 'pointer';
+                if (index === currentFrame) frameItem.style.backgroundColor = '#555';
+                frameItem.addEventListener('click', () => {
+                    currentFrame = index;
+                    selectedShapeIndex = -1;
+                    renderShapes(renderData, { scene });
+                    updateShapeList();
+                });
+                frameList.appendChild(frameItem);
+            });
+            shapeList.appendChild(frameList);
+
+            // Shape list for current frame
+            const currentShapes = renderData.animations[currentAnimation][currentFrame].shapes;
+            if (currentShapes.length === 0) {
                 const emptyMessage = document.createElement('div');
-                emptyMessage.textContent = 'No shapes added. Click "Add Shape" to begin.';
+                emptyMessage.textContent = 'No shapes in this frame.';
                 emptyMessage.style.padding = '10px';
                 emptyMessage.style.color = '#777';
                 shapeList.appendChild(emptyMessage);
                 document.getElementById('selected-shape').textContent = 'None';
                 return;
             }
-            
-            renderData.shapes.forEach((shape, index) => {
+
+            currentShapes.forEach((shape, index) => {
                 const shapeItem = document.createElement('div');
                 shapeItem.className = 'shape-item';
                 if (index === selectedShapeIndex) {
                     shapeItem.classList.add('active');
                     document.getElementById('selected-shape').textContent = `${shape.type} (${index})`;
                 }
-                
                 const title = document.createElement('div');
                 title.textContent = `${index + 1}. ${shape.type} ${shape.color}`;
                 title.style.fontWeight = 'bold';
                 title.style.marginBottom = '5px';
                 shapeItem.appendChild(title);
-                
                 const position = document.createElement('div');
                 position.textContent = `Position: X=${shape.x || 0}, Y=${shape.y || 0}, Z=${shape.z || 0}`;
                 position.style.fontSize = '12px';
                 shapeItem.appendChild(position);
-                
                 shapeItem.addEventListener('click', () => {
-                    if( selectedShapeIndex == index) {
-                        selectedShapeIndex = -1;
-                    } else {
-                        selectedShapeIndex = index;
-                    }
-                    updateShapeList();
-                    highlightSelectedShape();
-                    
-                    // Scroll the shape into view in the inspector
+                    selectShape(index);
                     createInspector(shape);
                 });
-                
                 shapeList.appendChild(shapeItem);
             });
-            
-            // Create inspector for selected shape
+
             if (selectedShapeIndex >= 0) {
-                createInspector(renderData.shapes[selectedShapeIndex]);
+                createInspector(currentShapes[selectedShapeIndex]);
             }
         }
         
@@ -2114,7 +2126,7 @@
                     newValue = parseFloat(newValue);
                 }
                 
-                renderData.shapes[selectedShapeIndex][property] = newValue;
+                renderData.animations[currentAnimation][currentFrame].shapes[selectedShapeIndex][property] = newValue;
                 renderShapes(renderData, { scene });
                 updateShapeList();
             });
