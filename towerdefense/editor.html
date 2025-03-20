@@ -447,25 +447,7 @@
         .button-danger:hover {
             background-color: #d32f2f;
         }
-        #move-modal {
-            display: none;
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background-color: rgba(0, 0, 0, 0.7);
-            z-index: 1000;
-            align-items: center;
-            justify-content: center;
-        }
-        #move-modal > div {
-            background: #333;
-            padding: 25px;
-            border-radius: 8px;
-            width: 320px;
-            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.5);
-        }
+        
         #move-modal h3 {
             margin-bottom: 20px;
             color: #e0e0e0;
@@ -576,8 +558,8 @@
         </div>
     </div>
     
-    <div id="move-modal">
-        <div>
+    <div class="modal" id="move-modal">
+        <div class="modal-content">
             <h3>Move All Shapes</h3>
             <div class="form-row">
                 <label for="move-x">X Offset:</label>
@@ -598,8 +580,8 @@
         </div>
     </div>
 
-    <div id="isometric-modal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0, 0, 0, 0.7); z-index: 1000;">
-        <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); background: #333; padding: 25px; border-radius: 8px; width: 320px; box-shadow: 0 5px 15px rgba(0, 0, 0, 0.5);">
+    <div  class="modal" id="isometric-modal">
+        <div class="modal-content" >
             <h3 style="margin-bottom: 20px; color: #e0e0e0; font-size: 18px;">Generate Isometric Sprites</h3>
             <div class="form-row">
                 <label for="iso-frustum">Frustum Size:</label>
@@ -1483,7 +1465,7 @@
         
         // Show the isometric modal
         function showIsometricModal() {
-            document.getElementById('isometric-modal').style.display = 'block';
+            document.getElementById('isometric-modal').classList.add('show');
         }
 
         // Generate isometric sprites
@@ -1495,7 +1477,7 @@
             const tempRenderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
             tempRenderer.setSize(size, size);
             // Hide the modal
-            document.getElementById('isometric-modal').style.display = 'none';
+            document.getElementById('isometric-modal').classList.remove('show');
             // Create a temporary canvas for rendering
             const renderTarget = new THREE.WebGLRenderTarget(size, size);
             const cameras = [
@@ -1726,7 +1708,7 @@
             });
 
             document.getElementById('move-cancel').addEventListener('click', () => {
-                document.getElementById('move-modal').style.display = 'none';
+                document.getElementById('move-modal').classList.remove('show');
             });
 
             document.getElementById('move-apply').addEventListener('click', () => {
@@ -1745,10 +1727,10 @@
                 updateShapeList();
                 
                 // Hide the modal
-                document.getElementById('move-modal').style.display = 'none';
+                document.getElementById('move-modal').classList.remove('show');
             });
             document.getElementById('iso-cancel').addEventListener('click', () => {
-                document.getElementById('isometric-modal').style.display = 'none';
+                document.getElementById('isometric-modal').classList.remove('show');
             });
             document.getElementById('iso-generate').addEventListener('click', generateIsometricSprites);
         }
@@ -1757,7 +1739,7 @@
             if (renderData.shapes.length === 0) return;
             
             // Show the modal
-            document.getElementById('move-modal').style.display = 'block';
+            document.getElementById('move-modal').classList.add('show');
             
             // Reset values
             document.getElementById('move-x').value = '0';
