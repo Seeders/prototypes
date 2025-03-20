@@ -1435,7 +1435,7 @@
             camera.lookAt(0, 0, 0);
             // Create renderer
             const canvas = document.getElementById('canvas');
-            renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
+            renderer = new THREE.WebGLRenderer({ canvas, antialias: false });
             renderer.setSize(canvas.clientWidth, canvas.clientHeight);
             
             // Add grid helper
@@ -1474,7 +1474,7 @@
             const cameraDistance = parseFloat(document.getElementById('iso-distance').value) || 100;
             const size = parseFloat(document.getElementById('iso-size').value) || 64;
             const aspect = 1; // Square images for simplicity
-            const tempRenderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+            const tempRenderer = new THREE.WebGLRenderer({ antialias: false, alpha: true });
             tempRenderer.setSize(size, size);
             // Hide the modal
             document.getElementById('isometric-modal').classList.remove('show');

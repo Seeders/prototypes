@@ -807,7 +807,7 @@ canvas {
 
         async captureObjectImagesFromJSON(shapeData) {
             const size = 64; // Image size
-            const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+            const renderer = new THREE.WebGLRenderer({ antialias: false, alpha: true });
             renderer.setSize(size, size);
             
             // Create an offscreen render target
@@ -2537,7 +2537,7 @@ canvas {
 
             // Shadow Turret Upgrades
             shadowPierce: { desc: 'Projectiles pierce 2 additional enemies', piercing: 2 },
-            shadowReach: { desc: '+30% Range', range: 1.3 },
+            overCharge: { desc: '+30% Range', range: 1.3 },
             shadowCrit: { desc: '+10% Critical Chance', critChance: 0.1 },
 
             // Soul Pyre Upgrades
@@ -2611,14 +2611,14 @@ canvas {
 
         // Shadow Turret Upgrades
         new Upgrade(
-            'shadowReach',
-            'Extended Darkness',
-            'Shadow Turret: ' + gameConfig.upgrades.shadowReach.desc,
+            'overCharge',
+            'Overcharge',
+            'Tesla Coil: ' + gameConfig.upgrades.overCharge.desc,
             '📏',
-            'shadowTurret',
+            'teslaCoil',
             (state) => true,
             (stats, additiveStats, multiplicitiveStats) => {
-                additiveStats['range'].push(gameConfig.upgrades.shadowReach.range);
+                additiveStats['range'].push(gameConfig.upgrades.overCharge.range);
             }
         ),
 
