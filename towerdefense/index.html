@@ -783,6 +783,7 @@ canvas {
 
         async loadImages(prefix, config) {
             for (const [type, cfg] of Object.entries(config)) {
+                if(!cfg.render) continue;
                 this.images[`${prefix}_${type}`] = await this.createPlaceholder(cfg);
                 // Later: this.images[type] = this.loadRealImage(cfg.src);
             }
@@ -1095,7 +1096,72 @@ canvas {
         }
       
     }
-    
+    class HitEffectParticle extends Component {
+        constructor(game, parent, damageType) {
+            super(game, parent);
+            this.damageType = damageType || "default";
+            this.particles = [];
+            
+            // Spawn particles based on damage type
+            const particleCount = 5;
+            for (let i = 0; i < particleCount; i++) {
+                this.particles.push({
+                    x: 0, // Relative to parent
+                    y: 0,
+                    vx: (Math.random() - 0.5) * 4, // Velocity (-2 to 2)
+                    vy: (Math.random() - 0.5) * 4,
+                    size: Math.random() * 3 + 1, // 1-4 pixels
+                    alpha: 1, // Fades from 1 to 0
+                    color: this.getColor()
+                });
+            }
+        }
+
+        getColor() {
+            switch (this.damageType) {
+                case "electric": return "rgba(0, 255, 255, "; // Cyan for electric
+                case "fire": return "rgba(255, 165, 0, "; // Orange for fire
+                case "ice": return "rgba(128, 128, 255, "; // Blue for ice
+                case "plasma": return "rgba(255, 0, 255, "; // Purple for plasma
+                default: return "rgba(255, 255, 255, "; // White fallback
+            }
+        }
+
+        update() {
+            const lifespanComp = this.parent.getComponent("LifeSpan");
+            if (!lifespanComp) return; // Safety check
+
+            const fadeFactor = lifespanComp.lifeSpan / 30; // Normalize to initial lifespan (30 frames)
+            for (let particle of this.particles) {
+                particle.x += particle.vx * this.game.state.timeScale;
+                particle.y += particle.vy * this.game.state.timeScale;
+                particle.alpha = fadeFactor; // Fade based on remaining lifespan
+                particle.size *= 0.98; // Slight shrink per frame
+            }
+        }
+    }
+    class HitEffectRenderer extends Component {
+        constructor(game, parent, image, offsetY) {
+            super(game, parent);
+            this.ctx = game.ctx;
+        }
+
+        draw() {
+            const particleComp = this.parent.getComponent("HitEffectParticle");
+            if (!particleComp || !particleComp.particles.length) return;
+
+            const basePos = translator.pixelToIso(this.parent.position.x, this.parent.position.y);
+
+            for (let particle of particleComp.particles) {
+                this.ctx.fillStyle = `${particle.color}${particle.alpha})`;
+                this.ctx.beginPath();
+                const drawX = basePos.x + particle.x;
+                const drawY = basePos.y + particle.y;
+                this.ctx.arc(drawX, drawY, particle.size, 0, Math.PI * 2);
+                this.ctx.fill();
+            }
+        }
+    }
     class LightningRenderer extends Component {
         constructor(game, parent, ownerStats) {
             super(game, parent);
@@ -1155,6 +1221,7 @@ canvas {
         constructor(game, parent, type, owner, target, stats) {
             super(game, parent);
             this.type = type;
+            this.def = gameConfig.projectiles[this.type];
             this.owner = owner;
             this.target = target;
             this.stats = stats;
@@ -1180,6 +1247,7 @@ canvas {
             targetHealth.hp -= this.stats.damage;
             this.piercedEnemies.push(this.target);
             this.chainTargets.push(this.target);
+            this.game.createHitEffect(this.target.position.x, this.target.position.y, this.def.hitEffectType);
 
             // Chain to nearby enemies
             if (this.stats.piercing > 0 && this.piercedEnemies.length <= this.stats.piercing) {
@@ -1199,6 +1267,7 @@ canvas {
                         enemyHealth.hp -= this.stats.damage;
                         this.piercedEnemies.push(enemy);
                         this.chainTargets.push(enemy);
+                        this.game.createHitEffect(enemy.position.x, enemy.position.y, this.def.hitEffectType);
                         if (this.piercedEnemies.length > this.stats.piercing) break;
                     }
                 }
@@ -1569,6 +1638,7 @@ canvas {
         constructor(game, parent, type, owner, target, stats) {
             super(game, parent);
             this.type = type;
+            this.def = gameConfig.projectiles[this.type];
             this.owner = owner;
             this.target = target;
             this.stats = stats;
@@ -1612,7 +1682,7 @@ canvas {
                             // Calculate actual distance only when needed
                             const splashDist = Math.sqrt(distSq1);
                             enemyHealth.hp -= (this.stats.damage * (1 - (splashDist / this.stats.splashRadius) * 0.5));                     
-
+                            this.game.createHitEffect(enemy.position.x, enemy.position.y, this.def.hitEffectType);
                             if( this.ownerStats.slowEffect ) {
                                 enemyStats.addEffect(gameConfig.effects.slow, effects.slow, this.ownerStats.slowEffect);
                             }
@@ -1622,9 +1692,10 @@ canvas {
                     explosion.addRenderer(Explosion, this.stats.splashRadius);
                     this.game.state.addEntity(explosion);
                 } else {
+                    let def = gameConfig.projectiles[this.type];
                     // Apply damage
                     targetHealth.hp -= this.stats.damage;
-
+                    this.game.createHitEffect(this.target.position.x, this.target.position.y, def.hitEffectType);
                     if( this.ownerStats.slowEffect ) {
                         this.target.addEffect(gameConfig.effects.slow, effects.slow, this.ownerStats.slowEffect );
                     }
@@ -2604,6 +2675,13 @@ canvas {
             this.addEntity(entity);      
             return entity;  
         }
+        createHitEffect(x, y, damageType = "default") {
+            let entity = new Entity(this, x, y);
+            entity.addRenderer(HitEffectRenderer, null, 0);
+            entity.addComponent(HitEffectParticle, damageType);
+            entity.addComponent(LifeSpan, 30); // ~0.5 seconds at 60 FPS
+            this.addEntity(entity);
+        }
         applyUpgrade(upgradeId) {
             const upgrade = upgrades.find(u => u.id === upgradeId);
             if (upgrade && upgrade.canApply(this.state)) {
@@ -2616,13 +2694,12 @@ canvas {
     const translator = new CoordinateTranslator(CONFIG);
     const gameConfig = {
         projectiles: {
-            plasmaBolt: { render: {"shapes":[{"type":"sphere","size":6,"x":0,"y":5,"z":0,"rotationX":90,"color":"#ee6060"}]} },
+            plasmaBolt: { hitEffectType: 'plasma', render: {"shapes":[{"type":"sphere","size":6,"x":0,"y":24,"z":0,"rotationX":90,"color":"#ee6060"}]} },
             nanoOrb: { render: {"shapes":[{"type":"sphere","size":6,"x":0,"y":5,"z":0,"rotationX":90,"color":"#ee6060"}]} },
-            neutronFragment: { render: {"shapes":[{"type":"sphere","size":6,"x":0,"y":5,"z":0,"rotationX":90,"color":"#ee6060"}]} },
-            voidPulse: { render: {"shapes":[{"type":"sphere","size":6,"x":0,"y":5,"z":0,"rotationX":90,"color":"#ee6060"}]} },
-            missile: { render: {"shapes":[{"type":"cylinder","size":5,"color":"#888888","x":0,"y":24,"z":-1.3812500000000014,"rotationX":90,"rotationY":0,"rotationZ":0,"height":25},{"type":"cone","size":5,"color":"#ff1117","x":0,"y":24,"z":13.618749999999999,"rotationX":90,"rotationY":0,"rotationZ":0,"height":5},{"type":"cone","size":2.5,"color":"#ff1117","x":0,"y":24,"z":-13.881250000000001,"rotationX":90,"rotationY":0,"rotationZ":0,"height":2.5},{"type":"cylinder","size":6.25,"color":"#888888","x":0,"y":24,"z":-11.131250000000001,"rotationX":90,"rotationY":0,"rotationZ":0,"height":5},{"type":"box","size":5,"color":"#888888","x":0,"y":27,"z":-11.631250000000001,"rotationX":45,"rotationY":0,"rotationZ":0,"width":0.25,"height":2.5,"depth":8.5},{"type":"box","size":5,"color":"#888888","x":0,"y":21,"z":-11.631250000000001,"rotationX":-45,"rotationY":0,"rotationZ":0,"width":0.25,"height":2.5,"depth":8.5},{"type":"box","size":5,"color":"#888888","x":-3,"y":24,"z":-11.631250000000001,"rotationX":0,"rotationY":45,"rotationZ":90,"width":0.25,"height":2.5,"depth":8.5},{"type":"box","size":5,"color":"#888888","x":3,"y":24,"z":-11.631250000000001,"rotationX":0,"rotationY":-45,"rotationZ":-90,"width":0.25,"height":2.5,"depth":8.5}]} },
-            cryoMist: { render: {"shapes":[{"type":"sphere","size":6,"x":0,"y":5,"z":0,"rotationX":90,"color":"#6060ee"}]} },
-            lightning: { customRenderer: "lightning", render: { "shapes":[]} }
+            neutronFragment: { render: {"shapes":[{"type":"sphere","size":6,"x":0,"y":25,"z":0,"rotationX":90,"color":"#ee6060"}]} },
+            missile: { hitEffectType: 'fire', render: {"shapes":[{"type":"cylinder","size":5,"color":"#888888","x":0,"y":24,"z":-1.3812500000000014,"rotationX":90,"rotationY":0,"rotationZ":0,"height":25},{"type":"cone","size":5,"color":"#ff1117","x":0,"y":24,"z":13.618749999999999,"rotationX":90,"rotationY":0,"rotationZ":0,"height":5},{"type":"cone","size":2.5,"color":"#ff1117","x":0,"y":24,"z":-13.881250000000001,"rotationX":90,"rotationY":0,"rotationZ":0,"height":2.5},{"type":"cylinder","size":6.25,"color":"#888888","x":0,"y":24,"z":-11.131250000000001,"rotationX":90,"rotationY":0,"rotationZ":0,"height":5},{"type":"box","size":5,"color":"#888888","x":0,"y":27,"z":-11.631250000000001,"rotationX":45,"rotationY":0,"rotationZ":0,"width":0.25,"height":2.5,"depth":8.5},{"type":"box","size":5,"color":"#888888","x":0,"y":21,"z":-11.631250000000001,"rotationX":-45,"rotationY":0,"rotationZ":0,"width":0.25,"height":2.5,"depth":8.5},{"type":"box","size":5,"color":"#888888","x":-3,"y":24,"z":-11.631250000000001,"rotationX":0,"rotationY":45,"rotationZ":90,"width":0.25,"height":2.5,"depth":8.5},{"type":"box","size":5,"color":"#888888","x":3,"y":24,"z":-11.631250000000001,"rotationX":0,"rotationY":-45,"rotationZ":-90,"width":0.25,"height":2.5,"depth":8.5}]} },
+            cryoMist: {  hitEffectType: 'ice', render: {"shapes":[{"type":"sphere","size":6,"x":0,"y":25,"z":0,"rotationX":90,"color":"#6060ee"}]} },
+            lightning: { customRenderer: 'lightning', hitEffectType: 'electric' },
         },
         towers: 
         {
