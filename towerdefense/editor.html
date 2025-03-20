@@ -177,6 +177,10 @@
         button.danger:hover {
             background-color: #f00;
         }
+
+        button.active {            
+            border: 1px solid #4CAF50;
+        }
         
         .actions {
             display: flex;
@@ -475,6 +479,7 @@
             <div id="graphics-container">
                 <div id="graphics-sidebar">
                     <div id="toolbar">
+                        <button id="preview-animation" class="small-btn">Preview Animation</button>
                         <button id="add-animation" class="small-btn">Add Animation</button>
                         <button id="add-frame" class="small-btn">Add Frame</button>
                         <button id="duplicate-frame" class="small-btn">Duplicate Frame</button>
@@ -1171,7 +1176,6 @@
             });
             document.body.addEventListener('saveObjectGraphics', (event) => {
                 let renderData = event.detail;
-                console.log("saving", renderData);
                 document.getElementById('render-value').value = JSON.stringify(renderData);
             });
         }
@@ -1414,7 +1418,7 @@
         let selectedOutline, originalMaterials = new Map();
         let isDragging = false;
         let clickStartTime = 0;
-        
+        let isPreviewingAnimation = false;
         // Initialize the application
         function init() {
             initThreeJS();
@@ -1582,7 +1586,8 @@
         }
         // Initialize event listeners
         function initEventListeners() {
-            document.getElementById('add-shape').addEventListener('click', addNewShape);            
+            document.getElementById('add-shape').addEventListener('click', addNewShape);     
+            document.getElementById('preview-animation').addEventListener('click', togglePreview);       
             document.getElementById('duplicate-shape').addEventListener('click', duplicateSelectedShape);         
             document.getElementById('delete-shape').addEventListener('click', deleteSelectedShape);                           
             document.getElementById('scale-all').addEventListener('click', scaleAllShapes);            
@@ -1593,6 +1598,7 @@
             document.getElementById('duplicate-frame').addEventListener('click', duplicateFrame);
             document.getElementById('delete-frame').addEventListener('click', deleteFrame);
             document.body.addEventListener('viewObject', (event) => {
+                setPreviewAnimationState(false);
                 renderData = event.detail;
                 document.getElementById('json-content').value =  JSON.stringify(renderData, null, 2);
                 currentAnimation = "idle";
@@ -1661,9 +1667,31 @@
             });
             document.getElementById('iso-generate').addEventListener('click', generateIsometricSprites);
         }
-        
+        function togglePreview(e) {
+            isPreviewingAnimation = !isPreviewingAnimation;
+            animatePreview();
+            setPreviewAnimationState(isPreviewingAnimation);            
+        }
+        function setPreviewAnimationState(isPreviewing) {
+            isPreviewingAnimation = isPreviewing
+            let btn = document.getElementById('preview-animation');
+            if (isPreviewingAnimation) {
+                btn.classList.add("active");
+            } else {
+                currentFrame = 0;
+                btn.classList.remove("active");
+            }
+        }
+        function animatePreview() {
+            if (!isPreviewingAnimation) return;
+            currentFrame = (currentFrame + 1) % renderData.animations[currentAnimation].length;
+            renderShapes(renderData, { scene }, false);
+            //updateShapeList();
+            setTimeout(animatePreview, 166); // ~6 FPS, adjust as needed
+        }
         // Select a shape
         function selectShape(index) {
+            setPreviewAnimationState(false);
             selectedShapeIndex = (selectedShapeIndex === index) ? -1 : index;
             updateShapeList();
             highlightSelectedShape();
@@ -1900,7 +1928,6 @@
             document.getElementById('json-content').value = JSON.stringify(renderData, null, 2);
 
             if(fireSave){
-                console.log('update:', renderData);
                         // Create a custom event with data
                 const myCustomEvent = new CustomEvent('saveObjectGraphics', {
                     detail: renderData, // Custom data
@@ -1970,6 +1997,7 @@
                 animSelector.appendChild(option);
             });
             animSelector.addEventListener('change', () => {
+                setPreviewAnimationState(false);
                 currentAnimation = animSelector.value;
                 currentFrame = 0;
                 selectedShapeIndex = -1;
@@ -1988,6 +2016,7 @@
                 frameItem.style.cursor = 'pointer';
                 if (index === currentFrame) frameItem.style.backgroundColor = '#555';
                 frameItem.addEventListener('click', () => {
+                    setPreviewAnimationState(false);
                     currentFrame = index;
                     selectedShapeIndex = -1;
                     renderShapes(renderData, { scene });
