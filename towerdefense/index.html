@@ -1738,13 +1738,24 @@ canvas {
             this.selectedTowerType = null;
             this.hoverCell = { x: -1, y: -1 };
             this.showRange = false;
+            this.isMapCached = false; // Flag to track if map needs redrawing
             
             // Create off-screen canvas for caching
             this.mapCacheCanvas = document.createElement('canvas');
             this.mapCacheCanvas.width = CONFIG.CANVAS_WIDTH;
             this.mapCacheCanvas.height = CONFIG.CANVAS_HEIGHT;
             this.mapCacheCtx = this.mapCacheCanvas.getContext('2d');
-            this.isMapCached = false; // Flag to track if map needs redrawing
+
+            
+            this.envCacheCanvasBG = document.createElement('canvas');
+            this.envCacheCanvasBG.width = CONFIG.CANVAS_WIDTH;
+            this.envCacheCanvasBG.height = CONFIG.CANVAS_HEIGHT / 2;
+            this.envCacheCtxBG = this.envCacheCanvasBG.getContext('2d');
+
+            this.envCacheCanvasFG = document.createElement('canvas');
+            this.envCacheCanvasFG.width = CONFIG.CANVAS_WIDTH;
+            this.envCacheCanvasFG.height = CONFIG.CANVAS_HEIGHT / 2;
+            this.envCacheCtxFG = this.envCacheCanvasFG.getContext('2d');
         }
 
         clearScreen() {        
@@ -1763,7 +1774,7 @@ canvas {
             this.isMapCached = true;
         }
 
-        render(state, map) {
+        renderBG(state, map) {
             this.clearScreen();
             
             // Generate cache if not already done
@@ -1773,6 +1784,10 @@ canvas {
             
             // Draw cached map image to main canvas
             this.ctx.drawImage(this.mapCacheCanvas, 0, 0);
+            this.ctx.drawImage(this.envCacheCanvasBG, 0, 0);
+        }
+        renderFG() {  
+            this.ctx.drawImage(this.envCacheCanvasFG, 0, CONFIG.CANVAS_HEIGHT / 2);
         }
 
         drawMap(tileMap, path) {
@@ -1825,12 +1840,13 @@ canvas {
 
         drawEnvironment() {
 
-            let treesAmt = CONFIG.COLS * CONFIG.ROWS;
+            let itemAmt = CONFIG.COLS * CONFIG.ROWS;
             let environmentTypes = [];
             for(let envType in gameConfig.environment){
                 environmentTypes.push(envType);
             }
-            for(let i = 0; i < treesAmt; i++) {
+            let items = [];            
+            for(let i = 0; i < itemAmt; i++) {
                 // Define the game board boundaries
                 const boardMinX = 0;
                 const boardMaxX = CONFIG.COLS * CONFIG.GRID_SIZE;
@@ -1865,24 +1881,32 @@ canvas {
                 // Double-check that the position is actually outside the board
                 if (x < boardMinX || x > boardMaxX || y < boardMinY || y > boardMaxY) {
                     const type = environmentTypes[Math.floor(Math.random() * environmentTypes.length)];
-                    const stats = gameConfig.environment[type];
                     const images = this.game.imageManager.getImages("environment", type);
-
-                    // Convert pixel to isometric
-                    const isoPos = translator.pixelToIso(x, y);
-
-                    const imgWidth = images[0].width;
-                    const imgHeight = images[0].height;
-                    
-                    const drawX = isoPos.x - imgWidth / 2;
-                    const drawY = isoPos.y - imgHeight / 2;
-
-                    this.mapCacheCtx.drawImage(images[0], drawX, drawY);
+                    items.push( { img: images[0], x: x, y: y});
                 } else {
                     i--; // Position inside board, try again
                 }
             }
 
+            items.sort((a, b) => {
+                return (a.y * CONFIG.COLS + a.x) - (b.y * CONFIG.COLS + b.x)
+            });
+
+            items.forEach((item) => {            
+                // Convert pixel to isometric
+                const isoPos = translator.pixelToIso(item.x, item.y);
+                const image = item.img;
+                const imgWidth = image.width;
+                const imgHeight = image.height;
+                
+                const drawX = isoPos.x - imgWidth / 2;
+                const drawY = isoPos.y - imgHeight / 2;
+                if( drawY < CONFIG.CANVAS_HEIGHT / 2 ) {
+                    this.envCacheCtxBG.drawImage(image, drawX, drawY);
+                } else {
+                    this.envCacheCtxFG.drawImage(image, drawX, drawY - CONFIG.CANVAS_HEIGHT / 2);
+                }
+            });
         }
     }
 
@@ -2300,10 +2324,11 @@ canvas {
 
         // Main Loop
         gameLoop() {
-            this.mapRenderer.render(this.state, { tileMap: this.state.tileMap, path: this.state.path });
+            this.mapRenderer.renderBG(this.state, { tileMap: this.state.tileMap, path: this.state.path });
             if (!this.state.isPaused) {
                 this.update();
             } 
+            this.mapRenderer.renderFG();
             this.draw();
         }
 
