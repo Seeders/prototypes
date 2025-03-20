@@ -1039,7 +1039,7 @@
          * Generate JavaScript code for the current configuration
          */
         function generateConfigCode() {
-            let code = `const ${state.selectedType}Config = {\n`;
+            let code = `{\n`;
             
             Object.entries(state.objectTypes[state.selectedType]).forEach(([objId, config]) => {
                 code += `    ${objId}: { `;
@@ -1060,7 +1060,7 @@
                 code += `${props} },\n`;
             });
             
-            code += '};';
+            code += '}';
             
             return code;
         }
@@ -1072,17 +1072,15 @@
         function parseConfigCode(code) {
             try {
                 // Extract the config object with variable pattern matching
-                const regex = /const\s+(\w+)Config\s*=\s*\{([^;]*(?:\{[^;]*\}[^;]*)*)\};?/s;
+                const regex = /\{([^;]*(?:\{[^;]*\}[^;]*)*)\}/s;
                 const match = code.match(regex);
                 
                 if (!match) {
                     throw new Error('Could not find configuration in the code');
                 }
-                
-                const configType = match[1];
-                
+                                
                 // Create a valid JavaScript expression
-                const objText = `({${match[2]}})`;
+                const objText = `(${match[0]})`;
                 
                 // Parse the JavaScript object
                 const config = eval(objText);
