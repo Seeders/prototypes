@@ -1532,12 +1532,12 @@ canvas {
                     const nearbyEnemies = this.game.spatialGrid.getNearbyEntities(
                         this.parent.position.x, 
                         this.parent.position.y, 
-                        this.stats.range
+                        this.ownerStats.range
                     );
                     // Find a new target
                     let newTarget = null;
                     for (let enemy of nearbyEnemies) {
-                        if (!enemy.isDead && !this.piercedEnemies.includes(enemy)) {
+                        if (!enemy.destroyed && !this.piercedEnemies.includes(enemy)) {
                             const dx = enemy.position.x - this.parent.position.x;
                             const dy = enemy.position.y - this.parent.position.y;
                             const distSq2 = dx * dx + dy * dy;
@@ -1552,7 +1552,7 @@ canvas {
                         this.target = newTarget;   
                         return;                 
                     } 
-                }
+                } 
                 
                 this.parent.destroy();
             }
@@ -1623,7 +1623,7 @@ canvas {
         
         getNearbyEntities(x, y, radius) {
             const nearby = [];
-            
+            const max = 3;
             // Get cells that could contain entities within radius
             const startCol = Math.max(0, Math.floor((x - radius) / this.cellSize));
             const endCol = Math.min(this.cols - 1, Math.floor((x + radius) / this.cellSize));
@@ -1631,11 +1631,18 @@ canvas {
             const endRow = Math.min(this.rows - 1, Math.floor((y + radius) / this.cellSize));
             
             // Collect potential candidates from relevant cells
-            for (let row = startRow; row <= endRow; row++) {
-                for (let col = startCol; col <= endCol; col++) {
+            for (let row = startRow; row <= endRow && nearby.length < max; row++) {
+                for (let col = startCol; col <= endCol && nearby.length < max; col++) {
                     const index = row * this.cols + col;
                     if (index >= 0 && index < this.grid.length) {
-                        this.grid[index].forEach(entity => nearby.push(entity));
+                        for( let i = 0; i < this.grid[index].length; i++){
+                            let entity = this.grid[index][i];
+                            if( nearby.length < max) {
+                                nearby.push(entity);
+                            } else {
+                                break;
+                            }
+                        }
                     }
                 }
             }
