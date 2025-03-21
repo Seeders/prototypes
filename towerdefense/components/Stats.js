@@ -1,6 +1,6 @@
 import { Component } from "./Component.js";
 import { calculateStats } from "../functions/calculateStats.js";
-import { Effect } from "../classes/Effect.js";
+import { Effect } from "./Effect.js";
 
 class Stats extends Component { 
     constructor( game, parent, type, stats ) {
@@ -20,12 +20,12 @@ class Stats extends Component {
         this.defaultStats[statName] = statValue;
     }
     addEffect(effectConfig, effectFn, effectAmt) {        
-        this.activeEffects[effectConfig.id] = new Effect( effectConfig, effectFn, effectAmt );
+        this.activeEffects[effectConfig.id] = this.parent.addComponent(Effect, effectConfig, effectFn, effectAmt );
     }
     applyEffects() {
         let effectArr = [];
         for(let effectId in this.activeEffects) {
-            if(this.activeEffects[effectId] && this.activeEffects[effectId].update()){
+            if(this.activeEffects[effectId] && this.activeEffects[effectId].lifeTime > 0){
                 effectArr.push(this.activeEffects[effectId]);
             } else {
                 this.activeEffects[effectId] = undefined;

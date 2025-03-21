@@ -1,4 +1,4 @@
-class Effect { 
+class Effect extends Component { 
     constructor(config, applyFn, amount) {
         this.id = config.id;
         this.title = config.title;
@@ -10,7 +10,7 @@ class Effect {
 
     update() {
         this.lifeTime--;
-        if( this.lifeTime <= 0) return false;
+        if( this.lifeTime <= 0) this.parent.removeComponent(this);
         return true;        
     }
 

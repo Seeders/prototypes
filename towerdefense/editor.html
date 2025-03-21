@@ -378,13 +378,62 @@
             height: 100%;
             cursor: grab;
         }
-        #toolbar {
-            padding: 15px;
-            border-bottom: 1px solid #555;
+        .toolbar {
             display: flex;
-            gap: 10px;
             flex-wrap: wrap;
-            background: #333;
+            gap: 5px; /* Reduced from 15px */
+            padding: 5px; /* Reduced from 10px */
+            background: linear-gradient(180deg, #2a2a2a, #222); /* Matches your sidebar */
+            border-bottom: 1px solid #555;
+        }
+
+        .btn {
+            padding: 4px 8px; /* Smaller than 6px 12px */
+            font-size: 12px; /* Reduced from 14px */
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background-color 0.2s, box-shadow 0.2s;
+            color: #f0f0f0;
+            min-width: 28px; /* Ensures buttons aren’t too tiny */
+            text-align: center;
+            margin: 0;
+        }
+
+        .btn-primary {
+            background-color: #a0f;
+        }
+
+        .btn-primary:hover {
+            background-color: #b4f;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+        }
+
+        .btn-danger {
+            background-color: #d00;
+        }
+
+        .btn-danger:hover {
+            background-color: #f00;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+        }
+
+        .btn-secondary {
+            background-color: #505050;
+        }
+
+        .btn-secondary:hover {
+            background-color: #606060;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+        }
+
+        .btn-special {
+            background-color: #4CAF50;
+        }
+
+        .btn-special:hover {
+            background-color: #66BB6A;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
         }
 
         #shape-list {
@@ -479,19 +528,19 @@
         <div class="main-content">
             <div id="graphics-container">
                 <div id="graphics-sidebar">
-                    <div id="toolbar">
-                        <button id="preview-animation" class="small-btn">Preview Animation</button>
-                        <button id="add-animation" class="small-btn">Add Animation</button>
-                        <button id="delete-animation" class="small-btn button-danger">Delete Animation</button>
-                        <button id="duplicate-frame" class="small-btn">Add Frame</button>
-                        <button id="delete-frame" class="small-btn button-danger">Delete Frame</button>
-                        <button id="add-shape" class="small-btn">Add Shape</button>
-                        <button id="duplicate-shape" class="small-btn">Duplicate</button>
-                        <button id="scale-all" class="small-btn">Scale All</button>
-                        <button id="move-all" class="small-btn">Move All</button>
-                        <button id="rotate-all" class="small-btn">Rotate All</button>
-                        <button id="generate-isometric" class="small-btn">Isometric Sprites</button>
-                        <button id="delete-shape" class="small-btn button-danger">Delete Shape</button>
+                    <div id="toolbar" class="toolbar">
+                        <button id="preview-animation" class="btn btn-primary" title="Preview Animation">Play</button>
+                        <button id="add-animation" class="btn btn-primary" title="Add Animation">+A</button>
+                        <button id="delete-animation" class="btn btn-danger" title="Delete Animation">-A</button>
+                        <button id="duplicate-frame" class="btn btn-primary" title="Add Frame">+F</button>
+                        <button id="delete-frame" class="btn btn-danger" title="Delete Frame">-F</button>
+                        <button id="add-shape" class="btn btn-primary" title="Add Shape">+S</button>
+                        <button id="duplicate-shape" class="btn btn-primary" title="Duplicate Shape">SS</button>
+                        <button id="delete-shape" class="btn btn-danger" title="Delete Shape">-S</button>
+                        <button id="scale-all" class="btn btn-secondary" title="Scale All">Sc</button>
+                        <button id="move-all" class="btn btn-secondary" title="Move All">Mv</button>
+                        <button id="rotate-all" class="btn btn-secondary" title="Rotate All">Rt</button>
+                        <button id="generate-isometric" class="btn btn-special" title="Generate Isometric Sprites">Iso</button>
                     </div>
                     <div id="shape-list"></div>
                 </div>
