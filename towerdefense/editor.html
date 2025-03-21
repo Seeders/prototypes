@@ -650,9 +650,7 @@
             GRID_SIZE: 40,
             DEFAULT_TOWER_SIZE: 30,
             DEFAULT_TOWER_COLOR: '#ffffff',
-            DEFAULT_RENDER: {
-                shapes: []
-            }
+            DEFAULT_RENDER: {animations:{idle:[{shapes:[]}]}}
         };
         let threeJsCamera = null;
         let currentCameraLocation = 0;
@@ -2167,7 +2165,17 @@
             });
 
             if (selectedShapeIndex >= 0) {
-                createInspector(currentShapes[selectedShapeIndex]);
+                let shape = currentShapes[selectedShapeIndex];
+                if( shape ) {
+                    createInspector(shape);
+                } else {
+                    const inspector = document.getElementById('inspector');
+                    inspector.innerHTML = "";
+                    selectedShapeIndex = -1;
+                    renderShapes(renderData, { scene });
+                    updateShapeList();
+                }
+
             }
         }
         
