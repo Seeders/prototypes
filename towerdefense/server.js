@@ -12,7 +12,7 @@ app.use(express.static(path.join(__dirname)));
 // Endpoint to save the config
 app.post('/save-config', async (req, res) => {
     const config = req.body;
-    const filePath = path.join(__dirname, 'game_config.json');
+    const filePath = path.join(__dirname, '/config/game_config.json');
 
     try {
         await fs.writeFile(filePath, JSON.stringify(config, null, 2), 'utf8');
@@ -24,7 +24,7 @@ app.post('/save-config', async (req, res) => {
 });
 
 // Start the server
-const PORT = 8000;
+const PORT = 5000;
 app.listen(PORT, () => {
     console.log(`Server running on http://localhost:${PORT}`);
 });

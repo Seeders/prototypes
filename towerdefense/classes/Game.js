@@ -490,7 +490,7 @@ class Game
             this.initEffectsAndUpgrades(); 
             return;
         }
-        await fetch('game_config.json')
+        await fetch('/config/game_config.json')
             .then(response => {
                 if (!response.ok) throw new Error('File not found');
                 return response.json();

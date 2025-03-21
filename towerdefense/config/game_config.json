@@ -6911,9 +6911,9 @@
     "armoredBeast": {
       "info": "ArmoredBeast",
       "speed": 0.9,
-      "essence": 10,
-      "value": 10,
-      "hp": 50,
+      "essence": 20,
+      "value": 30,
+      "hp": 100,
       "render": {
         "animations": {
           "idle": [

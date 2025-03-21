@@ -1,4 +1,4 @@
-import * as THREE from "../three.module.min.js";
+import * as THREE from "../library/three.module.min.js";
 
 class ImageManager {
     constructor() {

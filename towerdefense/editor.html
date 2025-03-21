@@ -634,9 +634,9 @@
 
 
     <script type="module">
-    import * as THREE from './three.module.min.js';
+    import * as THREE from './library/three.module.min.js';
     
-    import { OrbitControls } from './three.orbitControls.js';
+    import { OrbitControls } from './library/three.orbitControls.js';
 
 
     (function() {
@@ -1384,7 +1384,7 @@
          * Application initialization
          */
         function init() {
-            fetch('game_config.json')
+            fetch('/config/game_config.json')
                 .then(response => {
                     if (!response.ok) throw new Error('File not found');
                     return response.json();
