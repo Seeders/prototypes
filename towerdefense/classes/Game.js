@@ -335,7 +335,7 @@ class Game
     }
 
     checkValidTowerPosition(posX, posY) {
-        if(this.state.tileMap.length > posY && this.state.tileMap[posY].length > posX){
+        if(this.state.tileMap.length > posY && this.state.tileMap[posY].length > posX && posX > 0 && posY > 0){
             return this.state.tileMap[posY][posX].buildable;            
         }
         return false;
