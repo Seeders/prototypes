@@ -481,15 +481,15 @@
                     <div id="toolbar">
                         <button id="preview-animation" class="small-btn">Preview Animation</button>
                         <button id="add-animation" class="small-btn">Add Animation</button>
-                        <button id="add-frame" class="small-btn">Add Frame</button>
-                        <button id="duplicate-frame" class="small-btn">Duplicate Frame</button>
+                        <button id="delete-animation" class="small-btn button-danger">Delete Animation</button>
+                        <button id="duplicate-frame" class="small-btn">Add Frame</button>
                         <button id="delete-frame" class="small-btn button-danger">Delete Frame</button>
                         <button id="add-shape" class="small-btn">Add Shape</button>
                         <button id="duplicate-shape" class="small-btn">Duplicate</button>
                         <button id="scale-all" class="small-btn">Scale All</button>
                         <button id="move-all" class="small-btn">Move All</button>
                         <button id="generate-isometric" class="small-btn">Isometric Sprites</button>
-                        <button id="delete-shape" class="small-btn button-danger">Delete</button>
+                        <button id="delete-shape" class="small-btn button-danger">Delete Shape</button>
                     </div>
                     <div id="shape-list"></div>
                 </div>
@@ -1594,7 +1594,7 @@
             document.getElementById('move-all').addEventListener('click', moveAllShapes);
             document.getElementById('generate-isometric').addEventListener('click', showIsometricModal);
             document.getElementById('add-animation').addEventListener('click', addNewAnimation);
-            document.getElementById('add-frame').addEventListener('click', addNewFrame);
+            document.getElementById('delete-animation').addEventListener('click', deleteAnimation);
             document.getElementById('duplicate-frame').addEventListener('click', duplicateFrame);
             document.getElementById('delete-frame').addEventListener('click', deleteFrame);
             document.body.addEventListener('viewObject', (event) => {
@@ -1691,7 +1691,9 @@
         }
         // Select a shape
         function selectShape(index) {
-            setPreviewAnimationState(false);
+            if(isPreviewingAnimation){
+                setPreviewAnimationState(false);
+            }
             selectedShapeIndex = (selectedShapeIndex === index) ? -1 : index;
             updateShapeList();
             highlightSelectedShape();
@@ -1945,21 +1947,23 @@
         function addNewAnimation() {
             const animName = prompt("Enter animation name:", `anim${Object.keys(renderData.animations).length + 1}`);
             if (animName && !renderData.animations[animName]) {
-                renderData.animations[animName] = [{ shapes: [] }];
+                renderData.animations[animName] = [ ...renderData.animations["idle"] ];
                 currentAnimation = animName;
                 currentFrame = 0;
                 renderShapes(renderData, { scene });
                 updateShapeList();
             }
         }
-
-        function addNewFrame() {
-            const currentShapes = renderData.animations[currentAnimation][currentFrame];
-            const newFrame = { shapes: JSON.parse(JSON.stringify(currentShapes.shapes)) }; // Deep copy
-            renderData.animations[currentAnimation].push(newFrame);
-            currentFrame = renderData.animations[currentAnimation].length - 1;
-            renderShapes(renderData, { scene });
-            updateShapeList();
+        
+        function deleteAnimation() {
+            if( currentAnimation != "idle") {
+                delete renderData.animations[currentAnimation];
+                currentAnimation = "idle";
+                currentFrame = 0;
+                selectedShapeIndex = -1;
+                renderShapes(renderData, { scene });
+                updateShapeList();
+            }
         }
 
         function duplicateFrame() {
@@ -2018,7 +2022,6 @@
                 frameItem.addEventListener('click', () => {
                     setPreviewAnimationState(false);
                     currentFrame = index;
-                    selectedShapeIndex = -1;
                     renderShapes(renderData, { scene });
                     updateShapeList();
                 });
@@ -2046,7 +2049,7 @@
                     document.getElementById('selected-shape').textContent = `${shape.type} (${index})`;
                 }
                 const title = document.createElement('div');
-                title.textContent = `${index + 1}. ${shape.type} ${shape.color}`;
+                title.textContent = `${index + 1}. ${shape.name || shape.type} ${shape.color}`;
                 title.style.fontWeight = 'bold';
                 title.style.marginBottom = '5px';
                 shapeItem.appendChild(title);
@@ -2074,6 +2077,7 @@
             inspector.innerHTML = "";
             inspector.className = 'inspector';
             
+            addFormRow(inspector, 'Name', 'text', 'name', shape.name || "");
             // Type selector
             addFormRow(inspector, 'Type', 'select', 'type', shape.type, {
                 options: ['cube', 'sphere', 'box', 'cylinder', 'cone', 'torus', 'tetrahedron']
