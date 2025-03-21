@@ -246,7 +246,7 @@ class Game
                 const snappedPixelPos = this.translator.isoToPixel(isoSnappedGridPos.x, isoSnappedGridPos.y); // If checkValidTowerPosition needs pixels
                 this.state.previewTower.position.x = snappedPixelPos.x + CONFIG.GRID_SIZE / 2;
                 this.state.previewTower.position.y = snappedPixelPos.y + CONFIG.GRID_SIZE / 2; // Adjust if centering needed
-                const isValidPosition = this.checkValidTowerPosition(snappedPixelPos.x, snappedPixelPos.y);
+                const isValidPosition = this.checkValidTowerPosition(snappedGrid.x, snappedGrid.y);
                 this.canvas.style.cursor = isValidPosition ? 'pointer' : 'not-allowed';
             }
 
@@ -302,7 +302,7 @@ class Game
             const isoSnappedGridPos = this.translator.gridToIso(snappedGrid.x, snappedGrid.y); 
             const snappedPixelPos = this.translator.isoToPixel(isoSnappedGridPos.x, isoSnappedGridPos.y); // If checkValidTowerPosition needs pixels
             
-            if (this.checkValidTowerPosition(snappedPixelPos.x + CONFIG.GRID_SIZE / 2, snappedPixelPos.y + CONFIG.GRID_SIZE / 2)) {
+            if (this.checkValidTowerPosition(snappedGrid.x, snappedGrid.y)) {
                 // Create the tower
                 let cost = this.gameConfig.towers[this.state.selectedTowerType].cost;
                 let populationCost = this.gameConfig.towers[this.state.selectedTowerType].population || 0;
@@ -312,6 +312,8 @@ class Game
                 if (this.state.bloodShards >= finalCost && this.state.stats.population + populationCost <= this.state.stats.maxPopulation) {
                     const tower = this.createTower(snappedPixelPos.x + CONFIG.GRID_SIZE / 2, snappedPixelPos.y + CONFIG.GRID_SIZE / 2, this.state.selectedTowerType);
                     tower.placed = true;
+                    this.state.tileMap[snappedGrid.y][snappedGrid.x].buildable = false;
+                    this.state.tileMap[snappedGrid.y][snappedGrid.x].tower = tower;
                     this.state.bloodShards -= finalCost;
                     this.state.previewTower.destroy();
                     this.state.previewTower = null;
@@ -333,24 +335,10 @@ class Game
     }
 
     checkValidTowerPosition(posX, posY) {
-        // Check if too close to path
-        for (let i = 0; i < this.state.path.length - 1; i++) {
-            const p1 = this.state.path[i];
-            
-            // Calculate distance from point to line segment
-            const dist = Math.hypot(posX - p1.x, posY - p1.y);
-            if (dist < CONFIG.GRID_SIZE) return false;
+        if(this.state.tileMap.length > posY && this.state.tileMap[posY].length > posX){
+            return this.state.tileMap[posY][posX].buildable;            
         }
-        
-        // Check if too close to other towers
-        for (const tower of this.state.towers) {
-            
-            const towerGridPos = this.translator.isoToGrid(tower.position.x, tower.position.y);
-            const dist = Math.hypot(towerGridPos.x - posX, towerGridPos.y - posY);
-            if (dist < CONFIG.GRID_SIZE) return false;
-        }
-                
-        return true;
+        return false;
     }
     // Game-over and reset functions
     gameOver() {
