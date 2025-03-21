@@ -1,3 +1,5 @@
+import { Component } from "./Component.js";
+
 class Effect extends Component { 
     constructor(config, applyFn, amount) {
         this.id = config.id;
