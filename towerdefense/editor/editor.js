@@ -254,7 +254,7 @@
             Object.keys(state.objectTypes[typeId] || {}).forEach(objId => {
                 const option = document.createElement('option');
                 option.value = objId;
-                option.textContent = objId;
+                option.textContent = state.objectTypes[typeId][objId].title || objId;
                 selectElement.appendChild(option);
             });
             
