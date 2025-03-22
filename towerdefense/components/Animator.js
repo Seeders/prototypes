@@ -9,11 +9,14 @@ class Animator extends Component {
         this.currentFrame = 0;
         this.frameDuration = 10; // 10 frames per animation frame (~0.166s at 60 FPS)
         this.frameTimer = 0;
+
+        this.baseSpeed = this.parent.getComponent("stats").stats.speed || 1;
     }
 
     update() {
         this.frameTimer++;
-        if (this.frameTimer >= this.frameDuration) {
+        let currentSpeedPercent = this.parent.getComponent("stats").stats.speed / this.baseSpeed;
+        if (this.frameTimer >= this.frameDuration / currentSpeedPercent) {
             this.frameTimer = 0;
             const animFrames = this.animations[this.currentAnimation];
             this.currentFrame = (this.currentFrame + 1) % animFrames.length;

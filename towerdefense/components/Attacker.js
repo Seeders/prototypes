@@ -67,15 +67,18 @@ class Attacker extends Component {
     }
     
     launchProjectile() {
-        let damage = this.stats.damage * this.game.state.stats.damageMultiplier;
+        this.stats = this.getComponent('stats').stats;    
         let projectileType = this.stats.projectile;
-        // Critical hit calculation
-        const isCritical = Math.random() < this.stats.critChance;
-        if (isCritical) {
-            damage *= this.stats.critMultiplier;
-        } 
-        
-        this.game.createProjectile(projectileType, this.parent.position.x, this.parent.position.y, this.target, damage, isCritical, this.parent);
+        let projectileDef = this.game.gameConfig.projectiles[projectileType];
+        let projStats = { ...projectileDef };
+        delete projStats.render;
+        projStats.baseDamage = this.stats.damage || 1; 
+        projStats.speed = this.stats.speed || 5;     
+        projStats.piercing = this.stats.piercing || 0;
+        projStats.splashRadius = this.stats.splashRadius || 0;
+        projStats.critChance = this.stats.critChance || 0.05;
+        projStats.critMultiplier = this.stats.critMultiplier || 2;
+        this.game.createProjectile(projectileType, this.parent.position.x, this.parent.position.y, this.target, this.parent, projStats);
                 
     }
 

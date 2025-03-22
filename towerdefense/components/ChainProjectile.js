@@ -1,10 +1,10 @@
 import { Component } from "./Component.js";
+import { calculateDamage } from "../functions/calculateDamage.js";
 
 class ChainProjectile extends Component {
     constructor(game, parent, type, owner, target, stats) {
         super(game, parent);
         this.type = type;
-        this.def = this.game.gameConfig.projectiles[this.type];
         this.owner = owner;
         this.target = target;
         this.stats = stats;
@@ -27,10 +27,16 @@ class ChainProjectile extends Component {
 
         // Strike the initial target
         let targetHealth = this.target.getComponent("health");
-        targetHealth.hp -= this.stats.damage;
+        let targetEnergyShield = this.target.getComponent("energyshield");
+        let targetStats = {...this.target.getComponent("stats").stats};
+        targetStats.energyShield = targetEnergyShield.energyShield;
+        let damageResult = calculateDamage(this.stats, targetStats);                    
+        if( damageResult.wasEvaded ) { return; }         
+        targetHealth.hp -= damageResult.damageDealt;
+        targetEnergyShield.absorbDamage(damageResult.damageAbsorbed);
         this.piercedEnemies.push(this.target);
         this.chainTargets.push(this.target);
-        this.game.createHitEffect(this.target.position.x, this.target.position.y, this.def.hitEffectType);
+        this.game.createHitEffect(this.target.position.x, this.target.position.y, this.stats.damageType);
 
         // Chain to nearby enemies
         if (this.stats.piercing > 0 && this.piercedEnemies.length <= this.stats.piercing) {
@@ -47,11 +53,20 @@ class ChainProjectile extends Component {
                 const distSq = dx * dx + dy * dy;
                 if (distSq <= this.ownerStats.range * this.ownerStats.range) {
                     let enemyHealth = enemy.getComponent("health");
-                    enemyHealth.hp -= this.stats.damage;
-                    this.piercedEnemies.push(enemy);
-                    this.chainTargets.push(enemy);
-                    this.game.createHitEffect(enemy.position.x, enemy.position.y, this.def.hitEffectType);
-                    if (this.piercedEnemies.length > this.stats.piercing) break;
+                    let enemyEnergyShield = enemy.getComponent("energyshield");
+                    let enemyStats = {...enemy.getComponent("stats").stats};
+                    enemyStats.energyShield = targetEnergyShield.energyShield;
+                    let damageResult = calculateDamage(this.stats, enemyStats); 
+                    if(!damageResult.wasEvaded) {
+                        enemyHealth.hp -= damageResult.damageDealt;
+                        enemyEnergyShield.absorbDamage(damageResult.damageAbsorbed);
+                        this.piercedEnemies.push(enemy);
+                        this.chainTargets.push(enemy);
+                        this.game.createHitEffect(enemy.position.x, enemy.position.y, this.stats.damageType);
+                        if (this.piercedEnemies.length > this.stats.piercing) break;
+                    } else {
+                        break;
+                    }
                 }
             }
         }

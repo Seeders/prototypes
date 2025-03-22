@@ -32,6 +32,7 @@ import { MapRenderer } from "./MapRenderer.js";
 import { CoordinateTranslator } from './CoordinateTranslator.js'; 
 
 import { calculateStats } from "../functions/calculateStats.js";
+import { EnergyShield } from "../components/EnergyShield.js";
 
 class Game
  {
@@ -46,6 +47,10 @@ class Game
         this.canvas.setAttribute('height', CONFIG.CANVAS_HEIGHT);
 
         this.entitiesToAdd = [];
+        
+        this.currentTime = Date.now();
+        this.lastTime = Date.now();
+        this.deltaTime = 0;
 
     }
     // Initialize the game
@@ -64,19 +69,52 @@ class Game
         this.reset();            
 
         for(let objectType in this.gameConfig) {
-            for(let object in this.gameConfig[objectType]) {
-                if(!this.gameConfig[objectType][object].render){
-                    break;
-                }
-                await this.imageManager.loadImages(objectType, this.gameConfig[objectType]);
-            }
+            await this.imageManager.loadImages(objectType, this.gameConfig[objectType]);
         }
+        this.imageManager.dispose();
         this.gameInterval = setInterval(() => { this.gameLoop(); }, 10);
         this.state.isPaused = true;
         
         this.setupTowerPlacement();
         this.drawStats();
     }
+    
+
+    // Game Loop
+    update() {
+        this.currentTime = Date.now();
+        this.deltaTime = this.currentTime - this.lastTime;
+        if (this.state.gameOver || this.state.victory || this.state.isLevelingUp) return;
+        
+        this.applyActiveUpgrades();
+        this.state.entities.sort((a, b) => {
+            return (b.position.y * CONFIG.COLS + b.position.x) - (a.position.y * CONFIG.COLS + a.position.x)
+        });
+
+        for( let i = this.state.entities.length - 1; i >= 0; i-- ) {
+            let e = this.state.entities[i];
+            let result = e.update();
+            if( !result ) {               
+                this.state.entities.splice(i, 1);
+            }
+            e.draw();
+        }   
+
+        this.entitiesToAdd.forEach((entity) => this.state.addEntity(entity));
+        this.entitiesToAdd = [];
+        // Update wave status
+        this.updateWave();
+        // Level Up check
+        if (this.state.essence >= this.state.essenceToNextLevel && !this.state.isLevelingUp) {
+            this.showUpgradeMenu();
+        }
+        
+        // Game over check
+        if (this.state.bloodCoreHP <= 0 && !this.state.gameOver) {
+            this.gameOver();
+        }      
+    }
+
     showUpgradeMenu() {
         if (this.state.isLevelingUp) return; // Prevent re-triggering
         
@@ -335,7 +373,7 @@ class Game
     }
 
     checkValidTowerPosition(posX, posY) {
-        if(this.state.tileMap.length > posY && this.state.tileMap[posY].length > posX && posX >= 0 && posY >= 0){
+        if( posX >= 0 && posY >= 0 && this.state.tileMap.length > posY && this.state.tileMap[posY].length > posX){
             return this.state.tileMap[posY][posX].buildable;            
         }
         return false;
@@ -366,40 +404,6 @@ class Game
 
     hideTooltip() {
         tooltip.style.display = 'none';
-    }
-
-    // Game Loop
-    update() {
-        if (this.state.gameOver || this.state.victory || this.state.isLevelingUp) return;
-        
-        this.applyActiveUpgrades();
-        this.state.entities.sort((a, b) => {
-            return (b.position.y * CONFIG.COLS + b.position.x) - (a.position.y * CONFIG.COLS + a.position.x)
-        });
-        let entitiesToRemove = [];
-
-        for( let i = this.state.entities.length - 1; i >= 0; i-- ) {
-            let e = this.state.entities[i];
-            let result = e.update();
-            if( !result ) {               
-                this.state.entities.splice(i, 1);
-            }
-            e.draw();
-        }   
-
-        this.entitiesToAdd.forEach((entity) => this.state.addEntity(entity));
-        this.entitiesToAdd = [];
-        // Update wave status
-        this.updateWave();
-        // Level Up check
-        if (this.state.essence >= this.state.essenceToNextLevel && !this.state.isLevelingUp) {
-            this.showUpgradeMenu();
-        }
-        
-        // Game over check
-        if (this.state.bloodCoreHP <= 0 && !this.state.gameOver) {
-            this.gameOver();
-        }      
     }
 
     // Draw function
@@ -514,35 +518,27 @@ class Game
         this.state.reset();
         this.uiManager.reset();
     }
-    createProjectile(type, x, y, target, damage, isCritical, owner) {
-        let ownerStats = owner.getComponent('stats').stats;
+    createProjectile(type, x, y, target, attacker, projStats) {
+        let ownerStats = attacker.getComponent('stats').stats;
         let def = this.gameConfig.projectiles[type];
-        let stats = {            
-            speed: 5,
-            damage: damage,
-            isCritical: isCritical,
-            piercing: ownerStats.piercing || 0,
-            splashRadius: ownerStats.splashRadius || 0
-        };
-
         let entity = new Entity(this, x, y);
         entity.addComponent(Stats, type, stats);
         if( def.customRenderer == "lightning" ) {
             entity.addRenderer(LightningRenderer, ownerStats);
-            entity.addComponent(ChainProjectile, type, owner, target, stats );
+            entity.addComponent(ChainProjectile, type, attacker, target, projStats );
         } else {
             entity.addRenderer(Renderer, this.imageManager.getImages("projectiles", type), 0);
             entity.addComponent(Animator, "projectiles", type);
-            entity.addComponent(Projectile, type, owner, target, stats );
+            entity.addComponent(Projectile, type, attacker, target, projStats );
         }
         this.addEntity(entity);     
     }
     createTower(x, y, type, tracker="towers") {
         let stats = this.gameConfig.towers[type];
         let entity = new Entity(this, x, y);
+        entity.addComponent(Stats, type, stats);
         entity.addRenderer(Renderer, this.imageManager.getImages("towers", type), stats.drawOffsetY ? stats.drawOffsetY : 0 );
         entity.addComponent(Animator, "towers", type);
-        entity.addComponent(Stats, type, stats);
         entity.addComponent(Leveler);
         entity.addComponent(Buildable);
         entity.addComponent(PopulationBurden);
@@ -556,10 +552,10 @@ class Game
     createPreviewTower(x, y, type) {
         let stats = this.gameConfig.towers[type];
         let entity = new Entity(this, x, y);
+        entity.addComponent(Stats, type, stats);
         entity.addRenderer(Renderer, this.imageManager.getImages("towers", type),  stats.drawOffsetY ? stats.drawOffsetY : 0);
         entity.addComponent(Animator, "towers", type);
         entity.addRenderer(RangeIndicator);
-        entity.addComponent(Stats, type, stats);
         entity.addComponent(Buildable);
         
         this.addEntity(entity);        
@@ -595,10 +591,11 @@ class Game
         let stats = this.gameConfig.enemies[type];
         stats.hp *= 1 + (.01 * this.state.wave);
         let entity = new Entity(this, 0, 0);
+        entity.addComponent(Stats, type, stats);
         entity.addRenderer(Renderer, this.imageManager.getImages("enemies", type), stats.drawOffsetY ? stats.drawOffsetY : 0 );
         entity.addComponent(Animator, "enemies", type);
-        entity.addComponent(Stats, type, stats);
         entity.addRenderer(Health);
+        entity.addRenderer(EnergyShield);
         entity.addComponent(EssenceBounty);
         entity.addComponent(FollowPath);
         entity.addComponent(SpacialGridEntity);
@@ -609,9 +606,9 @@ class Game
     createEnvironmentObject(x, y, type, tracker="environment") {
         let stats = this.gameConfig.environment[type];
         let entity = new Entity(this, x, y);
+        entity.addComponent(Stats, type, stats);
         entity.addRenderer(Renderer, this.imageManager.getImages("environment", type), stats.drawOffsetY ? stats.drawOffsetY : 0 );
         entity.addComponent(Animator, "environment", type);
-        entity.addComponent(Stats, type, stats);
         entity.addComponent(ArrayTracker, tracker);            
         this.addEntity(entity);      
         return entity;  

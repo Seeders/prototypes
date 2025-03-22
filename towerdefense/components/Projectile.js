@@ -1,6 +1,7 @@
 import { Component } from "./Component.js";
 import { Entity } from "./../classes/Entity.js";
 import { Explosion } from "./Explosion.js";
+import { calculateDamage } from "../functions/calculateDamage.js";
 
 class Projectile extends Component {
     constructor(game, parent, type, owner, target, stats) {
@@ -29,6 +30,10 @@ class Projectile extends Component {
         // Hit detection
         if (distSq < 15 * 15 ) {
             let targetHealth = this.target.getComponent("health");
+            let targetEnergyShield = this.target.getComponent("energyshield");
+            let targetStats = this.target.getComponent("stats");
+            let targetStatClone = {...targetStats.stats};
+            targetStatClone.energyShield = targetEnergyShield.energyShield;
             if (this.stats.splashRadius > 0) {
                 const nearbyEnemies = this.game.spatialGrid.getNearbyEntities(
                     this.parent.position.x, 
@@ -39,7 +44,10 @@ class Projectile extends Component {
                 for (const enemy of nearbyEnemies) {
                     if (enemy.isDead) continue;
                     let enemyHealth = enemy.getComponent("health");
+                    let enemyEnergyShield = this.target.getComponent("energyshield");
                     let enemyStats = enemy.getComponent("stats");
+                    let enemyStatClone = {...enemyStats.stats};
+                    enemyStatClone.energyShield = enemyEnergyShield.energyShield;
                     const dx = enemy.position.x - this.target.position.x;
                     const dy = enemy.position.y - this.target.position.y;
                     const distSq1 = dx * dx + dy * dy;
@@ -48,11 +56,15 @@ class Projectile extends Component {
                     const splashRadiusSq = this.stats.splashRadius * this.stats.splashRadius;
                     if (distSq1 <= splashRadiusSq) {
                         // Calculate actual distance only when needed
-                        const splashDist = Math.sqrt(distSq1);
-                        enemyHealth.hp -= (this.stats.damage * (1 - (splashDist / this.stats.splashRadius) * 0.5));                     
-                        this.game.createHitEffect(enemy.position.x, enemy.position.y, this.def.hitEffectType);
-                        if( this.ownerStats.slowEffect ) {
-                            enemyStats.addEffect(this.game.gameConfig.effects.slow, this.game.effects.slow, this.ownerStats.slowEffect);
+                        //const splashDist = Math.sqrt(distSq1);
+                        let damageResult = calculateDamage(this.stats, enemyStatClone);                    
+                        if( !damageResult.wasEvaded ) {                        
+                            enemyHealth.hp -= damageResult.damageDealt;
+                            enemyEnergyShield.absorbDamage(damageResult.damageAbsorbed);
+                            this.game.createHitEffect(enemy.position.x, enemy.position.y, this.stats.damageType);
+                            if( this.ownerStats.slowEffect ) {
+                                enemyStats.addEffect(this.game.gameConfig.effects.slow, this.game.effects.slow, this.ownerStats.slowEffect);
+                            }
                         }
                     }
                 }
@@ -60,12 +72,15 @@ class Projectile extends Component {
                 explosion.addRenderer(Explosion, this.stats.splashRadius);
                 this.game.state.addEntity(explosion);
             } else {
-                let def = this.game.gameConfig.projectiles[this.type];
                 // Apply damage
-                targetHealth.hp -= this.stats.damage;
-                this.game.createHitEffect(this.target.position.x, this.target.position.y, def.hitEffectType);
-                if( this.ownerStats.slowEffect ) {
-                    this.target.addEffect(this.game.gameConfig.effects.slow, this.game.effects.slow, this.ownerStats.slowEffect );
+                let damageResult = calculateDamage(this.stats, targetStatClone);                    
+                if( !damageResult.wasEvaded ) {  
+                    targetHealth.hp -= damageResult.damageDealt;
+                    targetEnergyShield.absorbDamage(damageResult.damageAbsorbed);
+                    this.game.createHitEffect(this.target.position.x, this.target.position.y, this.stats.damageType);
+                    if( this.ownerStats.slowEffect ) {
+                        targetStats.addEffect(this.game.gameConfig.effects.slow, this.game.effects.slow, this.ownerStats.slowEffect );
+                    }
                 }
             }
 
@@ -118,7 +133,7 @@ class Projectile extends Component {
         
         // Move projectile
         let dist = Math.sqrt(distSq);
-        const speed = this.stats.speed * this.game.state.timeScale;
+        const speed = this.stats.speed;
         this.parent.position.x += (dx / dist) * speed;
         this.parent.position.y += (dy / dist) * speed;
     }

@@ -38,17 +38,12 @@ class Renderer extends Component {
 
     draw() {
         if (this.images && this.images.length > this.currentDirection) {
-            const pixelX = this.parent.position.x;
-            const pixelY = this.parent.position.y;
-
-            // Convert pixel to isometric
-            const isoPos = this.game.translator.pixelToIso(pixelX, pixelY);
 
             const imgWidth = this.images[this.currentDirection].width;
             const imgHeight = this.images[this.currentDirection].height;
             
-            const drawX = isoPos.x - imgWidth / 2;
-            const drawY = isoPos.y - imgHeight / 2;
+            const drawX = this.parent.drawPosition.x - imgWidth / 2;
+            const drawY = this.parent.drawPosition.y - imgHeight / 2;
 
             this.ctx.drawImage(this.images[this.currentDirection], drawX, drawY);
 
