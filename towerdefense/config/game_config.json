@@ -21,7 +21,8 @@
           ]
         }
       },
-      "speed": 5
+      "speed": 5,
+      "title": "Plasma Bolt"
     },
     "nanoOrb": {
       "render": {
@@ -44,7 +45,8 @@
         }
       },
       "speed": 5,
-      "damageType": "physical"
+      "damageType": "physical",
+      "title": "Nano Orb"
     },
     "neutronFragment": {
       "render": {
@@ -67,7 +69,8 @@
         }
       },
       "speed": 5,
-      "damageType": "physical"
+      "damageType": "physical",
+      "title": "Neutron Fragment"
     },
     "missile": {
       "damageType": "fire",
@@ -185,7 +188,8 @@
           ]
         }
       },
-      "speed": 5
+      "speed": 5,
+      "title": "Missile"
     },
     "cryoMist": {
       "damageType": "cold",
@@ -208,12 +212,14 @@
           ]
         }
       },
-      "speed": 5
+      "speed": 5,
+      "title": "Cryomist"
     },
     "lightning": {
       "customRenderer": "lightning",
       "damageType": "electric",
-      "speed": 5
+      "speed": 5,
+      "title": "Lightning"
     }
   },
   "towers": {
@@ -15836,7 +15842,7 @@
   },
   "environment": {
     "tree": {
-      "info": "Tree",
+      "title": "Tree",
       "render": {
         "animations": {
           "idle": [
@@ -15897,7 +15903,7 @@
       }
     },
     "rock": {
-      "info": "Rock",
+      "title": "Rock",
       "render": {
         "animations": {
           "idle": [
@@ -16032,6 +16038,34 @@
       "lifeTime": 100
     }
   },
+  "waves": {
+    "wave1": {
+      "title": "Wave 1",
+      "render": {
+        "animations": {
+          "idle": [
+            {
+              "shapes": []
+            }
+          ]
+        }
+      }
+    }
+  },
+  "levels": {
+    "level1": {
+      "title": "Level 1",
+      "render": {
+        "animations": {
+          "idle": [
+            {
+              "shapes": []
+            }
+          ]
+        }
+      }
+    }
+  },
   "objectTypeDefinitions": [
     {
       "id": "towers",
@@ -16062,6 +16096,16 @@
       "id": "effects",
       "name": "Effects",
       "singular": "Effect"
+    },
+    {
+      "id": "waves",
+      "name": "Waves",
+      "singular": "Wave"
+    },
+    {
+      "id": "levels",
+      "name": "Levels",
+      "singular": "Level"
     }
   ]
 }
