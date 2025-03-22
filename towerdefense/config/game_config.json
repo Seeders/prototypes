@@ -16041,29 +16041,20 @@
   "waves": {
     "wave1": {
       "title": "Wave 1",
-      "render": {
-        "animations": {
-          "idle": [
-            {
-              "shapes": []
-            }
-          ]
-        }
-      }
+      "enemies": [
+        "zombie",
+        "orc",
+        "wraith",
+        "ghost"
+      ]
     }
   },
   "levels": {
     "level1": {
       "title": "Level 1",
-      "render": {
-        "animations": {
-          "idle": [
-            {
-              "shapes": []
-            }
-          ]
-        }
-      }
+      "waves": [
+        "wave1"
+      ]
     }
   },
   "objectTypeDefinitions": [

@@ -15,6 +15,7 @@
             </div>
             <div style="margin-top: auto; padding-top: 10px;">
                 <button class="primary" id="add-object-btn" style="width: 100%;">Add New Object</button>
+                <button id="duplicate-object-btn" style="width: 100%; margin-top: 10px;">Duplicate Object</button>
                 <button id="import-export-btn" style="width: 100%; margin-top: 10px;">Import/Export Config</button>                
             </div>
         </div>
@@ -97,7 +98,7 @@
         <div class="modal-content">
             <h2>Create New Object</h2>
             <div class="form-group">
-                <label for="new-object-id">Tower ID:</label>
+                <label for="new-object-id">Object ID:</label>
                 <input type="text" id="new-object-id" placeholder="e.g. fireTower">
             </div>
             <div class="form-group">
@@ -107,6 +108,23 @@
             <div class="actions">
                 <button class="primary" id="create-object-btn">Create Tower</button>
                 <button id="close-new-object-modal">Cancel</button>
+            </div>
+        </div>
+    </div>
+    <div class="modal" id="duplicate-object-modal">
+        <div class="modal-content">
+            <h2>Create Duplicate Object</h2>
+            <div class="form-group">
+                <label for="duplicate-object-id">Object ID:</label>
+                <input type="text" id="duplicate-object-id" placeholder="e.g. fireTower">
+            </div>
+            <div class="form-group">
+                <label for="duplicate-object-name">Display Name:</label>
+                <input type="text" id="duplicate-object-name" placeholder="e.g. Fire Tower">
+            </div>
+            <div class="actions">
+                <button class="primary" id="create-duplicate-object-btn">Duplicate Object</button>
+                <button id="close-duplicate-object-modal">Cancel</button>
             </div>
         </div>
     </div>

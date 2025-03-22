@@ -54,6 +54,9 @@
         newObjectModal: document.getElementById('new-object-modal'),
         newObjectIdInput: document.getElementById('new-object-id'),
         newObjectNameInput: document.getElementById('new-object-name'),
+        duplicateObjectModal: document.getElementById('duplicate-object-modal'),
+        duplicateObjectIdInput: document.getElementById('duplicate-object-id'),
+        duplicateObjectNameInput: document.getElementById('duplicate-object-name'),
         tabs: document.querySelectorAll('.tab'),
         rotateLeftBtn: document.getElementById('rotateLeftBtn'),
         rotateRightBtn: document.getElementById('rotateRightBtn'),
@@ -212,11 +215,17 @@
         keyInput.value = key;
         keyInput.className = 'property-key';
         
+        // Check if the key matches a type name (plural or singular)
+        const matchingTypePlural = state.objectTypeDefinitions.find(t => t.name.toLowerCase() === key.toLowerCase());
+        const matchingTypeSingular = state.objectTypeDefinitions.find(t => t.singular.toLowerCase() === key.toLowerCase());
+        
+        propertyItem.appendChild(keyInput);
+        // Regular property input (not a reference)
         const valueInput = document.createElement('input');
         let type = 'text';
-        if( key === 'color' ) {
+        if (key === 'color') {
             type = 'color';
-        } else if( key === 'render' ) {
+        } else if (key === 'render') {
             type = 'textarea';
             value = JSON.stringify(value);
             valueInput.setAttribute('id', 'render-value');
@@ -226,6 +235,63 @@
         valueInput.value = value;
         valueInput.className = 'property-value';
         
+        propertyItem.appendChild(valueInput);
+        if (matchingTypePlural || matchingTypeSingular) {
+            // Create a container for the reference selector and value display
+            const refContainer = document.createElement('div');
+            refContainer.className = 'ref-container';
+            
+            // Create a select element for choosing objects
+            const selectElement = document.createElement('select');
+            selectElement.className = 'ref-select';
+            
+            // Determine which type we're referencing
+            const typeId = matchingTypePlural ? matchingTypePlural.id : matchingTypeSingular.id;
+            
+            // Add options based on available objects of that type
+            selectElement.innerHTML = `<option value="">-- Select ${matchingTypePlural ? matchingTypePlural.singular : matchingTypeSingular.singular} --</option>`;
+            
+            Object.keys(state.objectTypes[typeId] || {}).forEach(objId => {
+                const option = document.createElement('option');
+                option.value = objId;
+                option.textContent = objId;
+                selectElement.appendChild(option);
+            });
+            
+            // Add the select to the container
+            refContainer.appendChild(selectElement);            
+           
+            // Convert value to array if it's a plural reference
+            const valueArray = matchingTypePlural ? (Array.isArray(value) ? value : (value ? [value] : [])) : value;
+            
+ 
+            valueInput.value = matchingTypePlural ? JSON.stringify(valueArray) : valueArray || '';
+            
+            // Add button for inserting selected reference
+            const insertBtn = document.createElement('button');
+            insertBtn.textContent = 'Insert';
+            insertBtn.className = 'small-btn';
+            insertBtn.addEventListener('click', () => {
+                const selectedValue = selectElement.value;
+                if (!selectedValue) return;
+                
+                if (matchingTypePlural) {
+                    // For plural (array) references
+                    let currentValues = JSON.parse(valueInput.value || '[]');  
+                    currentValues.push(selectedValue);
+                    valueInput.value = JSON.stringify(currentValues);                
+                } else {
+                    // For singular references
+                    valueInput.value = selectedValue;
+                }
+            });                  
+            
+            // Add elements to the container
+            refContainer.appendChild(insertBtn);
+            propertyItem.appendChild(refContainer);
+            
+        } 
+        
         const removeBtn = document.createElement('button');
         removeBtn.textContent = 'Remove';
         removeBtn.className = 'danger';
@@ -233,8 +299,6 @@
             container.removeChild(propertyItem);
         });
         
-        propertyItem.appendChild(keyInput);
-        propertyItem.appendChild(valueInput);
         propertyItem.appendChild(removeBtn);
         container.appendChild(propertyItem);
     }
@@ -250,10 +314,12 @@
             const keyInput = item.querySelector('.property-key');
             const valueInput = item.querySelector('.property-value');
             
-            if (keyInput.value && valueInput.value) {
+            if (keyInput.value && valueInput) {
                 let value = valueInput.value;
-                
-                // Try to parse value types
+                const matchingTypePlural = state.objectTypeDefinitions.find(
+                    t => t.name.toLowerCase() === keyInput.value.toLowerCase()
+                );
+                // Try to parse value types for non-reference fields
                 if (!isNaN(parseFloat(value)) && isFinite(value)) {
                     value = parseFloat(value);
                 } else if (value.toLowerCase() === 'true') {
@@ -261,9 +327,16 @@
                 } else if (value.toLowerCase() === 'false') {
                     value = false;
                 }
-                if(keyInput.value == "render") {
+                
+                if (keyInput.value === "render") {
+                    value = JSON.parse(value);
+                } else if(matchingTypePlural) {
                     value = JSON.parse(value);
                 }
+
+                
+            
+                
                 object[keyInput.value] = value;
             }
         });
@@ -275,6 +348,7 @@
         renderObjectList();
         renderPreview();
         saveToLocalStorage();
+        
         // Show success message
         const actions = document.querySelector('.actions');
         const successMsg = document.createElement('span');
@@ -466,6 +540,25 @@
         renderObjectList();
         selectObject(id);
     }
+    /**
+     * Create a new tower
+     */
+    function duplicateObject() {      
+        const currentSelectedObjectType = state.objectTypes[state.selectedType];
+        if( currentSelectedObjectType ) {
+            // Create default properties based on type
+            let defaultProps = {...currentSelectedObjectType[state.selectedObject]};
+                
+            const id = elements.duplicateObjectIdInput.value.trim();
+            const title = elements.duplicateObjectNameInput.value.trim();
+            defaultProps.title = title;
+            state.objectTypes[state.selectedType][id] = defaultProps;
+            
+            elements.duplicateObjectModal.classList.remove('show');
+            renderObjectList();
+            selectObject(id);
+        }
+    }
     
     /**
      * Set up event listeners
@@ -504,6 +597,21 @@
         
         document.getElementById('create-object-btn').addEventListener('click', createNewObject);
         
+        // New object handling
+        document.getElementById('duplicate-object-btn').addEventListener('click', () => {
+            elements.duplicateObjectIdInput.value = '';
+            elements.duplicateObjectNameInput.value = '';
+            updateDuplicateObjectModal();
+            elements.duplicateObjectModal.classList.add('show');
+        });
+
+        document.getElementById('close-duplicate-object-modal').addEventListener('click', () => {
+            elements.duplicateObjectModal.classList.remove('show');
+        });
+
+        document.getElementById('create-duplicate-object-btn').addEventListener('click', duplicateObject);
+
+
         // Tab navigation
         elements.tabs.forEach(tab => {
             tab.addEventListener('click', () => {
@@ -591,6 +699,13 @@
         document.querySelector('#new-object-modal h2').textContent = `Create New ${singularType.charAt(0).toUpperCase() + singularType.slice(1)}`;
         document.querySelector('#new-object-modal label[for="new-object-id"]').textContent = `${singularType.charAt(0).toUpperCase() + singularType.slice(1)} ID:`;
         document.getElementById('create-object-btn').textContent = `Create ${singularType.charAt(0).toUpperCase() + singularType.slice(1)}`;
+    }
+    // Update new object modal
+    function updateDuplicateObjectModal() {
+        const singularType = getSingularType(state.selectedType);
+        document.querySelector('#duplicate-object-modal h2').textContent = `Create Duplicate ${singularType.charAt(0).toUpperCase() + singularType.slice(1)}`;
+        document.querySelector('#duplicate-object-modal label[for="duplicate-object-id"]').textContent = `${singularType.charAt(0).toUpperCase() + singularType.slice(1)} ID:`;
+        document.getElementById('create-duplicate-object-btn').textContent = `Create ${singularType.charAt(0).toUpperCase() + singularType.slice(1)}`;
     }
 
     function createNewType() {

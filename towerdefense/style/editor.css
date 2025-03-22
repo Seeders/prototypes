@@ -697,6 +697,44 @@
       padding: 15px;
       box-shadow: 0 0 15px rgba(0, 240, 255, 0.2), inset 0 0 30px rgba(0, 0, 35, 0.5);
   }
+
+  /* Reference selector styles */
+.ref-container {
+    display: flex;
+    gap: 5px;
+    margin-bottom: 5px;
+}
+
+.ref-select {
+    flex: 1;
+    min-width: 150px;
+    padding: 5px;
+}
+
+.ref-values {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 5px;
+    margin-bottom: 5px;
+}
+
+.ref-value-item {
+    background-color: #405060;
+    border-radius: 4px;
+    padding: 3px 6px;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+
+.remove-ref-btn {
+    background: none;
+    border: none;
+    color: #ff6b6b;
+    cursor: pointer;
+    font-size: 14px;
+    padding: 0 3px;
+}
   
   /* Custom scrollbars */
   ::-webkit-scrollbar {
