@@ -1,22 +1,49 @@
 import { CONFIG } from "../config/config.js";
 
 class MapManager {
-    generateMap() {
-        const tileMap = Array(CONFIG.ROWS).fill().map(() =>
-            Array(CONFIG.COLS).fill().map(() => ({ type: 'grass', tower: null, buildable: true }))
+    generateMap(data) {
+        // Extract values from the data object
+        const { size, terrainTypes, terrainMap, path } = data;
+        
+        // Create the tile map using the provided terrainMap
+        const tileMap = terrainMap.map((row, y) => 
+            row.map((terrainType, x) => {
+                // Find the terrain object to get color information
+                const terrain = terrainTypes.find(t => t.type === terrainType);
+                
+                // Determine if this tile is buildable based on terrain type
+                // Assuming only grass is buildable, but this can be customized
+                const buildable = terrainType === 'grass';
+                
+                return { 
+                    type: terrainType, 
+                    color: terrain ? terrain.color : '#8bc34a', // Default to grass color if not found
+                    buildable: buildable
+                };
+            })
         );
-        const path = this.generatePath();
+        if( !path || path.length == 0 ){
+            path = this.generateRandomPath();
+        }
+        // Mark the path tiles
         path.forEach(p => {
-            if (p.x >= 0 && p.x < CONFIG.COLS && p.y >= 0 && p.y < CONFIG.ROWS) {
+            if (p.x >= 0 && p.x < size && p.y >= 0 && p.y < size) {
                 tileMap[p.y][p.x].type = 'path';
                 tileMap[p.y][p.x].buildable = false;
             }
         });
-        tileMap[path[path.length - 1].y][path[path.length - 1].x].type = 'base';
+        
+        // Mark the end of the path as the base
+        const lastPoint = path[path.length - 1];
+        if (lastPoint && lastPoint.x >= 0 && lastPoint.x < size && lastPoint.y >= 0 && lastPoint.y < size) {
+            tileMap[lastPoint.y][lastPoint.x].type = 'base';
+            tileMap[lastPoint.y][lastPoint.x].color = '#FF0000'; // Red color for base
+        }
+        
         return { tileMap, path };
     }
 
-    generatePath() {        
+    generateRandomPath() {        
         let startX = 0;
         let startY = parseInt(CONFIG.ROWS / 2);
         let endX = CONFIG.COLS - 1;

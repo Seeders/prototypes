@@ -16045,6 +16045,21 @@
         "zombie",
         "orc",
         "wraith",
+        "ghost",
+        "dragon",
+        "zombie",
+        "zombie",
+        "zombie",
+        "zombie",
+        "zombie"
+      ]
+    },
+    "wave2": {
+      "title": "Wave 2",
+      "enemies": [
+        "zombie",
+        "orc",
+        "wraith",
         "ghost"
       ]
     }
@@ -16053,8 +16068,390 @@
     "level1": {
       "title": "Level 1",
       "waves": [
-        "wave1"
-      ]
+        "wave1",
+        "wave2"
+      ],
+      "tileMap": {
+        "size": 16,
+        "terrainTypes": [
+          {
+            "type": "grass",
+            "color": "#4a7c59"
+          },
+          {
+            "type": "water",
+            "color": "#2d85c6"
+          },
+          {
+            "type": "rock",
+            "color": "#9e9e9e"
+          },
+          {
+            "type": "lava",
+            "color": "#cc6315"
+          },
+          {
+            "type": "forest",
+            "color": "#1c6438"
+          }
+        ],
+        "terrainMap": [
+          [
+            "grass",
+            "grass",
+            "grass",
+            "grass",
+            "grass",
+            "grass",
+            "grass",
+            "grass",
+            "grass",
+            "grass",
+            "grass",
+            "grass",
+            "grass",
+            "grass",
+            "grass",
+            "grass"
+          ],
+          [
+            "grass",
+            "grass",
+            "grass",
+            "grass",
+            "grass",
+            "grass",
+            "grass",
+            "grass",
+            "grass",
+            "grass",
+            "grass",
+            "grass",
+            "grass",
+            "grass",
+            "grass",
+            "grass"
+          ],
+          [
+            "grass",
+            "grass",
+            "grass",
+            "grass",
+            "grass",
+            "grass",
+            "grass",
+            "grass",
+            "grass",
+            "grass",
+            "grass",
+            "forest",
+            "forest",
+            "forest",
+            "grass",
+            "grass"
+          ],
+          [
+            "grass",
+            "grass",
+            "grass",
+            "grass",
+            "grass",
+            "grass",
+            "grass",
+            "grass",
+            "grass",
+            "grass",
+            "forest",
+            "forest",
+            "forest",
+            "forest",
+            "forest",
+            "grass"
+          ],
+          [
+            "grass",
+            "grass",
+            "grass",
+            "grass",
+            "water",
+            "grass",
+            "grass",
+            "grass",
+            "grass",
+            "forest",
+            "forest",
+            "forest",
+            "forest",
+            "forest",
+            "forest",
+            "grass"
+          ],
+          [
+            "grass",
+            "grass",
+            "grass",
+            "water",
+            "water",
+            "water",
+            "grass",
+            "grass",
+            "grass",
+            "forest",
+            "forest",
+            "forest",
+            "forest",
+            "forest",
+            "forest",
+            "grass"
+          ],
+          [
+            "grass",
+            "grass",
+            "water",
+            "water",
+            "water",
+            "water",
+            "water",
+            "grass",
+            "grass",
+            "grass",
+            "grass",
+            "forest",
+            "forest",
+            "forest",
+            "grass",
+            "grass"
+          ],
+          [
+            "grass",
+            "grass",
+            "water",
+            "water",
+            "water",
+            "water",
+            "water",
+            "grass",
+            "grass",
+            "grass",
+            "grass",
+            "grass",
+            "forest",
+            "grass",
+            "grass",
+            "grass"
+          ],
+          [
+            "grass",
+            "grass",
+            "water",
+            "water",
+            "water",
+            "water",
+            "water",
+            "grass",
+            "grass",
+            "grass",
+            "grass",
+            "grass",
+            "grass",
+            "grass",
+            "grass",
+            "grass"
+          ],
+          [
+            "grass",
+            "grass",
+            "water",
+            "water",
+            "water",
+            "water",
+            "water",
+            "grass",
+            "grass",
+            "grass",
+            "lava",
+            "lava",
+            "lava",
+            "grass",
+            "grass",
+            "grass"
+          ],
+          [
+            "grass",
+            "grass",
+            "grass",
+            "water",
+            "water",
+            "water",
+            "grass",
+            "grass",
+            "grass",
+            "grass",
+            "lava",
+            "lava",
+            "lava",
+            "lava",
+            "grass",
+            "grass"
+          ],
+          [
+            "grass",
+            "grass",
+            "grass",
+            "grass",
+            "grass",
+            "grass",
+            "grass",
+            "grass",
+            "grass",
+            "grass",
+            "lava",
+            "lava",
+            "lava",
+            "grass",
+            "grass",
+            "grass"
+          ],
+          [
+            "grass",
+            "grass",
+            "grass",
+            "grass",
+            "grass",
+            "grass",
+            "grass",
+            "grass",
+            "grass",
+            "grass",
+            "grass",
+            "lava",
+            "lava",
+            "grass",
+            "grass",
+            "grass"
+          ],
+          [
+            "grass",
+            "grass",
+            "grass",
+            "grass",
+            "grass",
+            "grass",
+            "grass",
+            "grass",
+            "grass",
+            "grass",
+            "grass",
+            "grass",
+            "grass",
+            "grass",
+            "grass",
+            "grass"
+          ],
+          [
+            "grass",
+            "grass",
+            "grass",
+            "grass",
+            "grass",
+            "grass",
+            "grass",
+            "grass",
+            "grass",
+            "grass",
+            "grass",
+            "grass",
+            "grass",
+            "grass",
+            "grass",
+            "grass"
+          ],
+          [
+            "grass",
+            "grass",
+            "grass",
+            "grass",
+            "grass",
+            "grass",
+            "grass",
+            "grass",
+            "grass",
+            "grass",
+            "grass",
+            "grass",
+            "grass",
+            "grass",
+            "grass",
+            "grass"
+          ]
+        ],
+        "path": [
+          {
+            "x": 8,
+            "y": 0
+          },
+          {
+            "x": 8,
+            "y": 1
+          },
+          {
+            "x": 8,
+            "y": 2
+          },
+          {
+            "x": 8,
+            "y": 3
+          },
+          {
+            "x": 8,
+            "y": 4
+          },
+          {
+            "x": 8,
+            "y": 5
+          },
+          {
+            "x": 8,
+            "y": 6
+          },
+          {
+            "x": 8,
+            "y": 7
+          },
+          {
+            "x": 8,
+            "y": 8
+          },
+          {
+            "x": 8,
+            "y": 9
+          },
+          {
+            "x": 8,
+            "y": 10
+          },
+          {
+            "x": 8,
+            "y": 11
+          },
+          {
+            "x": 8,
+            "y": 12
+          },
+          {
+            "x": 8,
+            "y": 13
+          },
+          {
+            "x": 8,
+            "y": 14
+          },
+          {
+            "x": 8,
+            "y": 15
+          }
+        ]
+      }
     }
   },
   "objectTypeDefinitions": [

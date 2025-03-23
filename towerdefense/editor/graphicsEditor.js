@@ -20,6 +20,8 @@ import { OrbitControls } from '/library/three.orbitControls.js';
     let isPreviewingAnimation = false;
     // Initialize the application
     function init() {
+        let container = document.getElementById('graphics-editor-container');
+        container.classList.add('show');
         initThreeJS();
         initEventListeners();
         
@@ -197,7 +199,7 @@ import { OrbitControls } from '/library/three.orbitControls.js';
         document.getElementById('delete-animation').addEventListener('click', deleteAnimation);
         document.getElementById('duplicate-frame').addEventListener('click', duplicateFrame);
         document.getElementById('delete-frame').addEventListener('click', deleteFrame);
-        document.body.addEventListener('viewObject', (event) => {
+        document.body.addEventListener('renderObject', (event) => {
             setPreviewAnimationState(false);
             renderData = event.detail;
             document.getElementById('json-content').value =  JSON.stringify(renderData, null, 2);

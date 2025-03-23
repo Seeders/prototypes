@@ -72,9 +72,7 @@ class MapRenderer {
                 const isoX = (x - y) * (tileWidth / 2) + CONFIG.CANVAS_WIDTH / 2;
                 const isoY = (x + y) * (tileHeight / 2);
 
-                this.mapCacheCtx.fillStyle = tile.type === 'grass' ? '#4a7c59' : 
-                                tile.type === 'path' ? '#9c826a' : 
-                                '#3d88c8';
+                this.mapCacheCtx.fillStyle = tile.color;
 
                 this.mapCacheCtx.beginPath();
                 this.mapCacheCtx.moveTo(isoX, isoY);

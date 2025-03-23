@@ -63,7 +63,7 @@ class Game
         this.spatialGrid = new SpatialGrid(CONFIG.CANVAS_WIDTH, CONFIG.CANVAS_WIDTH, CONFIG.GRID_SIZE * 2);
         this.imageManager = new ImageManager();
         this.mapRenderer = new MapRenderer(this);
-        const { tileMap, path } = this.mapManager.generateMap();
+        const { tileMap, path } = this.mapManager.generateMap(this.gameConfig.levels.level1.tileMap);
         this.state.tileMap = tileMap;
         this.state.path = path;
         this.reset();            

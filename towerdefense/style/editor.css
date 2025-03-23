@@ -437,17 +437,20 @@
       }
   }
   
-  #graphics-container {
-      display: flex;
+  .main-content-container {
+      display: none;
       height: 50vh;
       overflow: hidden;
       background-color: #080815;
       color: #00f0ff;
       position: relative;
   }
+  .main-content-container.show {
+    display: flex;
+  }
   
   
-  #graphics-sidebar {
+  .content-sidebar {
       width: 360px;
       background: linear-gradient(180deg, rgba(20, 20, 50, 0.8), rgba(10, 10, 30, 0.8));
       border-right: 1px solid #00f0ff;
@@ -468,9 +471,13 @@
   #canvas-container {
       flex: 1;
       position: relative;
-      background: #05051a;
-      background-image: radial-gradient(rgba(0, 240, 255, 0.1) 1px, transparent 1px);
-      background-size: 20px 20px;
+  }
+
+  .grid-background {
+    background: #05051a;
+    background-image: radial-gradient(rgba(0, 240, 255, 0.1) 1px, transparent 1px);
+    background-size: 20px 20px;
+
   }
   
   #canvas {

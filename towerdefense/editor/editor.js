@@ -62,7 +62,9 @@
         rotateRightBtn: document.getElementById('rotateRightBtn'),
         clearDrawingBtn: document.getElementById('clearDrawingBtn'),
         colorPicker: document.getElementById('colorPicker'),
-        sizeSlider: document.getElementById('sizeSlider')
+        sizeSlider: document.getElementById('sizeSlider'),
+        terrainEditorContainer: document.getElementById('level-editor-container'),
+        graphicsEditorContainer: document.getElementById('graphics-editor-container')
     };
     let drawingState = {
         currentShape: 'circle',
@@ -140,6 +142,7 @@
         renderObjectList();
         renderEditor();
         renderPreview();
+        updateMainContent();
     }
     
     // Update the editor UI
@@ -229,7 +232,11 @@
             type = 'textarea';
             value = JSON.stringify(value);
             valueInput.setAttribute('id', 'render-value');
-        }
+        } else if (key === 'tileMap') {
+            type = 'textarea';
+            value = JSON.stringify(value);
+            valueInput.setAttribute('id', 'tilemap-value');
+        } 
         valueInput.type = type;
         valueInput.placeholder = 'Value';
         valueInput.value = value;
@@ -330,6 +337,8 @@
                 
                 if (keyInput.value === "render") {
                     value = JSON.parse(value);
+                } else if(keyInput.value === "tileMap") {
+                    value = JSON.parse(value);
                 } else if(matchingTypePlural) {
                     value = JSON.parse(value);
                 }
@@ -347,6 +356,7 @@
         // Update UI
         renderObjectList();
         renderPreview();
+        selectObject(state.selectedObject);
         saveToLocalStorage();
         
         // Show success message
@@ -394,61 +404,30 @@
     
       
     /**
-     * Draw a tower at the specified position
+     * Draw a object at the specified position
      */
     function drawObject(object, position) {
-        
-        if(!object.render) return;
-        const renderData = object.render;
-        
+        console.log('drawObject', object);
+        let data = null;
+        let eventName = "";
+        if(object.render) {
+            eventName = "renderObject";
+            data = object.render;
+        } else if(object.tileMap) {
+            eventName = "editTileMap";
+            data = object.tileMap;
+        }
+        if( data ) {
             // Create a custom event with data
-        const myCustomEvent = new CustomEvent('viewObject', {
-            detail: renderData, // Custom data
-            bubbles: true, // Allows the event to bubble up (optional)
-            cancelable: true // Allows the event to be canceled (optional)
-        });
+            const myCustomEvent = new CustomEvent(eventName, {
+                detail: data, // Custom data
+                bubbles: true, // Allows the event to bubble up (optional)
+                cancelable: true // Allows the event to be canceled (optional)
+            });
 
-        // Dispatch the event
-        document.body.dispatchEvent(myCustomEvent);
-
-        //renderShapes(renderData, threeJsContext);
-    }
-
-   
-    function addShapeToRender(x, y) {
-        if (!state.selectedObject) return;
-        
-        const object = state.objectTypes[state.selectedType][state.selectedObject];
-        const render = object.render || JSON.parse(JSON.stringify(CONFIG.DEFAULT_RENDER));
-        
-        // Convert canvas coordinates to render coordinates (64x64 space)
-        const renderX = Math.round(x - (state.objectPosition.x - 32));
-        const renderY = Math.round(y - (state.objectPosition.y - 32));
-        
-        if (renderX >= 0 && renderX <= 64 && renderY >= 0 && renderY <= 64) {
-            const shape = {
-                type: drawingState.currentShape,
-                x: renderX,
-                y: renderY,
-                size: drawingState.currentSize,
-                color: drawingState.currentColor
-            };
-            
-            render.shapes.push(shape);
-            object.render = render;
-            document.getElementById("render-value").value = JSON.stringify(render);
-            renderPreview();
+            // Dispatch the event
+            document.body.dispatchEvent(myCustomEvent);
         }
-    }
-
-    function clearRender() {
-        if (!state.selectedObject) return;
-        
-        const object = state.objectTypes[state.selectedType][state.selectedObject];
-        if( object.render ) {
-            object.render = { shapes: [] };
-        }
-        renderPreview();
     }
     /**
      * Generate JavaScript code for the current configuration
@@ -625,6 +604,9 @@
         document.body.addEventListener('saveObjectGraphics', (event) => {
             let renderData = event.detail;
             document.getElementById('render-value').value = JSON.stringify(renderData);
+        });
+        document.body.addEventListener('saveTileMap', (event) => {
+            document.getElementById('tilemap-value').value = JSON.stringify(event.detail);
         });
     }
 
@@ -847,6 +829,17 @@
         const singularType = getSingularType(state.selectedType);
         document.getElementById('add-object-btn').textContent = `Add New ${singularType}`;
         document.getElementById('import-export-btn').textContent = `Import/Export ${getPluralType(state.selectedType)}`;
+    }
+
+    function updateMainContent() {
+        elements.terrainEditorContainer.classList.remove('show');
+        elements.graphicsEditorContainer.classList.remove('show');
+console.log(state.objectTypes[state.selectedType][state.selectedObject]);
+        if(typeof state.objectTypes[state.selectedType][state.selectedObject].render != "undefined") {
+            elements.graphicsEditorContainer.classList.add('show');
+        } else if(typeof state.objectTypes[state.selectedType][state.selectedObject].tileMap != "undefined") {
+            elements.terrainEditorContainer.classList.add('show');
+        }
     }
 
     /**

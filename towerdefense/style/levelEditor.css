@@ -1,0 +1,160 @@
+#level-editor-container {
+    gap: 20px;
+    height: 50vh;
+    overflow: hidden;
+    background-color: #080815;
+    color: #00f0ff;
+    position: relative;
+}
+#level-editor-container.show {
+    display: flex;
+}
+  
+#level-editor-container .tools {
+    padding: 15px;
+    border-radius: 5px;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    min-width: 200px;
+}
+#level-editor-container .grid-container {
+    padding: 15px;
+    border-radius: 5px;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    flex-grow: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+}
+#level-editor-container .grid {
+    display: grid;
+    grid-template-columns: repeat(15, 30px); /* Fixed width columns */
+    grid-auto-rows: 30px; /* Fixed height rows */
+    gap: 1px;
+    background-color: #ccc;
+    border: 1px solid #999;
+    width: fit-content; /* Only take up as much space as needed */
+}
+#level-editor-container .cell {
+    width: 30px;
+    height: 30px;
+    background-color: #8bc34a; /* Default: grass */
+    transition: background-color 0.1s;
+}
+#level-editor-container .cell.path {
+    background-color: #a1887f; /* Path: dirt */
+}
+#level-editor-container .cell.water {
+    background-color: #64b5f6;
+}
+#level-editor-container .cell.rock {
+    background-color: #9e9e9e;
+}
+#level-editor-container .tools button {
+    padding: 5px;
+}
+#level-editor-container .color-picker {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 5px;
+    margin-bottom: 15px;
+}
+#level-editor-container .color-option {
+    width: 30px;
+    height: 30px;
+    border-radius: 4px;
+    cursor: pointer;
+    border: 2px solid transparent;
+}
+#level-editor-container .color-option.active {
+    border-color: #00f0ff;
+}
+#level-editor-container .options {
+    margin-top: 15px;
+}
+#level-editor-container .options label {
+    display: block;
+    margin-bottom: 5px;
+}
+#level-editor-container .export-section {
+    margin-top: 20px;
+    padding-top: 15px;
+    border-top: 1px solid #ddd;
+}
+#level-editor-container textarea {
+    width: 100%;
+    height: 100px;
+    margin-top: 10px;
+    font-family: monospace;
+    font-size: 12px;
+}
+/* Add these to your existing levelEditor.css file */
+
+/* Terrain type management */
+#level-editor-container .terrain-types-container {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin-top: 10px;
+  }
+  
+  #level-editor-container .terrain-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 5px;
+    border-radius: 4px;
+  }
+  
+  #level-editor-container .color-option {
+    width: 30px;
+    height: 30px;
+    border-radius: 4px;
+    cursor: pointer;
+    border: 2px solid transparent;
+    flex-shrink: 0;
+  }
+  
+  #level-editor-container .color-option:hover {
+    opacity: 0.8;
+  }
+  
+  #level-editor-container .terrain-label {
+    flex-grow: 1;
+    font-size: 14px;
+    font-weight: 500;
+  }
+  
+  #level-editor-container .terrain-buttons {
+    display: flex;
+    gap: 5px;
+  }
+
+  /* Form styles */
+  #level-editor-container .terrain-form {
+    margin-top: 15px;
+    padding: 10px;
+    border-radius: 5px;
+  }
+  
+  #level-editor-container .form-group {
+    margin-bottom: 10px;
+  }
+  
+  #level-editor-container .form-group label {
+    display: block;
+    margin-bottom: 5px;
+    font-weight: bold;
+  }
+  
+  #level-editor-container .form-group input {
+    width: 100%;
+    padding: 5px;
+    border: 1px solid #ccc;
+    border-radius: 3px;
+  }
+  
+  #level-editor-container .form-actions {
+    display: flex;
+    justify-content: flex-end;
+    margin-top: 15px;
+  }
