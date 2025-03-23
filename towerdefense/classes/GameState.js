@@ -22,10 +22,10 @@ class GameState {
         this.maxWaves = 10;
         this.waveTimer = 0;
         this.waveDelay = 300;
-        this.enemiesInWave = 10;
+        this.numEnemiesInWave = 10;
         this.enemiesSpawned = 110;
         this.spawnRate = 60;
-        this.spawnCounter = 0;
+        this.spawnTimer = 0;
         this.isLevelingUp = false;
         this.isPaused = false;
         this.selectedTowerType = null;
@@ -45,6 +45,8 @@ class GameState {
         this.gameOver = false;
         this.victory = false;
         this.activeUpgrades = {};
+        this.currentWaveEnemies = [];
+        this.maxWaves = 10;
     }
 
     addEntity(entity) {

@@ -182,20 +182,20 @@ class Game
     // Wave management
     updateWave() {
         // Spawn enemies
-        if (this.state.enemiesSpawned < this.state.enemiesInWave) {
-            this.state.spawnCounter++;
+        if (this.state.enemiesSpawned < this.state.numEnemiesInWave) {
+            this.state.spawnTimer++;
             
-            if (this.state.spawnCounter >= this.state.spawnRate) {
-                this.createEnemy(this.state.enemiesSpawned == parseInt(this.state.enemiesInWave / 2) ? "boss" : "");//spawn boss halfway through
+            if (this.state.spawnTimer >= this.state.spawnRate) {
+                this.createEnemy(this.state.currentWaveEnemies[this.state.enemiesSpawned]);
                 this.state.enemiesSpawned++;
-                this.state.spawnCounter = 0;
+                this.state.spawnTimer = 0;
                 
                 // Update wave progress
-                waveProgress.style.width = (this.state.enemiesSpawned / this.state.enemiesInWave * 100) + '%';
+                waveProgress.style.width = (this.state.enemiesSpawned / this.state.numEnemiesInWave * 100) + '%';
             }
         } 
         // Move to next wave if all enemies defeated
-        else if (this.state.enemies.length === 0 && this.state.enemiesSpawned >= this.state.enemiesInWave) {
+        else if (this.state.enemies.length === 0 && this.state.enemiesSpawned >= this.state.numEnemiesInWave) {
             this.state.waveTimer++;
             
             if (this.state.waveTimer >= this.state.waveDelay) {
@@ -205,21 +205,24 @@ class Game
     }
 
     startNextWave() {
-        this.state.wave++;
-        waveDisplay.textContent = this.state.wave;
         
         // Check for victory
-        // if (this.state.wave > this.state.maxWaves) {
-        //     this.gameVictory();
-        //     return;
-        // }
-        
-        this.state.enemiesInWave = 10 * (this.state.wave * .5);
+         if (this.state.wave > this.state.maxWaves) {
+             this.gameVictory();
+             return;
+        }
+        let currentLevel = "level1";
+        let currentWaveId = this.gameConfig.levels[currentLevel].waves[this.state.wave - 1];
+        this.state.maxWaves = this.gameConfig.levels[currentLevel].waves.length;
+        this.state.currentWaveEnemies = this.gameConfig.waves[currentWaveId].enemies;
+        this.state.numEnemiesInWave = this.state.currentWaveEnemies.length;
         this.state.enemiesSpawned = 0;
         this.state.spawnRate = Math.max(10, 60 - (this.state.wave));
-        this.state.spawnCounter = 0;
+        this.state.spawnTimer = 0;
         this.state.waveTimer = 0;
         
+        this.state.wave++;
+        waveDisplay.textContent = this.state.wave;
         // Reset wave progress bar
         waveProgress.style.width = '0%';
     }
@@ -412,7 +415,7 @@ class Game
         this.drawStats();  
 
         // Draw wave timer
-        if (this.state.enemies.length === 0 && this.state.enemiesSpawned >= this.state.enemiesInWave && !this.state.victory) {
+        if (this.state.enemies.length === 0 && this.state.enemiesSpawned >= this.state.numEnemiesInWave && !this.state.victory) {
             const countdown = Math.ceil((this.state.waveDelay - this.state.waveTimer) / 60);
             this.ctx.fillStyle = 'white';
             this.ctx.font = '20px Arial';
@@ -569,31 +572,13 @@ class Game
         let summon = this.createTower(x, y, type);
         summon.addComponent(LifeSpan, stats.lifeSpan);
     }
-    createEnemy(spawnType = "") {        
-        let normalTypes = [];
-        let bossTypes = [];
-        for(let type in this.gameConfig.enemies) {
-            if(this.gameConfig.enemies[type].boss) {
-                bossTypes.push(type);
-            } else {
-                normalTypes.push(type);
-            }
-        }
-
-        let allTypes = {
-            normal: normalTypes,
-            boss: bossTypes
-        }
-        let typeArr = allTypes[spawnType];
-        if(!typeArr) typeArr = allTypes.normal;    
-        let type = typeArr[Math.floor(Math.random() * typeArr.length)];
-     
-        let stats = this.gameConfig.enemies[type];
+    createEnemy(spawnType) {
+        let stats = this.gameConfig.enemies[spawnType];
         stats.hp *= 1 + (.01 * this.state.wave);
         let entity = new Entity(this, 0, 0);
-        entity.addComponent(Stats, type, stats);
-        entity.addRenderer(Renderer, this.imageManager.getImages("enemies", type), stats.drawOffsetY ? stats.drawOffsetY : 0 );
-        entity.addComponent(Animator, "enemies", type);
+        entity.addComponent(Stats, spawnType, stats);
+        entity.addRenderer(Renderer, this.imageManager.getImages("enemies", spawnType), stats.drawOffsetY ? stats.drawOffsetY : 0 );
+        entity.addComponent(Animator, "enemies", spawnType);
         entity.addRenderer(Health);
         entity.addRenderer(EnergyShield);
         entity.addComponent(EssenceBounty);
