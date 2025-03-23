@@ -1,10 +1,10 @@
 const CONFIG = {
     GRID_SIZE: 48,
     IMAGE_SIZE: 128,
-    CANVAS_WIDTH: 768,
-    CANVAS_HEIGHT: 384,
-    get ROWS() { return parseInt((this.CANVAS_HEIGHT * 2) / this.GRID_SIZE) },
-    get COLS() { return parseInt(this.CANVAS_WIDTH / this.GRID_SIZE) }
+    CANVAS_WIDTH: 768*2,
+    CANVAS_HEIGHT: 384*2,
+    ROWS: 16,
+    COLS: 16
 }
 
 export { CONFIG };

@@ -57,14 +57,14 @@ class Game
     async init() {
         await this.loadConfig();
         this.state = new GameState();
+        this.state.currentLevel = this.gameConfig.configs.state.currentLevel; 
         this.mapManager = new MapManager();
-        this.translator = new CoordinateTranslator(CONFIG);
+        this.translator = new CoordinateTranslator(this.gameConfig.levels[this.state.currentLevel].tileMap.terrainMap.length);
         this.uiManager = new UIManager(this.gameConfig);
         this.spatialGrid = new SpatialGrid(CONFIG.CANVAS_WIDTH, CONFIG.CANVAS_WIDTH, CONFIG.GRID_SIZE * 2);
         this.imageManager = new ImageManager();
-        this.mapRenderer = new MapRenderer(this);
+        this.mapRenderer = new MapRenderer(this.canvas, this.gameConfig.environment, this.imageManager);
         this.reset();   
-        this.state.currentLevel = this.gameConfig.configs.state.currentLevel; 
         const { tileMap, paths } = this.mapManager.generateMap(this.gameConfig.levels[this.state.currentLevel].tileMap);
         this.state.tileMap = tileMap;
         this.state.paths = paths;        

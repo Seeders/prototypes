@@ -1,9 +1,10 @@
 import { CONFIG } from "../config/config.js";
-
+import { CoordinateTranslator } from "./CoordinateTranslator.js";
 class MapRenderer {
-    constructor(game) {        
-        this.game = game;
-        this.ctx = game.canvas.getContext('2d');
+    constructor(canvas, environment, imageManager) {   
+        this.imageManager = imageManager;
+        this.environment = environment;
+        this.ctx = canvas.getContext('2d');
         this.selectedTowerType = null;
         this.hoverCell = { x: -1, y: -1 };
         this.showRange = false;
@@ -29,10 +30,14 @@ class MapRenderer {
 
     clearScreen() {        
         this.ctx.clearRect(0, 0, CONFIG.CANVAS_WIDTH, CONFIG.CANVAS_HEIGHT);
+        this.envCacheCtxBG.clearRect(0, 0, CONFIG.CANVAS_WIDTH, CONFIG.CANVAS_HEIGHT);
+        this.envCacheCtxFG.clearRect(0, 0, CONFIG.CANVAS_WIDTH, CONFIG.CANVAS_HEIGHT);
     }
 
     // Call this when map data changes or on initialization
     cacheMap(tileMap, paths) {
+           
+        this.translator = new CoordinateTranslator(tileMap.length);
         // Clear the cache canvas
         this.mapCacheCtx.clearRect(0, 0, CONFIG.CANVAS_WIDTH, CONFIG.CANVAS_HEIGHT);
         
@@ -57,23 +62,24 @@ class MapRenderer {
     }
     renderFG() {  
         this.ctx.drawImage(this.envCacheCanvasFG, 0, CONFIG.CANVAS_HEIGHT / 2);
-    }
+    }    
 
     drawMap(tileMap, paths) {
         this.mapCacheCtx.fillStyle = '#4a7c59';
         this.mapCacheCtx.fillRect(0, 0, CONFIG.CANVAS_WIDTH, CONFIG.CANVAS_HEIGHT);
-
         const tileWidth = CONFIG.GRID_SIZE;
         const tileHeight = CONFIG.GRID_SIZE * 0.5;
         
-        for (let y = 0; y < CONFIG.ROWS; y++) {
-            for (let x = 0; x < CONFIG.COLS; x++) {
+        for (let y = 0; y < tileMap.length; y++) {
+            for (let x = 0; x < tileMap[y].length; x++) {
                 const tile = tileMap[y][x];
-                const isoX = (x - y) * (tileWidth / 2) + CONFIG.CANVAS_WIDTH / 2;
-                const isoY = (x + y) * (tileHeight / 2);
-
+                
+                // Use translator to get iso coordinates
+                const isoCoords = this.translator.gridToIso(x, y);
+                const isoX = isoCoords.x;
+                const isoY = isoCoords.y;
+                
                 this.mapCacheCtx.fillStyle = tile.color;
-
                 this.mapCacheCtx.beginPath();
                 this.mapCacheCtx.moveTo(isoX, isoY);
                 this.mapCacheCtx.lineTo(isoX + tileWidth / 2, isoY + tileHeight / 2);
@@ -81,51 +87,57 @@ class MapRenderer {
                 this.mapCacheCtx.lineTo(isoX - tileWidth / 2, isoY + tileHeight / 2);
                 this.mapCacheCtx.closePath();
                 this.mapCacheCtx.fill();
-
                 this.mapCacheCtx.strokeStyle = 'rgba(0, 0, 0, 0.1)';
                 this.mapCacheCtx.stroke();
             }
         }
-
+        
         this.mapCacheCtx.strokeStyle = '#ffd166';
         this.mapCacheCtx.lineWidth = 2;
         this.mapCacheCtx.beginPath();
         
         paths.forEach(path => {
-            const firstIsoX = (path[0].x - path[0].y) * (tileWidth / 2) + CONFIG.CANVAS_WIDTH / 2;
-            const firstIsoY = (path[0].x + path[0].y) * (tileHeight / 2) + tileHeight / 2;
+            // First point in path
+            const firstIsoCoords = this.translator.gridToIso(path[0].x, path[0].y);
+            const firstIsoX = firstIsoCoords.x;
+            const firstIsoY = firstIsoCoords.y + tileHeight / 2; // Add half tile height for center of tile
+            
             this.mapCacheCtx.moveTo(firstIsoX, firstIsoY);
-
+            
+            // Remaining points in path
             path.forEach(location => {
-                const isoX = (location.x - location.y) * (tileWidth / 2) + CONFIG.CANVAS_WIDTH / 2;
-                const isoY = (location.x + location.y) * (tileHeight / 2) + tileHeight / 2;
+                const isoCoords = this.translator.gridToIso(location.x, location.y);
+                const isoX = isoCoords.x;
+                const isoY = isoCoords.y + tileHeight / 2; // Add half tile height for center of tile
+                
                 this.mapCacheCtx.lineTo(isoX, isoY);
             });
         });
+        
         this.mapCacheCtx.stroke();
-        this.drawEnvironment();
+        this.drawEnvironment(tileMap.length);
     }
 
-    drawEnvironment() {
-
-        let itemAmt = CONFIG.COLS * CONFIG.ROWS;
+    drawEnvironment(size) {
+return;
+        let itemAmt = size * size;
         let environmentTypes = [];
-        for(let envType in this.game.gameConfig.environment){
+        for(let envType in this.environment){
             environmentTypes.push(envType);
         }
         let items = [];            
         for(let i = 0; i < itemAmt; i++) {
             // Define the game board boundaries
             const boardMinX = 0;
-            const boardMaxX = CONFIG.COLS * CONFIG.GRID_SIZE;
+            const boardMaxX = size * CONFIG.GRID_SIZE;
             const boardMinY = 0;
-            const boardMaxY = CONFIG.ROWS * CONFIG.GRID_SIZE;
+            const boardMaxY = size * CONFIG.GRID_SIZE;
             
             // Generate a random position that's outside the board but within a reasonable distance
             let x, y;
             
             // Expand the area where we can place objects
-            const expandAmount = CONFIG.COLS * CONFIG.GRID_SIZE / 2; // Adjust this value as needed
+            const expandAmount = size * CONFIG.GRID_SIZE / 2; // Adjust this value as needed
             
             // Randomly choose whether to place on x-axis or y-axis outside the board
             if (Math.random() < 0.5) {
@@ -149,20 +161,22 @@ class MapRenderer {
             // Double-check that the position is actually outside the board
             if (x < boardMinX || x > boardMaxX || y < boardMinY || y > boardMaxY) {
                 const type = environmentTypes[Math.floor(Math.random() * environmentTypes.length)];
-                const images = this.game.imageManager.getImages("environment", type);
-                items.push( { img: images.idle[0][parseInt(Math.random()*images.idle[0].length)], x: x, y: y});
+                const images = this.imageManager.getImages("environment", type);
+                if(images){
+                    items.push( { img: images.idle[0][parseInt(Math.random()*images.idle[0].length)], x: x, y: y});
+                }
             } else {
                 i--; // Position inside board, try again
             }
         }
 
         items.sort((a, b) => {
-            return (a.y * CONFIG.COLS + a.x) - (b.y * CONFIG.COLS + b.x)
+            return (a.y * size + a.x) - (b.y * size + b.x)
         });
 
         items.forEach((item) => {            
             // Convert pixel to isometric
-            const isoPos = this.game.translator.pixelToIso(item.x, item.y);
+            const isoPos = this.translator.pixelToIso(item.x, item.y);
             const image = item.img;
             const imgWidth = image.width;
             const imgHeight = image.height;

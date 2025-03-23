@@ -1,34 +1,41 @@
 import { CONFIG } from "../config/config.js";
-
+import { MapManager } from "../classes/MapManager.js";
+import { MapRenderer } from "../classes/MapRenderer.js";
+import { ImageManager } from "../classes/ImageManager.js";
+import { CoordinateTranslator } from "../classes/CoordinateTranslator.js";
 (function() {
     // Grid configuration
     let gridSize = CONFIG.COLS;
     let currentTerrainType = 'grass';
     let isMouseDown = false;
-    let terrainMap = []; // 2D array for terrain data [y][x] = 'terrainType'
-    
-    // Terrain types system
-    let terrainTypes = [
-        { type: "start", color: "#ffff00" },
-        { type: "end", color: "#ff0000" },
-        { type: "path", color: "#eeae9e" },
-        { type: "grass", color: "#8bc34a" },
-        { type: "water", color: "#64b5f6" },
-        { type: "rock", color: "#9e9e9e" }
-    ];
-    
-    function init() {
+    let tileMap = {
+        size: 16,
+        terrainTypes : [
+            { type: "start", color: "#ffff00" },
+            { type: "end", color: "#ff0000" },
+            { type: "path", color: "#eeae9e" },
+            { type: "grass", color: "#8bc34a" },
+            { type: "water", color: "#64b5f6" },
+            { type: "rock", color: "#9e9e9e" }
+        ],
+        terrainMap: []
+    };    
+    let environment = [];
+    const canvasEl = document.getElementById('grid');
+    let imageManager = new ImageManager();
+    let mapRenderer = null;
+    let mapManager = null;
+    let translator = new CoordinateTranslator(tileMap.size);
+        
+    async function init() {
         setupTerrainTypesUI();
         setupEventListeners();
-        initTerrainMap();
-        initGrid();
+        updateTerrainStyles();
+        await initGridCanvas();        
+        // Apply initial terrain CSS
     }
     
-    function initTerrainMap() {
-        // Initialize a 2D array filled with 'grass'
-        terrainMap = Array(gridSize).fill().map(() => Array(gridSize).fill('grass'));
-    }
-    
+
     function setupTerrainTypesUI() {
         // Create the terrain types management UI
         const terrainsPanel = document.getElementById('terrainsPanel');
@@ -44,7 +51,7 @@ import { CONFIG } from "../config/config.js";
         terrainTypesContainer.className = 'terrain-types-container';
         
         // Add terrain options from terrainTypes array
-        terrainTypes.forEach(terrain => {
+        tileMap.terrainTypes.forEach(terrain => {
             const terrainItem = document.createElement('div');
             terrainItem.className = 'terrain-item';
             
@@ -118,7 +125,6 @@ import { CONFIG } from "../config/config.js";
         // Add form event listeners
         document.getElementById('saveTerrainBtn').addEventListener('click', saveTerrainType);
         document.getElementById('cancelTerrainBtn').addEventListener('click', hideTerrainForm);
-
     }
     
     function showAddTerrainForm() {
@@ -160,31 +166,24 @@ import { CONFIG } from "../config/config.js";
         
         if (editingType) {
             // Editing existing terrain
-            const index = terrainTypes.findIndex(t => t.type === editingType);
+            const index = tileMap.terrainTypes.findIndex(t => t.type === editingType);
             if (index !== -1) {
                 // If type name is changing, update all map references
                 if (editingType !== newType) {
                     // Check if new type name already exists
-                    if (terrainTypes.some(t => t.type === newType)) {
+                    if (tileMap.terrainTypes.some(t => t.type === newType)) {
                         alert('A terrain type with this name already exists');
                         return;
                     }
                     
                     // Update terrainMap
-                    for (let y = 0; y < terrainMap.length; y++) {
-                        for (let x = 0; x < terrainMap[y].length; x++) {
-                            if (terrainMap[y][x] === editingType) {
-                                terrainMap[y][x] = newType;
+                    for (let y = 0; y < tileMap.terrainMap.length; y++) {
+                        for (let x = 0; x < tileMap.terrainMap[y].length; x++) {
+                            if (tileMap.terrainMap[y][x] === editingType) {
+                                tileMap.terrainMap[y][x] = newType;
                             }
                         }
                     }
-                    
-                    // Update grid UI
-                    document.querySelectorAll(`.cell.${editingType}`).forEach(cell => {
-                        cell.classList.remove(editingType);
-                        cell.classList.add(newType);
-                        cell.dataset.type = newType;
-                    });
                     
                     // Update current terrain type if selected
                     if (currentTerrainType === editingType) {
@@ -193,24 +192,27 @@ import { CONFIG } from "../config/config.js";
                 }
                 
                 // Update the terrain type
-                terrainTypes[index] = { type: newType, color: newColor, buildable: newBuildable };
+                tileMap.terrainTypes[index] = { type: newType, color: newColor, buildable: newBuildable };
             }
         } else {
             // Adding new terrain
             // Check if type already exists
-            if (terrainTypes.some(t => t.type === newType)) {
+            if (tileMap.terrainTypes.some(t => t.type === newType)) {
                 alert('A terrain type with this name already exists');
                 return;
             }
             
             // Add new terrain type
-            terrainTypes.push({ type: newType, color: newColor, buildable: newBuildable });
+            tileMap.terrainTypes.push({ type: newType, color: newColor, buildable: newBuildable });
         }
         
         // Update UI and CSS
         updateTerrainStyles();
         setupTerrainTypesUI();
-        hideTerrainForm();
+        hideTerrainForm();        
+
+        // Update canvas rendering
+        updateCanvasWithData();
         
         // Export updated map
         exportMap();
@@ -218,7 +220,7 @@ import { CONFIG } from "../config/config.js";
     
     function deleteTerrain(typeToDelete) {
         // Don't allow deleting if it's the last terrain type
-        if (terrainTypes.length <= 1) {
+        if (tileMap.terrainTypes.length <= 1) {
             alert('Cannot delete the last terrain type');
             return;
         }
@@ -229,29 +231,22 @@ import { CONFIG } from "../config/config.js";
         }
         
         // Find the default terrain to replace with (grass or first available)
-        const defaultType = terrainTypes.find(t => t.type === 'grass') || terrainTypes[0];
+        const defaultType = tileMap.terrainTypes.find(t => t.type === 'grass') || tileMap.terrainTypes[0];
         
         // Remove from terrainTypes array
-        const index = terrainTypes.findIndex(t => t.type === typeToDelete);
+        const index = tileMap.terrainTypes.findIndex(t => t.type === typeToDelete);
         if (index !== -1) {
-            terrainTypes.splice(index, 1);
+            tileMap.terrainTypes.splice(index, 1);
         }
         
         // Update terrainMap - replace all instances with defaultType
-        for (let y = 0; y < terrainMap.length; y++) {
-            for (let x = 0; x < terrainMap[y].length; x++) {
-                if (terrainMap[y][x] === typeToDelete) {
-                    terrainMap[y][x] = defaultType.type;
+        for (let y = 0; y < tileMap.terrainMap.length; y++) {
+            for (let x = 0; x < tileMap.terrainMap[y].length; x++) {
+                if (tileMap.terrainMap[y][x] === typeToDelete) {
+                    tileMap.terrainMap[y][x] = defaultType.type;
                 }
             }
         }
-        
-        // Update grid UI
-        document.querySelectorAll(`.cell.${typeToDelete}`).forEach(cell => {
-            cell.classList.remove(typeToDelete);
-            cell.classList.add(defaultType.type);
-            cell.dataset.type = defaultType.type;
-        });
         
         // Update current terrain type if selected
         if (currentTerrainType === typeToDelete) {
@@ -261,6 +256,9 @@ import { CONFIG } from "../config/config.js";
         // Update UI and CSS
         updateTerrainStyles();
         setupTerrainTypesUI();
+        
+        // Update canvas rendering
+        updateCanvasWithData();
         
         // Export updated map
         exportMap();
@@ -277,145 +275,222 @@ import { CONFIG } from "../config/config.js";
         
         // Generate CSS for each terrain type
         let css = '';
-        terrainTypes.forEach(terrain => {
-            css += `#level-editor-container .cell.${terrain.type} { background-color: ${terrain.color}; }\n`;
+        tileMap.terrainTypes.forEach(terrain => {
+            css += `#level-editor-container .color-option.${terrain.type} { background-color: ${terrain.color}; }\n`;
         });
         
         styleElem.textContent = css;
     }
     
     function setupEventListeners() {
-    
         document.getElementById('terrainColor').addEventListener('change', function(el) {                    
-        document.getElementById('terrainColorText').value = el.target.value;
-    });
-    // Handle mouseup event (stop dragging)
-    document.addEventListener('mouseup', () => {
-        isMouseDown = false;
-    });
-
-    // Handle editTileMap event
-    document.body.addEventListener('editTileMap', (event) => {
-        const tileMap = event.detail;
-        if (tileMap) {
-            loadTileMap(tileMap);
-        }
-    });
-    
-    // Apply initial terrain CSS
-    updateTerrainStyles();
-    }
-    
-    // Function to load an existing tile map into the editor
-    function loadTileMap(tileMap) {
-    // Update grid size if it's different
-    if (tileMap.size && tileMap.size !== gridSize) {
-        gridSize = tileMap.size;
-        initTerrainMap();
-        initGrid();
-    }
-    
-    // Load terrain types if provided
-    if (tileMap.terrainTypes && Array.isArray(tileMap.terrainTypes)) {
-        terrainTypes = [...tileMap.terrainTypes];
-        updateTerrainStyles();
-        setupTerrainTypesUI();
-    }
-    
-    // Load terrain data
-    if (tileMap.terrainMap && Array.isArray(tileMap.terrainMap)) {
-        terrainMap = tileMap.terrainMap;
-    }
-        
-    // Update grid visuals to match data
-    updateGridFromData();
-}
-    
-    // Update the visual grid to match the data structures
-    function updateGridFromData() {
-    const cells = document.querySelectorAll('.cell');
-    cells.forEach(cell => {
-        const x = parseInt(cell.dataset.x);
-        const y = parseInt(cell.dataset.y);
-        
-        // Reset cell class
-        cell.className = 'cell';        
-
-        // Apply terrain type
-        const terrainType = terrainMap[y][x];
-        cell.classList.add(terrainType);
-        cell.dataset.type = terrainType;
-        
-    });
-}
-    
-    // Initialize the grid
-    function initGrid() {
-        const grid = document.getElementById('grid');
-        grid.innerHTML = '';
-        grid.style.gridTemplateColumns = `repeat(${gridSize}, 30px)`; // Fixed width columns
-        
-        for (let y = 0; y < gridSize; y++) {
-            for (let x = 0; x < gridSize; x++) {
-                const cell = document.createElement('div');
-                cell.className = 'cell grass';
-                cell.dataset.index = y * gridSize + x;
-                cell.dataset.y = y;
-                cell.dataset.x = x;
-                cell.dataset.type = 'grass';
-                
-                cell.addEventListener('mousedown', () => {
-                    isMouseDown = true;
-                    handleCellInteraction(cell);
-                });
-                
-                cell.addEventListener('mouseenter', () => {
-                    if (isMouseDown) {
-                        handleCellInteraction(cell);
+            document.getElementById('terrainColorText').value = el.target.value;
+        });
+        document.getElementById('terrainMapSize').addEventListener('change', function(ev) {    
+            const newGridSize = parseInt(ev.target.value);
+            const oldGridSize = tileMap.size;
+            
+            // Create a new map to hold the resized terrain
+            const newTerrainMap = [];
+            for (let i = 0; i < newGridSize; i++) {
+                newTerrainMap.push(new Array(newGridSize));
+            }
+            
+            // Calculate offsets for maintaining center
+            // For both increasing and decreasing size
+            const oldOffset = Math.floor(oldGridSize / 2);
+            const newOffset = Math.floor(newGridSize / 2);
+            
+            // Fill the new map
+            for (let newI = 0; newI < newGridSize; newI++) {
+                for (let newJ = 0; newJ < newGridSize; newJ++) {
+                    // Calculate absolute coordinates (relative to center)
+                    const absI = newI - newOffset;
+                    const absJ = newJ - newOffset;
+                    
+                    // Calculate source coordinates in old map
+                    const oldI = absI + oldOffset;
+                    const oldJ = absJ + oldOffset;
+                    
+                    // Check if source coordinates are within old map boundaries
+                    if (oldI >= 0 && oldI < oldGridSize && oldJ >= 0 && oldJ < oldGridSize) {
+                        // Copy existing terrain
+                        newTerrainMap[newI][newJ] = tileMap.terrainMap[oldI][oldJ];
+                    } else {
+                        // Use nearest edge value for new areas
+                        const clampedI = Math.max(0, Math.min(oldGridSize - 1, oldI));
+                        const clampedJ = Math.max(0, Math.min(oldGridSize - 1, oldJ));
+                        newTerrainMap[newI][newJ] = tileMap.terrainMap[clampedI][clampedJ];
                     }
-                });
+                }
+            }
+            
+            // Update tileMap with new terrain
+            tileMap.terrainMap = newTerrainMap;
+            tileMap.size = newGridSize;
+            translator = new CoordinateTranslator(newGridSize);
+            
+            updateTerrainStyles();
+            setupTerrainTypesUI();
+            initGridCanvas();
+            exportMap();
+        });
+        
+        // Handle mouseup event (stop dragging)
+        document.addEventListener('mouseup', () => {
+            isMouseDown = false;
+        });
+
+        // Add mouse down event for canvas
+        canvasEl.addEventListener('mousedown', (e) => {
+            isMouseDown = true;
+            handleCanvasInteraction(e);
+        });
+        
+        // Add mouse move event for drawing while dragging
+        canvasEl.addEventListener('mousemove', (e) => {
+            if (isMouseDown) {
+                handleCanvasInteraction(e);
+            }
+        });
+        // Add event listeners
+        document.getElementById('translate-left').addEventListener('click', () => translateMap(-1, 0));
+        document.getElementById('translate-right').addEventListener('click', () => translateMap(1, 0));
+        document.getElementById('translate-up').addEventListener('click', () => translateMap(0, -1));
+        document.getElementById('translate-down').addEventListener('click', () => translateMap(0, 1));
+    
+        // Handle editTileMap event
+        document.body.addEventListener('editTileMap', (event) => {
+
+            environment = event.detail.environment;
+            canvasEl.width = CONFIG.CANVAS_WIDTH;
+            canvasEl.height = CONFIG.CANVAS_HEIGHT;
+            tileMap = event.detail.tileMap;
+            mapRenderer = new MapRenderer(canvasEl, environment, imageManager);
+                // Update grid size if it's different
+            if (tileMap.size && tileMap.size !== gridSize) {
+                gridSize = tileMap.size;
+                translator = new CoordinateTranslator(gridSize);
+            } else {
+                gridSize = CONFIG.COLS;
+                translator = new CoordinateTranslator(gridSize);
+            }
+            document.getElementById('terrainMapSize').value = gridSize;
+            
+            // Load terrain types if provided
+            updateTerrainStyles();
+            setupTerrainTypesUI();
+            initGridCanvas();
+    
+        });
+    }    
+    function translateMap(deltaX, deltaY) {
+        const gridSize = tileMap.size;
+        
+        // Create a new map to hold the translated terrain
+        const newTerrainMap = [];
+        for (let i = 0; i < gridSize; i++) {
+            newTerrainMap.push(new Array(gridSize));
+        }
+        
+        // Fill the new map
+        for (let i = 0; i < gridSize; i++) {
+            for (let j = 0; j < gridSize; j++) {
+                // Calculate source coordinates in old map
+                const oldI = i - deltaY;
+                const oldJ = j - deltaX;
                 
-                grid.appendChild(cell);
+                // Check if source coordinates are within map boundaries
+                if (oldI >= 0 && oldI < gridSize && oldJ >= 0 && oldJ < gridSize) {
+                    // Copy existing terrain
+                    newTerrainMap[i][j] = tileMap.terrainMap[oldI][oldJ];
+                } else {
+                    // For areas that would be outside the original map,
+                    // use the nearest edge value (wrap around)
+                    const clampedI = Math.max(0, Math.min(gridSize - 1, oldI));
+                    const clampedJ = Math.max(0, Math.min(gridSize - 1, oldJ));
+                    newTerrainMap[i][j] = tileMap.terrainMap[clampedI][clampedJ];
+                }
             }
         }
+        
+        // Update tileMap with new terrain
+        tileMap.terrainMap = newTerrainMap;
+        
+        // Update UI and export
+        initGridCanvas();
+        exportMap();
+    }
+    async function initGridCanvas() {
+        // Initialize the canvas with our map renderer
+        canvasEl.width = CONFIG.CANVAS_WIDTH;
+        canvasEl.height = CONFIG.CANVAS_HEIGHT;
+        imageManager = new ImageManager();
+        
+        // Initialize the map renderer
+        if (!mapRenderer) {
+            mapRenderer = new MapRenderer(canvasEl, environment, imageManager);
+        }
+        
+        // Load images for environment
+        await imageManager.loadImages("environment", environment);        
+        
+        // Render the initial map
+        updateCanvasWithData();
+        // Clean up resources
+        imageManager.dispose();
     }
     
-    // Handle cell click/drag based on selected tool
-    function handleCellInteraction(cell) {
-        const x = parseInt(cell.dataset.x);
-        const y = parseInt(cell.dataset.y);
+    // Handle canvas click/drag for terrain placement
+    function handleCanvasInteraction(event) {
+        // Get mouse position relative to canvas
+        const rect = canvasEl.getBoundingClientRect();
+        const mouseX = event.clientX - rect.left;
+        const mouseY = event.clientY - rect.top;
         
-
-        // Apply the selected terrain type
-        cell.className = 'cell';
-        cell.classList.add(currentTerrainType);
-        cell.dataset.type = currentTerrainType;
+        // Convert from isometric to grid coordinates
+        const gridPos = translator.isoToGrid(mouseX, mouseY);
         
-        // Update terrain map
-        terrainMap[y][x] = currentTerrainType;   
+        // Snap to grid
+        const snappedGrid = translator.snapToGrid(gridPos.x, gridPos.y);
+        
+        // Check if coordinates are within bounds
+        if (snappedGrid.x >= 0 && snappedGrid.x < gridSize && 
+            snappedGrid.y >= 0 && snappedGrid.y < gridSize) {
+            
+            // Update terrain map with selected terrain type
+            tileMap.terrainMap[snappedGrid.y][snappedGrid.x] = currentTerrainType;
+            
+            // Update the map rendering
+            updateCanvasWithData();
+            
+            // Export the updated map
+            exportMap();
+        }
+    }
 
-        exportMap();
+    function updateCanvasWithData(){
+
+        mapManager = new MapManager();
+        mapRenderer.isMapCached = false;
+        let map = mapManager.generateMap(tileMap);
+        mapRenderer.renderBG({}, { tileMap: map.tileMap, paths: [] });
+        mapRenderer.renderFG();
     }
     
     // Export the current map as JSON
     function exportMap() {
-        const map = {
-            size: gridSize,
-            terrainTypes: terrainTypes,
-            terrainMap: terrainMap
-        };
-        
-        const tileMap = JSON.stringify(map, null, 2);
         
         // Create a custom event with data
         const myCustomEvent = new CustomEvent('saveTileMap', {
-            detail: map,
+            detail: tileMap,
             bubbles: true,
             cancelable: true
         });
 
         // Dispatch the event
         document.body.dispatchEvent(myCustomEvent);
-    }    
+    }
+    
     init();
 })();

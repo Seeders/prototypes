@@ -84,7 +84,7 @@ class ImageManager {
             this.ground.material.dispose();
         }
         // Dispose of other reusable resources
-        this.cameras = null;
+        this.cameras = [];
         this.scene = null;
         this.lightGroup = null;
         this.ambientLight = null;
@@ -123,7 +123,7 @@ class ImageManager {
     
     async captureObjectImagesFromJSON(shapeData) {
         const size = this.imageSize;
-        
+        console.log(this.renderer);
         // Clear the scene
         while (this.scene.children.length > 0) {
             const object = this.scene.children[0];

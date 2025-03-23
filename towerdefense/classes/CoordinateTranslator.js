@@ -1,9 +1,12 @@
+import { CONFIG } from "../config/config.js";
+
 class CoordinateTranslator {
-    constructor(config) {
-        this.tileWidth = config.GRID_SIZE;
-        this.tileHeight = config.GRID_SIZE * 0.5;
-        this.canvasWidth = config.CANVAS_WIDTH;
-        this.canvasHeight = config.CANVAS_HEIGHT;
+    constructor(mapSize) {
+        this.tileWidth = CONFIG.GRID_SIZE;
+        this.tileHeight = CONFIG.GRID_SIZE * 0.5;
+        this.canvasWidth = CONFIG.CANVAS_WIDTH;
+        this.canvasHeight = CONFIG.CANVAS_HEIGHT;
+        this.mapSize = mapSize;
     }
 
     // Pixel (top-down) to Grid
@@ -14,10 +17,19 @@ class CoordinateTranslator {
         };
     }
 
-    // Grid to Isometric (exactly matches drawMap)
+    // Grid to Isometric (with vertical centering)
     gridToIso(gridX, gridY) {
         const isoX = (gridX - gridY) * (this.tileWidth / 2) + this.canvasWidth / 2;
-        const isoY = (gridX + gridY) * (this.tileHeight / 2);
+        
+        // Calculate the height the grid would occupy
+        // Assuming ROWS is accessible or passed to the constructor
+        const totalGridHeight = this.mapSize * this.tileHeight;
+        
+        // Center vertically by adding an offset
+        const verticalOffset = (this.canvasHeight - totalGridHeight) / 2;
+        
+        const isoY = (gridX + gridY) * (this.tileHeight / 2) + verticalOffset;
+        
         return { x: isoX, y: isoY };
     }
 
@@ -29,9 +41,17 @@ class CoordinateTranslator {
 
     isoToGrid(isoX, isoY) {
         const adjustedX = isoX - this.canvasWidth / 2;
-        const adjustedY = isoY;
+        
+        // Calculate the same vertical offset as in gridToIso
+        const totalGridHeight = this.mapSize * this.tileHeight;
+        const verticalOffset = (this.canvasHeight - totalGridHeight) / 2;
+        
+        // Subtract the offset before conversion
+        const adjustedY = isoY - verticalOffset;
+        
         const gridX = (adjustedX / (this.tileWidth / 2) + adjustedY / (this.tileHeight / 2)) / 2;
         const gridY = (adjustedY / (this.tileHeight / 2) - adjustedX / (this.tileWidth / 2)) / 2;
+        
         return { x: gridX, y: gridY };
     }
 

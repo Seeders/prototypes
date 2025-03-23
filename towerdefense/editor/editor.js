@@ -400,7 +400,6 @@
      * Draw a object at the specified position
      */
     function drawObject(object, position) {
-        console.log('drawObject', object);
         let data = null;
         let eventName = "";
         if(object.render) {
@@ -408,7 +407,7 @@
             data = object.render;
         } else if(object.tileMap) {
             eventName = "editTileMap";
-            data = object.tileMap;
+            data = { tileMap: object.tileMap, environment: state.objectTypes["environment"] }
         }
         if( data ) {
             // Create a custom event with data

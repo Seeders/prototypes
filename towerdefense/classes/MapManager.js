@@ -154,11 +154,11 @@ class MapManager {
      */
     calculateMovementCost(tileType) {
         // Heavily favor "path" type tiles
-        if (tileType.toLowerCase() === 'path') {
+        if (tileType.toLowerCase() === 'path' || tileType.toLowerCase() === 'end') {
             return 1;
         } else {
             // Make non-path tiles much less desirable
-            return Infinity;
+            return 100000;
         }
     }
     
