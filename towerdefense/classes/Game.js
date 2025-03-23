@@ -183,7 +183,7 @@ class Game
     // Wave management
     updateWaves() {
         this.state.startDelayTimer += this.deltaTime;
-        
+        this.state.spawnTimer += this.deltaTime;
         // Process all wavesets in parallel
         for (let i = 0; i < this.state.currentWaveIds.length; i++) {
             let waveSet = this.gameConfig.wavesets[this.state.waveSets[i]];
@@ -193,7 +193,7 @@ class Game
             
             // If this waveset still has enemies to spawn
             if (this.state.enemiesSpawned[i] < this.state.currentWaveEnemies[i].length) {
-                this.state.spawnTimer++;
+                
                 
                 if (this.state.spawnTimer >= this.state.spawnRate) {
                     // Create enemy from the appropriate waveset using the enemy type and start point index
@@ -229,8 +229,7 @@ class Game
         }
     }
     startNextWave() {
-        this.state.wave++;
-        waveDisplay.textContent = this.state.wave;
+        waveDisplay.textContent = this.state.round + 1;
         
         let currentLevel = "level1";
         this.state.waveSets = this.gameConfig.levels[currentLevel].wavesets;
@@ -265,7 +264,7 @@ class Game
         }
         
         this.state.maxWaves = totalWaves;
-        this.state.spawnRate = Math.max(10, 60 - (this.state.wave));
+        this.state.spawnRate = 1;
         this.state.spawnTimer = 0;
         this.state.waveTimer = 0;
         this.state.startDelayTimer = 0;
@@ -434,7 +433,7 @@ class Game
     gameOver() {
         this.state.gameOver = true;
         this.state.isPaused = true;
-        gameOverWave.textContent = this.state.wave;
+        gameOverWave.textContent = this.state.round + 1;
         gameOverMenu.style.display = 'block';
         overlay.style.display = 'block';
     }
@@ -592,7 +591,7 @@ class Game
     }
     createEnemy(spawnType, pathIndex) {
         let stats = this.gameConfig.enemies[spawnType];
-        stats.hp *= 1 + (.01 * this.state.wave);
+        stats.hp *= 1 + (.01 * this.state.round);
         let entity = new Entity(this, 0, 0);
         entity.addComponent(Stats, spawnType, stats);
         entity.addRenderer(Renderer, this.imageManager.getImages("enemies", spawnType), stats.drawOffsetY ? stats.drawOffsetY : 0 );
