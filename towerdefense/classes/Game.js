@@ -63,8 +63,9 @@ class Game
         this.spatialGrid = new SpatialGrid(CONFIG.CANVAS_WIDTH, CONFIG.CANVAS_WIDTH, CONFIG.GRID_SIZE * 2);
         this.imageManager = new ImageManager();
         this.mapRenderer = new MapRenderer(this);
-        this.reset();    
-        const { tileMap, paths } = this.mapManager.generateMap(this.gameConfig.levels.level1.tileMap);
+        this.reset();   
+        this.state.currentLevel = "level4"; 
+        const { tileMap, paths } = this.mapManager.generateMap(this.gameConfig.levels[this.state.currentLevel].tileMap);
         this.state.tileMap = tileMap;
         this.state.paths = paths;        
 
@@ -230,9 +231,7 @@ class Game
     }
     startNextWave() {
         waveDisplay.textContent = this.state.round + 1;
-        
-        let currentLevel = "level1";
-        this.state.waveSets = this.gameConfig.levels[currentLevel].wavesets;
+        this.state.waveSets = this.gameConfig.levels[this.state.currentLevel].wavesets;
         this.state.currentWaveIds = [];
         this.state.currentWaveEnemies = [];
         this.state.enemiesSpawned = [];
