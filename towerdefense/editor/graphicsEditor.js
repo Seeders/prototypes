@@ -838,6 +838,21 @@ import { OrbitControls } from '/library/three.orbitControls.js';
                 }
                 input.appendChild(option);
             });
+        } else if(type === "color") {
+            input = document.createElement('input');
+            input.type = "text";
+            input.value = value;
+            let colorInput = document.createElement('input');
+            colorInput.type = "color";
+            colorInput.value = value;
+
+            colorInput.addEventListener('change', () => {
+                let newValue = colorInput.value;                
+                renderData.animations[currentAnimation][currentFrame].shapes[selectedShapeIndex][property] = newValue;
+                renderShapes(renderData, { scene });
+                updateShapeList();
+            });
+            row.appendChild(colorInput);
         } else {
             input = document.createElement('input');
             input.type = type;

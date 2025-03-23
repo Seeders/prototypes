@@ -45,8 +45,9 @@ class Attacker extends Component {
             if (enemyHP <= 0) continue;          
 
             // Target furthest enemy along path (closest to core)
-            if (followPath.pathIndex > furthestDistance) {
-                furthestDistance = followPath.pathIndex;
+            let distanceToEnd = this.game.state.paths[followPath.pathIndex].length - followPath.indexInPath;
+            if (distanceToEnd > furthestDistance) {
+                furthestDistance = followPath.indexInPath;
                 furthestEnemy = enemy;
             }
             

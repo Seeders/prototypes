@@ -3,128 +3,219 @@ import { CONFIG } from "../config/config.js";
 class MapManager {
     generateMap(data) {
         // Extract values from the data object
-        const { size, terrainTypes, terrainMap, path } = data;
+        const { size, terrainTypes, terrainMap } = data;
         
+        let paths = [];
+        let starts = [];
+        let endPoint = {x: 0, y: 0};
         // Create the tile map using the provided terrainMap
         const tileMap = terrainMap.map((row, y) => 
             row.map((terrainType, x) => {
                 // Find the terrain object to get color information
-                const terrain = terrainTypes.find(t => t.type === terrainType);
-                
-                // Determine if this tile is buildable based on terrain type
-                // Assuming only grass is buildable, but this can be customized
-                const buildable = terrainType === 'grass';
-                
+                const terrain = terrainTypes.find(t => t.type === terrainType);                
+                if(terrainType == "start") {
+                    starts.push({x: x, y:y });
+                } else if(terrainType == "end") {
+                    endPoint = {x: x, y: y};
+                }
                 return { 
                     type: terrainType, 
                     color: terrain ? terrain.color : '#8bc34a', // Default to grass color if not found
-                    buildable: buildable
+                    buildable: terrain.buildable
                 };
             })
-        );
-        if( !path || path.length == 0 ){
-            path = this.generateRandomPath();
-        }
-        // Mark the path tiles
-        path.forEach(p => {
-            if (p.x >= 0 && p.x < size && p.y >= 0 && p.y < size) {
-                tileMap[p.y][p.x].type = 'path';
-                tileMap[p.y][p.x].buildable = false;
-            }
+        );        
+        
+        starts.forEach((startPoint) => {
+            paths.push(this.findPath(startPoint, endPoint, terrainMap));
         });
-        
-        // Mark the end of the path as the base
-        const lastPoint = path[path.length - 1];
-        if (lastPoint && lastPoint.x >= 0 && lastPoint.x < size && lastPoint.y >= 0 && lastPoint.y < size) {
-            tileMap[lastPoint.y][lastPoint.x].type = 'base';
-            tileMap[lastPoint.y][lastPoint.x].color = '#FF0000'; // Red color for base
-        }
-        
-        return { tileMap, path };
+
+        console.log(paths);
+
+        return { tileMap, paths };
     }
 
-    generateRandomPath() {        
-        let startX = 0;
-        let startY = parseInt(CONFIG.ROWS / 2);
-        let endX = CONFIG.COLS - 1;
-        let endY = startY; 
-        let yMin = 0;
-        let yMax = CONFIG.ROWS - 1;
-        // Initialize the path with the start point
-        let currentX = startX;
-        let currentY = startY;
-        const path = [{ x: currentX, y: currentY }];
+    findPath(startPoint, endPoint, tileMap) {
+        
+        return this.aStar(startPoint, endPoint, tileMap);
+    }
+    /**
+     * A* Pathfinding Algorithm Implementation
+     * Finds the shortest path between two points on a 2D tile map,
+     * with a strong preference for "path" type tiles.
+     */
 
-        // Track the current direction (right, up, or down)
-        let currentDirection = "right"; // Start by moving right
-
-        // Generate the path
-        while (currentX != endX || currentY != endY) {
-            // Define possible moves based on the current direction
-            let moves = [];
-            if (currentDirection === "right") {
-                // If moving right, prioritize continuing right or turning up/down
-                moves = [
-                    { dx: 1, dy: 0 }, // Right
-                    { dx: 0, dy: 1 }, // Up
-                    { dx: 0, dy: -1 }, // Down
-                ];
-
-                //only move toward exit when on last column.
-                if( currentX == endX && currentY > endY ) {
-                    moves.splice(1, 1); 
-                } else if( currentX == endX && currentY < endY ) {
-                    moves.splice(2, 1);
-                } else if (currentX == startX ) {
-                    moves.splice(1, 2);//always go right first
-                }
-            } else if (currentDirection === "up" || currentDirection === "down") {
-                // If moving up or down, prioritize continuing in that direction or turning right
-                moves = [
-                    { dx: 1, dy: 0 }, // Right
-                    { dx: 0, dy: currentDirection === "up" ? 1 : -1 }, // Continue up/down
-                ];
+    
+    /**
+     * A* pathfinding algorithm
+     * @param {Object} start - Starting position {x, y}
+     * @param {Object} end - Ending position {x, y}
+     * @param {Array} tileMap - 2D array representing the map
+     * @returns {Array} - Array of positions forming the path, or empty array if no path found
+     */
+    aStar(start, end, tileMap) {
+        const rows = tileMap.length;
+        const cols = tileMap[0].length;
+        
+        // Validate inputs
+        if (start.x < 0 || start.x >= cols || start.y < 0 || start.y >= rows) {
+            throw new Error('Start position is outside the map bounds');
+        }
+        if (end.x < 0 || end.x >= cols || end.y < 0 || end.y >= rows) {
+            throw new Error('End position is outside the map bounds');
+        }
+        
+        // Create start and end nodes
+        const startNode = new Node(start.x, start.y, tileMap[start.y][start.x]);
+        const endNode = new Node(end.x, end.y, tileMap[end.y][end.x]);
+        
+        // Initialize open and closed lists
+        const openList = [];
+        const closedList = new Set();
+        const openSet = new Set(); // For faster lookups
+        
+        // Add start node to open list
+        openList.push(startNode);
+        openSet.add(startNode.key());
+        
+        // Define movement directions (4-directional: up, right, down, left)
+        const directions = [
+            {x: 0, y: -1}, // Up
+            {x: 1, y: 0},  // Right
+            {x: 0, y: 1},  // Down
+            {x: -1, y: 0}  // Left
+        ];
+        
+        // Main loop
+        while (openList.length > 0) {
+            // Sort by f value and take the lowest
+            openList.sort((a, b) => a.f - b.f);
+            const currentNode = openList.shift();
+            openSet.delete(currentNode.key());
+            
+            // Add current node to closed list
+            closedList.add(currentNode.key());
+            
+            // Check if we've reached the end
+            if (currentNode.equals(endNode)) {
+                // Reconstruct the path
+                return this.reconstructPath(currentNode);
             }
-
-            // Filter valid moves (stay within grid bounds and avoid backtracking)
-            const validMoves = moves.filter(({ dx, dy }) => {
-                const nextX = currentX + dx;
-                const nextY = currentY + dy;
-                return (
-                    nextX >= startX &&
-                    nextX <= endX &&
-                    nextY >= yMin &&
-                    nextY <= yMax &&
-                    !path.some(point => point.x === nextX && point.y === nextY) // Avoid revisiting points
-                );
-            });
-            if (validMoves.length > 0) {
-                // Randomly select a valid move
-                const randomMove = validMoves[Math.floor(Math.random() * validMoves.length)];
-
-                // Update the current direction
-                if (randomMove.dx === 1) {
-                    currentDirection = "right"; // Moving right
-                } else if (randomMove.dy === 1) {
-                    currentDirection = "up"; // Moving up
-                } else if (randomMove.dy === -1) {
-                    currentDirection = "down"; // Moving down
+            
+            // Generate neighbors
+            for (const dir of directions) {
+                const neighborX = currentNode.x + dir.x;
+                const neighborY = currentNode.y + dir.y;
+                
+                // Check if neighbor is inside the map
+                if (neighborX < 0 || neighborX >= cols || neighborY < 0 || neighborY >= rows) {
+                    continue;
                 }
-
-                // Update the current position
-                currentX += randomMove.dx;
-                currentY += randomMove.dy;
-
-                // Add the new point to the path
-                path.push({ x: currentX, y: currentY });
-            } else {
-                // No valid moves left (should not happen if grid is properly sized)
-                break;
+                
+                const tileType = tileMap[neighborY][neighborX];
+                const neighbor = new Node(neighborX, neighborY, tileType, currentNode);
+                const neighborKey = neighbor.key();
+                
+                // Skip if neighbor is in closed list
+                if (closedList.has(neighborKey)) {
+                    continue;
+                }
+                
+                // Calculate g score for this neighbor
+                // Path tiles will have a much lower cost than other tile types
+                let movementCost = this.calculateMovementCost(tileType);
+                const tentativeG = currentNode.g + movementCost;
+                
+                // Check if this is a better path to neighbor
+                if (!openSet.has(neighborKey) || tentativeG < neighbor.g) {
+                    // Update neighbor values
+                    neighbor.g = tentativeG;
+                    neighbor.h = this.calculateHeuristic(neighbor, endNode);
+                    neighbor.f = neighbor.g + neighbor.h;
+                    
+                    // Add neighbor to open list if not there already
+                    if (!openSet.has(neighborKey)) {
+                        openList.push(neighbor);
+                        openSet.add(neighborKey);
+                    }
+                }
             }
         }
-
+        
+        // No path found
+        return [];
+    }
+    
+    /**
+     * Calculate movement cost based on tile type
+     * Path tiles are heavily favored
+     * @param {string} tileType - Type of the tile
+     * @returns {number} - Movement cost
+     */
+    calculateMovementCost(tileType) {
+        // Heavily favor "path" type tiles
+        if (tileType.toLowerCase() === 'path') {
+            return 1;
+        } else {
+            // Make non-path tiles much less desirable
+            return Infinity;
+        }
+    }
+    
+    /**
+     * Calculate heuristic (Manhattan distance)
+     * @param {Node} nodeA 
+     * @param {Node} nodeB 
+     * @returns {number} - Heuristic value
+     */
+    calculateHeuristic(nodeA, nodeB) {
+        return Math.abs(nodeA.x - nodeB.x) + Math.abs(nodeA.y - nodeB.y);
+    }
+    
+    /**
+     * Reconstruct the path from the end node to the start
+     * @param {Node} endNode - The end node
+     * @returns {Array} - Array of positions {x, y} from start to end
+     */
+    reconstructPath(endNode) {
+        const path = [];
+        let currentNode = endNode;
+        
+        while (currentNode !== null) {
+            path.unshift({
+                x: currentNode.x,
+                y: currentNode.y,
+                tileType: currentNode.tileType
+            });
+            currentNode = currentNode.parent;
+        }
+        
         return path;
     }
+    
+}
 
+
+// Helper class for representing a node in the search
+class Node {
+    constructor(x, y, tileType, parent = null) {
+        this.x = x;
+        this.y = y;
+        this.tileType = tileType;
+        this.parent = parent;
+        
+        this.g = 0; // Cost from start to current node
+        this.h = 0; // Heuristic (estimated cost from current to goal)
+        this.f = 0; // Total cost (g + h)
+    }
+
+    equals(other) {
+        return this.x === other.x && this.y === other.y;
+    }
+
+    // Unique key for node based on coordinates
+    key() {
+        return `${this.x},${this.y}`;
+    }
 }
 export { MapManager };

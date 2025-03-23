@@ -32,12 +32,12 @@ class MapRenderer {
     }
 
     // Call this when map data changes or on initialization
-    cacheMap(tileMap, path) {
+    cacheMap(tileMap, paths) {
         // Clear the cache canvas
         this.mapCacheCtx.clearRect(0, 0, CONFIG.CANVAS_WIDTH, CONFIG.CANVAS_HEIGHT);
         
         // Draw the map onto the cache canvas
-        this.drawMap(tileMap, path);
+        this.drawMap(tileMap, paths);
         
         // Mark cache as valid
         this.isMapCached = true;
@@ -48,7 +48,7 @@ class MapRenderer {
         
         // Generate cache if not already done
         if (!this.isMapCached) {
-            this.cacheMap(map.tileMap, map.path);
+            this.cacheMap(map.tileMap, map.paths);
         }
         
         // Draw cached map image to main canvas
@@ -59,7 +59,7 @@ class MapRenderer {
         this.ctx.drawImage(this.envCacheCanvasFG, 0, CONFIG.CANVAS_HEIGHT / 2);
     }
 
-    drawMap(tileMap, path) {
+    drawMap(tileMap, paths) {
         this.mapCacheCtx.fillStyle = '#4a7c59';
         this.mapCacheCtx.fillRect(0, 0, CONFIG.CANVAS_WIDTH, CONFIG.CANVAS_HEIGHT);
 
@@ -91,16 +91,17 @@ class MapRenderer {
         this.mapCacheCtx.lineWidth = 2;
         this.mapCacheCtx.beginPath();
         
-        const firstIsoX = (path[0].x - path[0].y) * (tileWidth / 2) + CONFIG.CANVAS_WIDTH / 2;
-        const firstIsoY = (path[0].x + path[0].y) * (tileHeight / 2) + tileHeight / 2;
-        this.mapCacheCtx.moveTo(firstIsoX, firstIsoY);
+        paths.forEach(path => {
+            const firstIsoX = (path[0].x - path[0].y) * (tileWidth / 2) + CONFIG.CANVAS_WIDTH / 2;
+            const firstIsoY = (path[0].x + path[0].y) * (tileHeight / 2) + tileHeight / 2;
+            this.mapCacheCtx.moveTo(firstIsoX, firstIsoY);
 
-        path.slice(1).forEach(p => {
-            const isoX = (p.x - p.y) * (tileWidth / 2) + CONFIG.CANVAS_WIDTH / 2;
-            const isoY = (p.x + p.y) * (tileHeight / 2) + tileHeight / 2;
-            this.mapCacheCtx.lineTo(isoX, isoY);
+            path.forEach(location => {
+                const isoX = (location.x - location.y) * (tileWidth / 2) + CONFIG.CANVAS_WIDTH / 2;
+                const isoY = (location.x + location.y) * (tileHeight / 2) + tileHeight / 2;
+                this.mapCacheCtx.lineTo(isoX, isoY);
+            });
         });
-        
         this.mapCacheCtx.stroke();
         this.drawEnvironment();
     }
@@ -149,7 +150,7 @@ class MapRenderer {
             if (x < boardMinX || x > boardMaxX || y < boardMinY || y > boardMaxY) {
                 const type = environmentTypes[Math.floor(Math.random() * environmentTypes.length)];
                 const images = this.game.imageManager.getImages("environment", type);
-                items.push( { img: images.idle[0][0], x: x, y: y});
+                items.push( { img: images.idle[0][parseInt(Math.random()*images.idle[0].length)], x: x, y: y});
             } else {
                 i--; // Position inside board, try again
             }
@@ -166,12 +167,12 @@ class MapRenderer {
             const imgWidth = image.width;
             const imgHeight = image.height;
             
-            const drawX = isoPos.x - imgWidth / 2;
-            const drawY = isoPos.y - imgHeight / 2;
+            const drawX = isoPos.x;
+            const drawY = isoPos.y;
             if( drawY < CONFIG.CANVAS_HEIGHT / 2 ) {
-                this.envCacheCtxBG.drawImage(image, drawX, drawY);
-            } else {
-                this.envCacheCtxFG.drawImage(image, drawX, drawY - CONFIG.CANVAS_HEIGHT / 2);
+                this.envCacheCtxBG.drawImage(image, drawX - imgWidth / 2, drawY - imgHeight / 2);
+            } else if(drawY - CONFIG.CANVAS_HEIGHT / 2 - imgHeight / 2 > 0) {
+                this.envCacheCtxFG.drawImage(image, drawX - imgWidth / 2, drawY - CONFIG.CANVAS_HEIGHT / 2 - imgHeight / 2);
             }
         });
     }

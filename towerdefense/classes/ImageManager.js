@@ -1,23 +1,26 @@
 import * as THREE from "../library/three.module.min.js";
 
+import { CONFIG } from "../config/config.js";
+
 class ImageManager {
     constructor() {
         this.images = {};
+        this.imageSize = CONFIG.IMAGE_SIZE;
         // Create a single reusable renderer
         this.renderer = new THREE.WebGLRenderer({ antialias: false, alpha: true });
-        this.renderer.setSize(64, 64);
+        this.renderer.setSize(this.imageSize, this.imageSize);
         this.renderer.shadowMap.enabled = true;
         this.renderer.shadowMap.type = THREE.PCFSoftShadowMap;
         
-        this.renderTarget = new THREE.WebGLRenderTarget(64, 64);
+        this.renderTarget = new THREE.WebGLRenderTarget(this.imageSize, this.imageSize);
         this.renderTarget.texture.flipY = true;
         
         // Create reusable scene
         this.scene = new THREE.Scene();
         
         // Create reusable cameras for different views
-        const frustumSize = 48;
         const cameraDistance = 64;
+        const frustumSize = cameraDistance + 16;
         const aspect = 1;
         
         this.cameras = [
@@ -88,10 +91,8 @@ class ImageManager {
     }
 
     async loadImages(prefix, config) {
-        console.log("prefix", prefix);
         for (const [type, cfg] of Object.entries(config)) {
             if (!cfg.render || !cfg.render.animations) continue;
-            console.log("loading ", type);
             this.images[`${prefix}_${type}`] = await this.createAnimatedPlaceholder(cfg);
         }
     }
@@ -100,19 +101,16 @@ class ImageManager {
         const animations = {};
         for (const [animType, frames] of Object.entries(config.render.animations)) {
             animations[animType] = [];
-            console.log("animation ", animType);
             let i = 0;
             for (const frame of frames) {
                 const frameImages = await this.captureObjectImagesFromJSON(frame);
                 const canvases = frameImages.map(img => {
                     const canvas = document.createElement('canvas');
-                    canvas.width = canvas.height = 64;
+                    canvas.width = canvas.height = this.imageSize;
                     const ctx = canvas.getContext('2d');
                     ctx.drawImage(img, 0, 0);
                     return canvas;
-                });
-                
-                console.log("generated frame ", ++i, config.title);
+                });                
                 animations[animType].push(canvases); // Array of 4 canvases per frame
             }
         }
@@ -124,7 +122,7 @@ class ImageManager {
     }
     
     async captureObjectImagesFromJSON(shapeData) {
-        const size = 64;
+        const size = this.imageSize;
         
         // Clear the scene
         while (this.scene.children.length > 0) {

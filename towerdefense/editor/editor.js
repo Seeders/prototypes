@@ -10,18 +10,9 @@
         GRID_SIZE: 40,
         DEFAULT_TOWER_SIZE: 30,
         DEFAULT_TOWER_COLOR: '#ffffff',
-        DEFAULT_RENDER: {animations:{idle:[{shapes:[]}]}}
+        DEFAULT_RENDER: {animations:{idle:[{shapes:[]}]}},
+        DEFAULT_TILEMAP: {}
     };
-    let threeJsCamera = null;
-    let currentCameraLocation = 0;
-    
-    const cameraDistance = 96;
-    let cameraLocations = [ 
-        { x: cameraDistance, y: cameraDistance, z: cameraDistance },
-        { x: cameraDistance, y: cameraDistance, z: -cameraDistance },
-        { x: -cameraDistance, y: cameraDistance, z: -cameraDistance },
-        { x: -cameraDistance, y: cameraDistance, z: cameraDistance }
-    ];
 
     //const threeJsContext = setupThreeJsRenderer('three-js-container');
     // Application state changes
@@ -65,12 +56,6 @@
         sizeSlider: document.getElementById('sizeSlider'),
         terrainEditorContainer: document.getElementById('level-editor-container'),
         graphicsEditorContainer: document.getElementById('graphics-editor-container')
-    };
-    let drawingState = {
-        currentShape: 'circle',
-        currentColor: '#000000',
-        currentSize: 32,
-        isDrawing: false
     };
     function getSingularType(typeId) {
         const typeDef = state.objectTypeDefinitions.find(t => t.id === typeId);
@@ -167,6 +152,8 @@
                     <!-- Custom properties will be rendered here -->
                 </div>
                 <button id="add-property-btn" style="margin-top: 10px;">Add Custom Property</button>
+                <button id="add-renderer-btn" style="margin-top: 10px;">Add Renderer</button>
+                <button id="add-tileMap-btn" style="margin-top: 10px;">Add TileMap</button>
             </div>
             
             <div class="actions">
@@ -185,6 +172,12 @@
         // Add event listeners for editor controls
         document.getElementById('add-property-btn').addEventListener('click', () => {
             addCustomProperty(customPropertiesContainer, '', '');
+        });
+        document.getElementById('add-renderer-btn').addEventListener('click', () => {
+            addCustomProperty(customPropertiesContainer, 'renderer', JSON.stringify(CONFIG.DEFAULT_RENDER));
+        });
+        document.getElementById('add-tileMap-btn').addEventListener('click', () => {
+            addCustomProperty(customPropertiesContainer, 'tileMap', CONFIG.DEFAULT_TILEMAP);
         });
         
         document.getElementById('save-object-btn').addEventListener('click', saveObject);
@@ -219,7 +212,7 @@
         keyInput.className = 'property-key';
         
         // Check if the key matches a type name (plural or singular)
-        const matchingTypePlural = state.objectTypeDefinitions.find(t => t.name.toLowerCase() === key.toLowerCase());
+        const matchingTypePlural = state.objectTypeDefinitions.find(t => t.id.toLowerCase() === key.toLowerCase());
         const matchingTypeSingular = state.objectTypeDefinitions.find(t => t.singular.toLowerCase() === key.toLowerCase());
         
         propertyItem.appendChild(keyInput);
@@ -324,7 +317,7 @@
             if (keyInput.value && valueInput) {
                 let value = valueInput.value;
                 const matchingTypePlural = state.objectTypeDefinitions.find(
-                    t => t.name.toLowerCase() === keyInput.value.toLowerCase()
+                    t => t.id.toLowerCase() === keyInput.value.toLowerCase()
                 );
                 // Try to parse value types for non-reference fields
                 if (!isNaN(parseFloat(value)) && isFinite(value)) {
@@ -834,7 +827,6 @@
     function updateMainContent() {
         elements.terrainEditorContainer.classList.remove('show');
         elements.graphicsEditorContainer.classList.remove('show');
-console.log(state.objectTypes[state.selectedType][state.selectedObject]);
         if(typeof state.objectTypes[state.selectedType][state.selectedObject].render != "undefined") {
             elements.graphicsEditorContainer.classList.add('show');
         } else if(typeof state.objectTypes[state.selectedType][state.selectedObject].tileMap != "undefined") {

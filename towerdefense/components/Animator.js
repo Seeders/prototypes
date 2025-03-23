@@ -15,7 +15,7 @@ class Animator extends Component {
 
     update() {
         this.frameTimer++;
-        let currentSpeedPercent = this.parent.getComponent("stats").stats.speed / this.baseSpeed;
+        let currentSpeedPercent = this.parent.getComponent("stats").stats.speed / this.baseSpeed || 1;
         if (this.frameTimer >= this.frameDuration / currentSpeedPercent) {
             this.frameTimer = 0;
             const animFrames = this.animations[this.currentAnimation];

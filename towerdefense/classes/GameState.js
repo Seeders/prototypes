@@ -10,6 +10,8 @@ class GameState {
         this.level = 1;
         this.essenceToNextLevel = 100;
         this.bloodCoreHP = 100;
+        this.paths = [];
+        this.tileMap = [];
         this.entities = [];
         this.mousePosition = { x: 0, y: 0, isoX: 0, isoY: 0, gridX: 0, gridY: 0 };
         this.enemies = [];
@@ -17,13 +19,15 @@ class GameState {
         this.projectiles = [];
         this.summons = [];
         this.others = [];
+        this.waveSets = [];
+        this.currentWaveIds = [];
+        this.currentWaveEnemies = [];
+        this.enemiesSpawned = [];
 
         this.wave = 1;
         this.maxWaves = 10;
         this.waveTimer = 0;
         this.waveDelay = 300;
-        this.numEnemiesInWave = 10;
-        this.enemiesSpawned = 110;
         this.spawnRate = 60;
         this.spawnTimer = 0;
         this.isLevelingUp = false;
@@ -45,8 +49,8 @@ class GameState {
         this.gameOver = false;
         this.victory = false;
         this.activeUpgrades = {};
-        this.currentWaveEnemies = [];
         this.maxWaves = 10;
+        this.round = 0;
     }
 
     addEntity(entity) {

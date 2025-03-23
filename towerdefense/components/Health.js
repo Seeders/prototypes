@@ -22,10 +22,10 @@ class Health extends Component {
 
         const isoPos = this.game.translator.pixelToIso(this.parent.position.x, this.parent.position.y)
 
-        this.game.ctx.fillRect(isoPos.x - barWidth/2, isoPos.y - CONFIG.GRID_SIZE, barWidth, 5);
+        this.game.ctx.fillRect(isoPos.x - barWidth/2, isoPos.y - CONFIG.IMAGE_SIZE * .3, barWidth, 5);
         if( healthPercentage >= 0 ) {
             this.game.ctx.fillStyle = healthPercentage > 0.5 ? 'rgba(0, 255, 0, 0.5)' : healthPercentage > 0.25 ? 'rgba(255, 255, 0, 0.5)' : 'rgba(255, 0, 0, 0.5)';
-            this.game.ctx.fillRect(isoPos.x - barWidth/2, isoPos.y - CONFIG.GRID_SIZE, barWidth * healthPercentage, 5);
+            this.game.ctx.fillRect(isoPos.x - barWidth/2, isoPos.y - CONFIG.IMAGE_SIZE * .3, barWidth * healthPercentage, 5);
         }
     }
 }
