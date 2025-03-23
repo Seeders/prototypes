@@ -1,4 +1,9 @@
 {
+  "configs": {
+    "state": {
+      "currentLevel": "level1"
+    }
+  },
   "projectiles": {
     "plasmaBolt": {
       "damageType": "physical",
@@ -24195,8 +24200,7 @@
     "level5": {
       "title": "Level 5",
       "wavesets": [
-        "level1_start1",
-        "level1_start2"
+        "level1_start1"
       ],
       "tileMap": {
         "size": 16,
@@ -24556,6 +24560,11 @@
     }
   },
   "objectTypeDefinitions": [
+    {
+      "id": "configs",
+      "name": "Configs",
+      "singular": "Config"
+    },
     {
       "id": "towers",
       "name": "Towers",

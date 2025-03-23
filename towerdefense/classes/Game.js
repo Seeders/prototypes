@@ -64,7 +64,7 @@ class Game
         this.imageManager = new ImageManager();
         this.mapRenderer = new MapRenderer(this);
         this.reset();   
-        this.state.currentLevel = "level4"; 
+        this.state.currentLevel = this.gameConfig.configs.state.currentLevel; 
         const { tileMap, paths } = this.mapManager.generateMap(this.gameConfig.levels[this.state.currentLevel].tileMap);
         this.state.tileMap = tileMap;
         this.state.paths = paths;        
