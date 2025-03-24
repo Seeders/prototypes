@@ -1,11 +1,11 @@
 import { Component } from "./Component.js";
-import { CONFIG } from "../config/config.js";
 
 class Health extends Component { 
     constructor( game, parent ) {
         super(game, parent);        
         let statsComp = parent.getComponent('stats');
         this.hp = statsComp.stats.hp;
+        
         statsComp.addStat('maxHp', this.hp);
     }
     update() {        
@@ -15,6 +15,7 @@ class Health extends Component {
     }
 
     draw() {
+        let imageSize = this.game.gameConfig.configs.state.imageSize;
         let statsComp = this.parent.getComponent('stats');
         const healthPercentage = this.hp / statsComp.stats.maxHp;
         const barWidth = 30;
@@ -22,10 +23,10 @@ class Health extends Component {
 
         const isoPos = this.game.translator.pixelToIso(this.parent.position.x, this.parent.position.y)
 
-        this.game.ctx.fillRect(isoPos.x - barWidth/2, isoPos.y - CONFIG.IMAGE_SIZE * .3, barWidth, 5);
+        this.game.ctx.fillRect(isoPos.x - barWidth/2, isoPos.y - imageSize * .3, barWidth, 5);
         if( healthPercentage >= 0 ) {
             this.game.ctx.fillStyle = healthPercentage > 0.5 ? 'rgba(0, 255, 0, 0.5)' : healthPercentage > 0.25 ? 'rgba(255, 255, 0, 0.5)' : 'rgba(255, 0, 0, 0.5)';
-            this.game.ctx.fillRect(isoPos.x - barWidth/2, isoPos.y - CONFIG.IMAGE_SIZE * .3, barWidth * healthPercentage, 5);
+            this.game.ctx.fillRect(isoPos.x - barWidth/2, isoPos.y - imageSize * .3, barWidth * healthPercentage, 5);
         }
     }
 }

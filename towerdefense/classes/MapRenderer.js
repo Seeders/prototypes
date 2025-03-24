@@ -1,7 +1,7 @@
-import { CONFIG } from "../config/config.js";
 import { CoordinateTranslator } from "./CoordinateTranslator.js";
 class MapRenderer {
-    constructor(canvas, environment, imageManager) {   
+    constructor(canvas, environment, imageManager, config) {   
+        this.config = config;
         this.imageManager = imageManager;
         this.environment = environment;
         this.ctx = canvas.getContext('2d');
@@ -12,34 +12,34 @@ class MapRenderer {
         
         // Create off-screen canvas for caching
         this.mapCacheCanvas = document.createElement('canvas');
-        this.mapCacheCanvas.width = CONFIG.CANVAS_WIDTH;
-        this.mapCacheCanvas.height = CONFIG.CANVAS_HEIGHT;
+        this.mapCacheCanvas.width = this.config.canvasWidth;
+        this.mapCacheCanvas.height = this.config.canvasHeight;
         this.mapCacheCtx = this.mapCacheCanvas.getContext('2d');
 
         
         this.envCacheCanvasBG = document.createElement('canvas');
-        this.envCacheCanvasBG.width = CONFIG.CANVAS_WIDTH;
-        this.envCacheCanvasBG.height = CONFIG.CANVAS_HEIGHT / 2;
+        this.envCacheCanvasBG.width = this.config.canvasWidth;
+        this.envCacheCanvasBG.height = this.config.canvasHeight / 2;
         this.envCacheCtxBG = this.envCacheCanvasBG.getContext('2d');
 
         this.envCacheCanvasFG = document.createElement('canvas');
-        this.envCacheCanvasFG.width = CONFIG.CANVAS_WIDTH;
-        this.envCacheCanvasFG.height = CONFIG.CANVAS_HEIGHT / 2;
+        this.envCacheCanvasFG.width = this.config.canvasWidth;
+        this.envCacheCanvasFG.height = this.config.canvasHeight / 2;
         this.envCacheCtxFG = this.envCacheCanvasFG.getContext('2d');
     }
 
     clearScreen() {        
-        this.ctx.clearRect(0, 0, CONFIG.CANVAS_WIDTH, CONFIG.CANVAS_HEIGHT);
-        this.envCacheCtxBG.clearRect(0, 0, CONFIG.CANVAS_WIDTH, CONFIG.CANVAS_HEIGHT);
-        this.envCacheCtxFG.clearRect(0, 0, CONFIG.CANVAS_WIDTH, CONFIG.CANVAS_HEIGHT);
+        this.ctx.clearRect(0, 0, this.config.canvasWidth, this.config.canvasHeight);
+        this.envCacheCtxBG.clearRect(0, 0, this.config.canvasWidth, this.config.canvasHeight);
+        this.envCacheCtxFG.clearRect(0, 0, this.config.canvasWidth, this.config.canvasHeight);
     }
 
     // Call this when map data changes or on initialization
     cacheMap(tileMap, paths) {
            
-        this.translator = new CoordinateTranslator(tileMap.length);
+        this.translator = new CoordinateTranslator(this.config, tileMap.length);
         // Clear the cache canvas
-        this.mapCacheCtx.clearRect(0, 0, CONFIG.CANVAS_WIDTH, CONFIG.CANVAS_HEIGHT);
+        this.mapCacheCtx.clearRect(0, 0, this.config.canvasWidth, this.config.canvasHeight);
         
         // Draw the map onto the cache canvas
         this.drawMap(tileMap, paths);
@@ -54,21 +54,22 @@ class MapRenderer {
         // Generate cache if not already done
         if (!this.isMapCached) {
             this.cacheMap(map.tileMap, map.paths);
-        }
-        
+        }        
+  
         // Draw cached map image to main canvas
         this.ctx.drawImage(this.mapCacheCanvas, 0, 0);
         this.ctx.drawImage(this.envCacheCanvasBG, 0, 0);
     }
     renderFG() {  
-        this.ctx.drawImage(this.envCacheCanvasFG, 0, CONFIG.CANVAS_HEIGHT / 2);
+        this.ctx.drawImage(this.envCacheCanvasFG, 0, this.config.canvasHeight / 2);
     }    
 
     drawMap(tileMap, paths) {
+
         this.mapCacheCtx.fillStyle = '#4a7c59';
-        this.mapCacheCtx.fillRect(0, 0, CONFIG.CANVAS_WIDTH, CONFIG.CANVAS_HEIGHT);
-        const tileWidth = CONFIG.GRID_SIZE;
-        const tileHeight = CONFIG.GRID_SIZE * 0.5;
+        this.mapCacheCtx.fillRect(0, 0, this.config.canvasWidth, this.config.canvasHeight);
+        const tileWidth = this.config.gridSize;
+        const tileHeight = this.config.gridSize * 0.5;
         
         for (let y = 0; y < tileMap.length; y++) {
             for (let x = 0; x < tileMap[y].length; x++) {
@@ -119,7 +120,7 @@ class MapRenderer {
     }
 
     drawEnvironment(size) {
-return;
+
         let itemAmt = size * size;
         let environmentTypes = [];
         for(let envType in this.environment){
@@ -129,15 +130,15 @@ return;
         for(let i = 0; i < itemAmt; i++) {
             // Define the game board boundaries
             const boardMinX = 0;
-            const boardMaxX = size * CONFIG.GRID_SIZE;
+            const boardMaxX = size * this.config.gridSize;
             const boardMinY = 0;
-            const boardMaxY = size * CONFIG.GRID_SIZE;
+            const boardMaxY = size * this.config.gridSize;
             
             // Generate a random position that's outside the board but within a reasonable distance
             let x, y;
             
             // Expand the area where we can place objects
-            const expandAmount = size * CONFIG.GRID_SIZE / 2; // Adjust this value as needed
+            const expandAmount = size * this.config.gridSize / 2; // Adjust this value as needed
             
             // Randomly choose whether to place on x-axis or y-axis outside the board
             if (Math.random() < 0.5) {
@@ -183,10 +184,10 @@ return;
             
             const drawX = isoPos.x;
             const drawY = isoPos.y;
-            if( drawY < CONFIG.CANVAS_HEIGHT / 2 ) {
+            if( drawY < this.config.canvasHeight / 2 ) {
                 this.envCacheCtxBG.drawImage(image, drawX - imgWidth / 2, drawY - imgHeight / 2);
-            } else if(drawY - CONFIG.CANVAS_HEIGHT / 2 - imgHeight / 2 > 0) {
-                this.envCacheCtxFG.drawImage(image, drawX - imgWidth / 2, drawY - CONFIG.CANVAS_HEIGHT / 2 - imgHeight / 2);
+            } else if(drawY - this.config.canvasHeight / 2 - imgHeight / 2 > 0) {
+                this.envCacheCtxFG.drawImage(image, drawX - imgWidth / 2, drawY - this.config.canvasHeight / 2 - imgHeight / 2);
             }
         });
     }

@@ -1,11 +1,9 @@
-import { CONFIG } from "../config/config.js";
-
 class CoordinateTranslator {
-    constructor(mapSize) {
-        this.tileWidth = CONFIG.GRID_SIZE;
-        this.tileHeight = CONFIG.GRID_SIZE * 0.5;
-        this.canvasWidth = CONFIG.CANVAS_WIDTH;
-        this.canvasHeight = CONFIG.CANVAS_HEIGHT;
+    constructor(config, mapSize) {
+        this.tileWidth = config.gridSize;
+        this.tileHeight = config.gridSize * 0.5;
+        this.canvasWidth = config.canvasWidth;
+        this.canvasHeight = config.canvasHeight;
         this.mapSize = mapSize;
     }
 

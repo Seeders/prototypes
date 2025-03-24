@@ -1,5 +1,4 @@
 import { Component } from "./Component.js";
-import { CONFIG } from "../config/config.js";
 
 class EnergyShield extends Component {
     constructor(game, parent) {
@@ -88,9 +87,8 @@ class EnergyShield extends Component {
         
         const shieldPercentage = this.energyShield / this.maxEnergyShield;        
         
-        // Health bar is typically at CONFIG.GRID_SIZE pixels above the entity
         // Shield bar will be slightly above that
-        const barY = this.parent.drawPosition.y - CONFIG.IMAGE_SIZE * .3 - this.barOffset;
+        const barY = this.parent.drawPosition.y - this.game.gameConfig.configs.state.imageSize * .3 - this.barOffset;
         
         // Draw shield background/empty bar
         this.game.ctx.fillStyle = this.shieldEmptyColor;

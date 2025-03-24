@@ -1,13 +1,19 @@
-import { CONFIG } from "../config/config.js";
 import { MapManager } from "../classes/MapManager.js";
 import { MapRenderer } from "../classes/MapRenderer.js";
 import { ImageManager } from "../classes/ImageManager.js";
 import { CoordinateTranslator } from "../classes/CoordinateTranslator.js";
 (function() {
     // Grid configuration
-    let gridSize = CONFIG.COLS;
+    const defaultMapSize = 16;
+    let mapSize = defaultMapSize;
     let currentTerrainType = 'grass';
     let isMouseDown = false;
+    let config = {
+        gridSize: 48,
+        imageSize: 128,
+        canvasWidth: 1536, 
+        canvasHeight: 768
+    };
     let tileMap = {
         size: 16,
         terrainTypes : [
@@ -22,10 +28,10 @@ import { CoordinateTranslator } from "../classes/CoordinateTranslator.js";
     };    
     let environment = [];
     const canvasEl = document.getElementById('grid');
-    let imageManager = new ImageManager();
+    let imageManager = new ImageManager(config.imageSize);
     let mapRenderer = null;
     let mapManager = null;
-    let translator = new CoordinateTranslator(tileMap.size);
+    let translator = new CoordinateTranslator(config, tileMap.size);
         
     async function init() {
         setupTerrainTypesUI();
@@ -328,7 +334,7 @@ import { CoordinateTranslator } from "../classes/CoordinateTranslator.js";
             // Update tileMap with new terrain
             tileMap.terrainMap = newTerrainMap;
             tileMap.size = newGridSize;
-            translator = new CoordinateTranslator(newGridSize);
+            translator = new CoordinateTranslator(config, newGridSize);
             
             updateTerrainStyles();
             setupTerrainTypesUI();
@@ -361,21 +367,21 @@ import { CoordinateTranslator } from "../classes/CoordinateTranslator.js";
     
         // Handle editTileMap event
         document.body.addEventListener('editTileMap', (event) => {
-
+            config = event.detail.config;
+            canvasEl.width = event.detail.config.canvasWidth;
+            canvasEl.height = event.detail.config.canvasHeight;
             environment = event.detail.environment;
-            canvasEl.width = CONFIG.CANVAS_WIDTH;
-            canvasEl.height = CONFIG.CANVAS_HEIGHT;
             tileMap = event.detail.tileMap;
-            mapRenderer = new MapRenderer(canvasEl, environment, imageManager);
+            mapRenderer = new MapRenderer(canvasEl, environment, imageManager, event.detail.config);
                 // Update grid size if it's different
-            if (tileMap.size && tileMap.size !== gridSize) {
-                gridSize = tileMap.size;
-                translator = new CoordinateTranslator(gridSize);
+            if (tileMap.size && tileMap.size !== mapSize) {
+                mapSize = tileMap.size;
+                translator = new CoordinateTranslator(config, mapSize);
             } else {
-                gridSize = CONFIG.COLS;
-                translator = new CoordinateTranslator(gridSize);
+                mapSize = defaultMapSize;
+                translator = new CoordinateTranslator(config, mapSize);
             }
-            document.getElementById('terrainMapSize').value = gridSize;
+            document.getElementById('terrainMapSize').value = mapSize;
             
             // Load terrain types if provided
             updateTerrainStyles();
@@ -423,17 +429,15 @@ import { CoordinateTranslator } from "../classes/CoordinateTranslator.js";
     }
     async function initGridCanvas() {
         // Initialize the canvas with our map renderer
-        canvasEl.width = CONFIG.CANVAS_WIDTH;
-        canvasEl.height = CONFIG.CANVAS_HEIGHT;
-        imageManager = new ImageManager();
+        imageManager = new ImageManager(config.imageSize);
         
         // Initialize the map renderer
         if (!mapRenderer) {
-            mapRenderer = new MapRenderer(canvasEl, environment, imageManager);
+            mapRenderer = new MapRenderer(canvasEl, environment, imageManager, config);
         }
-        
-        // Load images for environment
-        await imageManager.loadImages("environment", environment);        
+      
+        await imageManager.loadImages("environment", environment);
+      
         
         // Render the initial map
         updateCanvasWithData();
@@ -455,8 +459,8 @@ import { CoordinateTranslator } from "../classes/CoordinateTranslator.js";
         const snappedGrid = translator.snapToGrid(gridPos.x, gridPos.y);
         
         // Check if coordinates are within bounds
-        if (snappedGrid.x >= 0 && snappedGrid.x < gridSize && 
-            snappedGrid.y >= 0 && snappedGrid.y < gridSize) {
+        if (snappedGrid.x >= 0 && snappedGrid.x < mapSize && 
+            snappedGrid.y >= 0 && snappedGrid.y < mapSize) {
             
             // Update terrain map with selected terrain type
             tileMap.terrainMap[snappedGrid.y][snappedGrid.x] = currentTerrainType;
@@ -469,13 +473,15 @@ import { CoordinateTranslator } from "../classes/CoordinateTranslator.js";
         }
     }
 
-    function updateCanvasWithData(){
-
+    function updateCanvasWithData() {
+        
         mapManager = new MapManager();
         mapRenderer.isMapCached = false;
         let map = mapManager.generateMap(tileMap);
+        
         mapRenderer.renderBG({}, { tileMap: map.tileMap, paths: [] });
         mapRenderer.renderFG();
+      
     }
     
     // Export the current map as JSON

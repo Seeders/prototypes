@@ -1,5 +1,3 @@
-import { CONFIG } from "../config/config.js";
-
 class MapManager {
     generateMap(data) {
         // Extract values from the data object
@@ -30,7 +28,6 @@ class MapManager {
             paths.push(this.findPath(startPoint, endPoint, terrainMap));
         });
 
-        console.log(paths);
 
         return { tileMap, paths };
     }

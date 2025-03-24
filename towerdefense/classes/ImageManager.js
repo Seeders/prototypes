@@ -1,11 +1,9 @@
 import * as THREE from "../library/three.module.min.js";
 
-import { CONFIG } from "../config/config.js";
-
 class ImageManager {
-    constructor() {
+    constructor(imageSize) {
         this.images = {};
-        this.imageSize = CONFIG.IMAGE_SIZE;
+        this.imageSize = imageSize;
         // Create a single reusable renderer
         this.renderer = new THREE.WebGLRenderer({ antialias: false, alpha: true });
         this.renderer.setSize(this.imageSize, this.imageSize);
@@ -123,7 +121,6 @@ class ImageManager {
     
     async captureObjectImagesFromJSON(shapeData) {
         const size = this.imageSize;
-        console.log(this.renderer);
         // Clear the scene
         while (this.scene.children.length > 0) {
             const object = this.scene.children[0];

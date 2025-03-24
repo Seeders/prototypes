@@ -1,6 +1,3 @@
-
-import { CONFIG } from "../config/config.js";
-
 import { LifeSpan } from "../components/LifeSpan.js";
 import { HitEffectParticle } from "../components/HitEffectParticle.js";
 import { HitEffectRenderer } from "../components/HitEffectRenderer.js";
@@ -42,9 +39,6 @@ class Game
 
         this.canvas = document.getElementById("gameCanvas");
         this.ctx = this.canvas.getContext("2d");
-     
-        this.canvas.setAttribute('width', CONFIG.CANVAS_WIDTH);
-        this.canvas.setAttribute('height', CONFIG.CANVAS_HEIGHT);
 
         this.entitiesToAdd = [];
         
@@ -56,14 +50,18 @@ class Game
     // Initialize the game
     async init() {
         await this.loadConfig();
+        
+     
+        this.canvas.setAttribute('width', this.gameConfig.configs.state.canvasWidth);
+        this.canvas.setAttribute('height', this.gameConfig.configs.state.canvasHeight);
         this.state = new GameState();
-        this.state.currentLevel = this.gameConfig.configs.state.currentLevel; 
+        this.state.currentLevel = this.gameConfig.configs.state.level; 
         this.mapManager = new MapManager();
-        this.translator = new CoordinateTranslator(this.gameConfig.levels[this.state.currentLevel].tileMap.terrainMap.length);
+        this.translator = new CoordinateTranslator(this.gameConfig.configs.state, this.gameConfig.levels[this.state.currentLevel].tileMap.terrainMap.length);
         this.uiManager = new UIManager(this.gameConfig);
-        this.spatialGrid = new SpatialGrid(CONFIG.CANVAS_WIDTH, CONFIG.CANVAS_WIDTH, CONFIG.GRID_SIZE * 2);
-        this.imageManager = new ImageManager();
-        this.mapRenderer = new MapRenderer(this.canvas, this.gameConfig.environment, this.imageManager);
+        this.spatialGrid = new SpatialGrid(this.gameConfig.configs.state.canvasWidth, this.gameConfig.configs.state.canvasWidth, this.gameConfig.configs.state.gridSize * 2);
+        this.imageManager = new ImageManager(this.gameConfig.configs.state.imageSize);
+        this.mapRenderer = new MapRenderer(this.canvas, this.gameConfig.environment, this.imageManager, this.gameConfig.configs.state);
         this.reset();   
         const { tileMap, paths } = this.mapManager.generateMap(this.gameConfig.levels[this.state.currentLevel].tileMap);
         this.state.tileMap = tileMap;
@@ -90,7 +88,7 @@ class Game
         
         this.applyActiveUpgrades();
         this.state.entities.sort((a, b) => {
-            return (b.position.y * CONFIG.COLS + b.position.x) - (a.position.y * CONFIG.COLS + a.position.x)
+            return (b.position.y * this.state.tileMap.length + b.position.x) - (a.position.y * this.state.tileMap.length + a.position.x)
         });
 
         for( let i = this.state.entities.length - 1; i >= 0; i-- ) {
@@ -284,7 +282,7 @@ class Game
         let endY = endPath.y;
         let endX = endPath.x;
 
-        const keep =  this.createTower(endX * CONFIG.GRID_SIZE + CONFIG.GRID_SIZE / 2, endY * CONFIG.GRID_SIZE + CONFIG.GRID_SIZE / 2, 'keep');
+        const keep =  this.createTower(endX * this.gameConfig.configs.state.gridSize + this.gameConfig.configs.state.gridSize / 2, endY * this.gameConfig.configs.state.gridSize + this.gameConfig.configs.state.gridSize / 2, 'keep');
         keep.placed = true;
         const towerButtons = document.querySelectorAll('.tower-option');
         towerButtons.forEach(button => {
@@ -332,8 +330,8 @@ class Game
 
             if (this.state.selectedTowerType && this.state.previewTower) {
                 const snappedPixelPos = this.translator.isoToPixel(isoSnappedGridPos.x, isoSnappedGridPos.y); // If checkValidTowerPosition needs pixels
-                this.state.previewTower.position.x = snappedPixelPos.x + CONFIG.GRID_SIZE / 2;
-                this.state.previewTower.position.y = snappedPixelPos.y + CONFIG.GRID_SIZE / 2; // Adjust if centering needed
+                this.state.previewTower.position.x = snappedPixelPos.x + this.gameConfig.configs.state.gridSize / 2;
+                this.state.previewTower.position.y = snappedPixelPos.y + this.gameConfig.configs.state.gridSize / 2; // Adjust if centering needed
                 const isValidPosition = this.checkValidTowerPosition(snappedGrid.x, snappedGrid.y);
                 this.canvas.style.cursor = isValidPosition ? 'pointer' : 'not-allowed';
             }
@@ -398,7 +396,7 @@ class Game
                 const finalCost = Math.floor(cost * this.state.stats.towerCostMod);
                 
                 if (this.state.bloodShards >= finalCost && this.state.stats.population + populationCost <= this.state.stats.maxPopulation) {
-                    const tower = this.createTower(snappedPixelPos.x + CONFIG.GRID_SIZE / 2, snappedPixelPos.y + CONFIG.GRID_SIZE / 2, this.state.selectedTowerType);
+                    const tower = this.createTower(snappedPixelPos.x + this.gameConfig.configs.state.gridSize / 2, snappedPixelPos.y + this.gameConfig.configs.state.gridSize / 2, this.state.selectedTowerType);
                     tower.placed = true;
                     this.state.tileMap[snappedGrid.y][snappedGrid.x].buildable = false;
                     this.state.tileMap[snappedGrid.y][snappedGrid.x].tower = tower;
