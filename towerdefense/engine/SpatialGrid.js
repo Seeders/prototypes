@@ -67,7 +67,6 @@
                             const distSquared = dx * dx + dy * dy;
                             
                             if (distSquared <= radius * radius) {
-                                console.log( Math.sqrt(distSquared));
                                 let healthComp = entity.getComponent('health');
                                 if (healthComp) {
                                     nearby.push(entity);

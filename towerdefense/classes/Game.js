@@ -447,7 +447,7 @@ class Game extends Engine {
             entity.addRenderer(LightningRenderer, ownerStats);
             entity.addComponent(ChainProjectile, type, attacker, target, projStats);
         } else {
-            entity.addRenderer(Renderer, this.imageManager.getImages("projectiles", type), 0);
+            entity.addRenderer(Renderer, this.imageManager.getImages("projectiles", type));
             entity.addComponent(Animator, "projectiles", type);
             entity.addComponent(Projectile, type, attacker, target, projStats);
         }
@@ -458,7 +458,7 @@ class Game extends Engine {
         let stats = this.gameConfig.towers[type];
         let entity = new Entity(this, x, y);
         entity.addComponent(Stats, type, stats);
-        entity.addRenderer(Renderer, this.imageManager.getImages("towers", type), stats.drawOffsetY ? stats.drawOffsetY : 0);
+        entity.addRenderer(Renderer, this.imageManager.getImages("towers", type), 1);
         entity.addComponent(Animator, "towers", type);
         entity.addComponent(Leveler);
         entity.addComponent(Buildable);
@@ -475,7 +475,7 @@ class Game extends Engine {
         let stats = this.gameConfig.towers[type];
         let entity = new Entity(this, x, y);
         entity.addComponent(Stats, type, stats);
-        entity.addRenderer(Renderer, this.imageManager.getImages("towers", type), stats.drawOffsetY ? stats.drawOffsetY : 0);
+        entity.addRenderer(Renderer, this.imageManager.getImages("towers", type), 1);
         entity.addComponent(Animator, "towers", type);
         entity.addRenderer(RangeIndicator);
         entity.addComponent(Buildable);
@@ -499,7 +499,7 @@ class Game extends Engine {
         stats.hp *= 1 + (.01 * this.state.round);
         let entity = new Entity(this, 0, 0);
         entity.addComponent(Stats, spawnType, stats);
-        entity.addRenderer(Renderer, this.imageManager.getImages("enemies", spawnType), stats.drawOffsetY ? stats.drawOffsetY : 0);
+        entity.addRenderer(Renderer, this.imageManager.getImages("enemies", spawnType));
         entity.addComponent(Animator, "enemies", spawnType);
         entity.addRenderer(Health);
         entity.addRenderer(EnergyShield);
@@ -514,7 +514,7 @@ class Game extends Engine {
         let stats = this.gameConfig.environment[type];
         let entity = new Entity(this, x, y);
         entity.addComponent(Stats, type, stats);
-        entity.addRenderer(Renderer, this.imageManager.getImages("environment", type), stats.drawOffsetY ? stats.drawOffsetY : 0);
+        entity.addRenderer(Renderer, this.imageManager.getImages("environment", type));
         entity.addComponent(Animator, "environment", type);
         entity.addComponent(ArrayTracker, tracker);            
         this.addEntity(entity);      

@@ -23,7 +23,7 @@
  * 
  * // Calculate damage
  * const damageResult = calculateDamage(fireballAttack, enemyUnit);
- * console.log(damageResult);
+
  */
 
 function calculateDamage(attack, target) {

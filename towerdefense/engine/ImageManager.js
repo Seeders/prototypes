@@ -21,18 +21,26 @@ class ImageManager {
         const frustumSize = cameraDistance + 16;
         const aspect = 1;
         
-        this.cameras = [
-            new THREE.OrthographicCamera(-frustumSize * aspect, frustumSize * aspect, frustumSize, -frustumSize, 0.1, 1000), // Front
-            new THREE.OrthographicCamera(-frustumSize * aspect, frustumSize * aspect, frustumSize, -frustumSize, 0.1, 1000), // Left
-            new THREE.OrthographicCamera(-frustumSize * aspect, frustumSize * aspect, frustumSize, -frustumSize, 0.1, 1000), // Right
-            new THREE.OrthographicCamera(-frustumSize * aspect, frustumSize * aspect, frustumSize, -frustumSize, 0.1, 1000)  // Back
-        ];
+        // Create 8 cameras for isometric views at 45-degree intervals
+        this.cameras = [];
+        for (let i = 0; i < 8; i++) {
+            this.cameras.push(new THREE.OrthographicCamera(-frustumSize * aspect, frustumSize * aspect, frustumSize, -frustumSize, 0.1, 1000));
+        }
         
-        this.cameras[0].position.set(cameraDistance, cameraDistance, cameraDistance);
-        this.cameras[1].position.set(-cameraDistance, cameraDistance, cameraDistance);
-        this.cameras[2].position.set(cameraDistance, cameraDistance, -cameraDistance);
-        this.cameras[3].position.set(-cameraDistance, cameraDistance, -cameraDistance);
-        this.cameras.forEach(camera => camera.lookAt(0, 0, 0));
+        // Position cameras in a circle around the y-axis at isometric angle
+        // Standard isometric angle is about 35.264 degrees (arctan(1/sqrt(2)))
+        const isoAngle = Math.atan(1 / Math.sqrt(2));
+        const horizDistance = cameraDistance * Math.cos(isoAngle);
+        const vertDistance = cameraDistance * Math.sin(isoAngle);
+        
+        for (let i = 0; i < 8; i++) {
+            const angle = (i * Math.PI / 4); // 45-degree increments
+            const x = horizDistance * Math.sin(angle);
+            const z = horizDistance * Math.cos(angle);
+            
+            this.cameras[i].position.set(x, vertDistance, z);
+            this.cameras[i].lookAt(0, 0, 0);
+        }
         
         // Create reusable lights
         this.ambientLight = new THREE.AmbientLight(0xffaaff, 2);
@@ -109,10 +117,10 @@ class ImageManager {
                     ctx.drawImage(img, 0, 0);
                     return canvas;
                 });                
-                animations[animType].push(canvases); // Array of 4 canvases per frame
+                animations[animType].push(canvases); // Array of 8 canvases per frame
             }
         }
-        return animations; // { "idle": [[canvas0, canvas1, canvas2, canvas3], ...], "walk": [...] }
+        return animations; // { "idle": [[canvas0, canvas1, canvas2, canvas3, ...], ...], "walk": [...] }
     }
 
     getImages(prefix, type) {
@@ -155,21 +163,11 @@ class ImageManager {
             this.lightGroup.rotation.set(0, 0, 0);
             
             // Rotate light group to match camera position
-            switch(i) {
-                case 0: // Front camera
-                    // No rotation needed - default position
-                    this.lightGroup.rotation.y = Math.PI / 4; // 90 degrees
-                    break;
-                case 1: // Left camera
-                    this.lightGroup.rotation.y = -Math.PI / 2 + Math.PI / 4; // 90 degrees
-                    break;
-                case 2: // Right camera
-                    this.lightGroup.rotation.y = Math.PI / 2 + Math.PI / 4; // -90 degrees
-                    break;
-                case 3: // Back camera
-                    this.lightGroup.rotation.y = Math.PI + Math.PI / 4; // 180 degrees
-                    break;
-            }
+            // Calculate angle based on camera index (8 positions at 45-degree intervals)
+            // Rotate 45 degrees CLOCKWISE (subtract π/4 instead of adding)
+            const angle = (i * Math.PI / 4); 
+            this.lightGroup.rotation.y = angle;
+            
             // Before rendering with each camera, update shadow camera frustum
             const d = 100;
             this.directionalLight.shadow.camera.left = -d;

@@ -20,7 +20,6 @@ class Attacker extends Component {
                 this.target.position.y - this.parent.position.y
             );
             if (distance > this.stats.range || this.target.getComponent('health').hp <= 0) {
-                console.log(`Target out of range or dead: ${distance} > ${this.stats.range}`);
                 this.target = null;
             }
         }
