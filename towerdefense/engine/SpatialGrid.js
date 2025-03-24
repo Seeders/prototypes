@@ -51,15 +51,14 @@
         getNearbyEntities(x, y, radius) {
             const nearby = [];
             // Get cells that could contain entities within radius
-            const startCol = Math.max(0, Math.floor((x - radius)));
-            const endCol = Math.min(this.cols - 1, Math.floor((x + radius)));
-            const startRow = Math.max(0, Math.floor((y - radius)));
-            const endRow = Math.min(this.rows - 1, Math.floor((y + radius)));
-            const radiusSquared = radius * radius; // Avoid square root calculations
-        
+            const startX = Math.max(0, Math.floor((x - radius)));
+            const endX = Math.min(this.cols - 1, Math.floor((x + radius)));
+            const startY = Math.max(0, Math.floor((y - radius)));
+            const endY = Math.min(this.rows - 1, Math.floor((y + radius)));
+       
             // Collect potential candidates from relevant cells
-            for (let row = startRow; row <= endRow; row++) {
-                for (let col = startCol; col <= endCol; col++) {
+            for (let row = startY; row <= endY; row++) {
+                for (let col = startX; col <= endX; col++) {
                     const index = row * this.cols + col;
                     if (index >= 0 && index < this.grid.length) {
                         for (let entity of this.grid[index]) {
@@ -67,12 +66,13 @@
                             const dy = entity.gridPosition.y - y;
                             const distSquared = dx * dx + dy * dy;
                             
-                            if (distSquared <= radiusSquared) {
+                            if (distSquared <= radius * radius) {
+                                console.log( Math.sqrt(distSquared));
                                 let healthComp = entity.getComponent('health');
                                 if (healthComp) {
                                     nearby.push(entity);
                                 }
-                            }
+                            }                            
                         }
                     }
                 }
