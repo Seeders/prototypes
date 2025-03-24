@@ -11,20 +11,31 @@ class Attacker extends Component {
     }
 
     update() {
-
         if (this.cooldown > 0) this.cooldown--;
-                
+
+        // Validate current target
+        if (this.target) {
+            const distance = Math.hypot(
+                this.target.position.x - this.parent.position.x,
+                this.target.position.y - this.parent.position.y
+            );
+            if (distance > this.stats.range || this.target.getComponent('health').hp <= 0) {
+                console.log(`Target out of range or dead: ${distance} > ${this.stats.range}`);
+                this.target = null;
+            }
+        }
+
         // Find target if none
-        if (!this.target || this.target.getComponent('health').hp <= 0 || Math.hypot(this.target.position.x - this.parent.position.x, this.target.position.y - this.parent.position.y) > this.stats.range) {
+        if (!this.target) {
             this.findTarget();
         }
-        
+
         // Attack if ready and has target
         if (this.cooldown <= 0 && this.target) {
             this.attack();
         }
 
-        if( this.cooldown <= 0 && this.stats.mineAmt > 0 ){
+        if (this.cooldown <= 0 && this.stats.mineAmt > 0) {
             this.gather();
         }
         return true;
@@ -34,23 +45,21 @@ class Attacker extends Component {
         this.target = null;
         let furthestEnemy = null;
         let furthestDistance = -1;
-        const nearbyEnemies = this.game.spatialGrid.getNearbyEntities(
-            this.parent.position.x, 
-            this.parent.position.y, 
+        const nearbyEntities = this.game.spatialGrid.getNearbyEntities(
+            this.parent.gridPosition.x, 
+            this.parent.gridPosition.y, 
             this.stats.range
         );
-        for (let enemy of nearbyEnemies) {
-            let enemyHP = enemy.getComponent('health').hp;
+        for (let enemy of nearbyEntities) {
+            let enemyHP = enemy.getComponent("health").hp;
             let followPath = enemy.getComponent('followPath');
             if (enemyHP <= 0) continue;          
 
-            // Target furthest enemy along path (closest to core)
             let distanceToEnd = this.game.state.paths[followPath.pathIndex].length - followPath.indexInPath;
             if (distanceToEnd > furthestDistance) {
                 furthestDistance = followPath.indexInPath;
                 furthestEnemy = enemy;
-            }
-            
+            }  
         }
         
         this.target = furthestEnemy;
@@ -80,9 +89,7 @@ class Attacker extends Component {
         projStats.critChance = this.stats.critChance || 0.05;
         projStats.critMultiplier = this.stats.critMultiplier || 2;
         this.game.createProjectile(projectileType, this.parent.position.x, this.parent.position.y, this.target, this.parent, projStats);
-                
     }
-
 }
 
 export { Attacker };

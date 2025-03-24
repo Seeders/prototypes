@@ -10,7 +10,7 @@ import { LifeSpan } from "../components/LifeSpan.js";
 import { HitEffectParticle } from "../components/HitEffectParticle.js";
 import { HitEffectRenderer } from "../components/HitEffectRenderer.js";
 import { Stats } from "../components/Stats.js";
-import { Renderer } from "../components/Renderer.js";
+import { Renderer } from "../engine/Renderer.js";
 import { Animator } from "../components/Animator.js";
 import { Health } from "../components/Health.js";
 import { EssenceBounty } from "../components/EssenceBounty.js";
@@ -65,7 +65,9 @@ class Game extends Engine {
         this.uiManager.reset();
     }
 
-    update() {
+    update() {        
+        this.state.stats = {...this.state.defaultStats};
+
         super.update();
         
         if (this.state.gameOver || this.state.victory || this.state.isLevelingUp) return;
@@ -178,7 +180,6 @@ class Game extends Engine {
     }
 
     applyActiveUpgrades() {
-        this.state.stats = {...this.state.defaultStats};
         calculateStats(this.state.stats, this.state.activeUpgrades['global']);    
     }
 
@@ -662,7 +663,8 @@ class Game extends Engine {
     }
 
     drawUI() {
-                
+        // To be implemented by game subclass
+      
         this.drawStats();  
 
         // Draw wave timer

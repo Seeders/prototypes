@@ -4,45 +4,49 @@ class RangeIndicator extends Component {
     constructor(game, parent, image, offsetY) {
         super(game, parent);
         this.ctx = game.ctx;
+        this.translator = game.translator; // Access translator for tileWidth
     }
+
     draw() {
-
         let statsComp = this.getComponent('stats');
-        if (statsComp && statsComp.stats.range) {
-            this.drawRangeIndicator(statsComp.stats.range);
+        if (!statsComp || !statsComp.stats || !statsComp.stats.range) {
+            return;
         }
+        this.drawRangeIndicator(statsComp.stats.range);
     }
 
-    drawRangeIndicator(range) {            
+    drawRangeIndicator(range) {    
+        const drawRage = range - 1;        
         const pixelX = this.parent.position.x;
         const pixelY = this.parent.position.y;
-        let gridPos = this.game.translator.pixelToGrid(pixelX, pixelY);
-        gridPos = this.game.translator.snapToGrid(gridPos.x, gridPos.y);
-        if( gridPos.x == this.game.state.mousePosition.gridX && gridPos.y == this.game.state.mousePosition.gridY ) {
-            const isoPos = this.game.translator.pixelToIso(pixelX, pixelY);
-            // Convert range from grid units to isometric pixel units
-            const isoRangeX = range;         // X-axis range remains roughly the same in isometric space
-            const isoRangeY = range * 0.5;   // Y-axis range is halved due to isometric compression
-
-            // Set styling for the range indicator
+        let gridPos = this.translator.pixelToGrid(pixelX, pixelY);
+        gridPos = this.translator.snapToGrid(gridPos.x, gridPos.y);
+        const isoPos = this.translator.pixelToIso(pixelX, pixelY);
+    
+        const isoRangeX = drawRage * this.game.gameConfig.configs.state.gridSize;  // Matches gridToIso X scaling
+        const isoRangeY = drawRage * this.game.gameConfig.configs.state.gridSize * 0.5; // Matches gridToIso Y scaling
+    
+        if (gridPos.x === this.game.state.mousePosition.gridX && gridPos.y === this.game.state.mousePosition.gridY) {
+            this.ctx.save();
             this.ctx.beginPath();
-            this.ctx.strokeStyle = 'rgba(255, 0, 0, 0.5)'; // Red with transparency
+            this.ctx.strokeStyle = 'rgba(255, 0, 0, 0.5)';
             this.ctx.lineWidth = 2;
-
-            // Draw an ellipse to represent the range in isometric space
+    
             this.ctx.ellipse(
-                isoPos.x,           // Center x in isometric coords
-                isoPos.y,           // Center y in isometric coords
-                isoRangeX,          // X radius (wider due to isometric projection)
-                isoRangeY,          // Y radius (shorter due to flattening)
-                0,                  // Rotation (none needed for isometric)
-                0,                  // Start angle
-                2 * Math.PI         // End angle (full circle)
+                isoPos.x,
+                isoPos.y,
+                isoRangeX,
+                isoRangeY,
+                0,
+                0,
+                2 * Math.PI
             );
-
+    
             this.ctx.stroke();
             this.ctx.closePath();
-        }
+            this.ctx.restore();
+        }    
+      
     }
 }
 

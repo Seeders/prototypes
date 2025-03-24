@@ -41,8 +41,8 @@ class ChainProjectile extends Component {
         // Chain to nearby enemies
         if (this.stats.piercing > 0 && this.piercedEnemies.length <= this.stats.piercing) {
             const nearbyEnemies = this.game.spatialGrid.getNearbyEntities(
-                this.target.position.x, 
-                this.target.position.y, 
+                this.target.gridPosition.x, 
+                this.target.gridPosition.y, 
                 this.ownerStats.range
             );
 
@@ -51,7 +51,8 @@ class ChainProjectile extends Component {
                 const dx = enemy.position.x - this.target.position.x;
                 const dy = enemy.position.y - this.target.position.y;
                 const distSq = dx * dx + dy * dy;
-                if (distSq <= this.ownerStats.range * this.ownerStats.range) {
+                let gridSize = this.game.gameConfig.configs.state.gridSize;
+                if (distSq <= this.ownerStats.range * this.ownerStats.range * gridSize * gridSize) {
                     let enemyHealth = enemy.getComponent("health");
                     let enemyEnergyShield = enemy.getComponent("energyshield");
                     let enemyStats = {...enemy.getComponent("stats").stats};

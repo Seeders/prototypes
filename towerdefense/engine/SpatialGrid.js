@@ -1,9 +1,9 @@
  
     class SpatialGrid {
-        constructor(worldWidth, worldHeight, cellSize) {
+        constructor(worldSize, cellSize) {
             this.cellSize = cellSize;
-            this.cols = Math.ceil(worldWidth / cellSize);
-            this.rows = Math.ceil(worldHeight / cellSize);
+            this.cols = worldSize;
+            this.rows = worldSize;
             this.grid = new Array(this.cols * this.rows).fill().map(() => []);
             
             // Track which cell each entity is in
@@ -11,17 +11,11 @@
         }
         
         getIndex(x, y) {
-            // Clamp coordinates to world boundaries
-            const clampedX = Math.max(0, Math.min(x, this.cols * this.cellSize - 1));
-            const clampedY = Math.max(0, Math.min(y, this.rows * this.cellSize - 1));
-            
-            const col = Math.floor(clampedX / this.cellSize);
-            const row = Math.floor(clampedY / this.cellSize);
-            return row * this.cols + col;
+            return y * this.cols + x;
         }
 
         insert(entity) {
-            const newIndex = this.getIndex(entity.position.x, entity.position.y);
+            const newIndex = this.getIndex(entity.gridPosition.x, entity.gridPosition.y);
             const oldIndex = this.entityCells.get(entity);
             
             // If entity moved to a new cell
@@ -54,27 +48,30 @@
                 this.entityCells.delete(entity);
             }
         }
-        
         getNearbyEntities(x, y, radius) {
             const nearby = [];
-            const max = 3;
             // Get cells that could contain entities within radius
-            const startCol = Math.max(0, Math.floor((x - radius) / this.cellSize));
-            const endCol = Math.min(this.cols - 1, Math.floor((x + radius) / this.cellSize));
-            const startRow = Math.max(0, Math.floor((y - radius) / this.cellSize));
-            const endRow = Math.min(this.rows - 1, Math.floor((y + radius) / this.cellSize));
-            
+            const startCol = Math.max(0, Math.floor((x - radius)));
+            const endCol = Math.min(this.cols - 1, Math.floor((x + radius)));
+            const startRow = Math.max(0, Math.floor((y - radius)));
+            const endRow = Math.min(this.rows - 1, Math.floor((y + radius)));
+            const radiusSquared = radius * radius; // Avoid square root calculations
+        
             // Collect potential candidates from relevant cells
-            for (let row = startRow; row <= endRow && nearby.length < max; row++) {
-                for (let col = startCol; col <= endCol && nearby.length < max; col++) {
+            for (let row = startRow; row <= endRow; row++) {
+                for (let col = startCol; col <= endCol; col++) {
                     const index = row * this.cols + col;
                     if (index >= 0 && index < this.grid.length) {
-                        for( let i = 0; i < this.grid[index].length; i++){
-                            let entity = this.grid[index][i];
-                            if( nearby.length < max) {
-                                nearby.push(entity);
-                            } else {
-                                break;
+                        for (let entity of this.grid[index]) {
+                            const dx = entity.gridPosition.x - x;
+                            const dy = entity.gridPosition.y - y;
+                            const distSquared = dx * dx + dy * dy;
+                            
+                            if (distSquared <= radiusSquared) {
+                                let healthComp = entity.getComponent('health');
+                                if (healthComp) {
+                                    nearby.push(entity);
+                                }
                             }
                         }
                     }
@@ -83,7 +80,6 @@
             
             return nearby;
         }
-        
         clear() {
             this.grid = this.grid.map(() => []);
             this.entityCells.clear();

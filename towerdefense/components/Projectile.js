@@ -36,8 +36,8 @@ class Projectile extends Component {
             targetStatClone.energyShield = targetEnergyShield.energyShield;
             if (this.stats.splashRadius > 0) {
                 const nearbyEnemies = this.game.spatialGrid.getNearbyEntities(
-                    this.parent.position.x, 
-                    this.parent.position.y, 
+                    this.parent.gridPosition.x, 
+                    this.parent.gridPosition.y, 
                     this.stats.splashRadius
                 );
                 // Process only relevant enemies
@@ -52,8 +52,9 @@ class Projectile extends Component {
                     const dy = enemy.position.y - this.target.position.y;
                     const distSq1 = dx * dx + dy * dy;
                     
+                    let gridSize = this.game.gameConfig.configs.state.gridSize;
                     // Compare with squared splash radius for efficiency
-                    const splashRadiusSq = this.stats.splashRadius * this.stats.splashRadius;
+                    const splashRadiusSq = this.stats.splashRadius * this.stats.splashRadius * gridSize * gridSize;
                     if (distSq1 <= splashRadiusSq) {
                         // Calculate actual distance only when needed
                         //const splashDist = Math.sqrt(distSq1);
@@ -104,8 +105,8 @@ class Projectile extends Component {
             if (this.stats.piercing > 0 && this.piercedEnemies.length < this.stats.piercing) {
                 this.piercedEnemies.push(this.target);
                 const nearbyEnemies = this.game.spatialGrid.getNearbyEntities(
-                    this.parent.position.x, 
-                    this.parent.position.y, 
+                    this.parent.gridPosition.x, 
+                    this.parent.gridPosition.y, 
                     this.ownerStats.range
                 );
                 // Find a new target
@@ -115,7 +116,8 @@ class Projectile extends Component {
                         const dx = enemy.position.x - this.parent.position.x;
                         const dy = enemy.position.y - this.parent.position.y;
                         const distSq2 = dx * dx + dy * dy;
-                        if (distSq2 < this.ownerStats.range * this.ownerStats.range) {
+                        const gridSize = this.game.gameConfig.configs.state.gridSize;
+                        if (distSq2 < this.ownerStats.range * this.ownerStats.range * gridSize * gridSize) {
                             newTarget = enemy;
                             break;
                         }

@@ -28,7 +28,7 @@ class Engine {
         this.canvas.setAttribute('height', this.gameConfig.configs.state.canvasHeight);
         
         this.translator = new CoordinateTranslator(this.gameConfig.configs.state, this.gameConfig.levels[this.state.currentLevel].tileMap.terrainMap.length);
-        this.spatialGrid = new SpatialGrid(this.gameConfig.configs.state.canvasWidth, this.gameConfig.configs.state.canvasWidth, this.gameConfig.configs.state.gridSize * 2);
+        this.spatialGrid = new SpatialGrid(this.gameConfig.levels[this.state.currentLevel].tileMap.terrainMap.length, this.gameConfig.configs.state.gridSize);
         this.imageManager = new ImageManager(this.gameConfig.configs.state.imageSize);
         this.mapRenderer = new MapRenderer(this.canvasBuffer, this.gameConfig.environment, this.imageManager, this.gameConfig.configs.state);
         
@@ -38,7 +38,7 @@ class Engine {
         }
         
         this.imageManager.dispose();
-        this.gameInterval = setInterval(() => { this.gameLoop(); }, 10);
+        this.animationFrameId = requestAnimationFrame(() => this.gameLoop());
     }
 
     update() {
@@ -66,7 +66,7 @@ class Engine {
         // Update all entities
         for(let i = this.state.entities.length - 1; i >= 0; i--) {
             let e = this.state.entities[i];
-            let result = e.update();
+            let result = e.update();      
             if(!result) {               
                 this.state.entities.splice(i, 1);
             }
@@ -89,10 +89,16 @@ class Engine {
         } 
         
         this.mapRenderer.renderFG();
-        this.finalCtx.drawImage(this.canvasBuffer, 0, 0);
         this.drawUI();
+        this.finalCtx.drawImage(this.canvasBuffer, 0, 0);
+        this.animationFrameId = requestAnimationFrame(() => this.gameLoop());
     }
-
+    stopGameLoop() {
+        if (this.animationFrameId) {
+            cancelAnimationFrame(this.animationFrameId);
+            this.animationFrameId = null;
+        }
+    }
     addEntity(entity) {
         this.entitiesToAdd.push(entity);
     }
@@ -140,7 +146,6 @@ class Engine {
 
     // Abstract UI drawing method to be implemented by subclasses
     drawUI() {
-        // To be implemented by game subclass
     }
 }
 

@@ -383,9 +383,9 @@
       "info": "Defensive attack sentry.",
       "cost": 25,
       "population": 1,
-      "range": 120,
+      "range": 4,
       "damage": 15,
-      "attackSpeed": 20,
+      "attackSpeed": 50,
       "projectile": "plasmaBolt",
       "critChance": 0.05,
       "critMultiplier": 1.5,
@@ -1401,7 +1401,7 @@
       "summonType": "drone",
       "cost": 200,
       "population": 4,
-      "range": 150,
+      "range": 5,
       "damage": 8,
       "attackSpeed": 30,
       "projectile": "nanoOrb",
@@ -1632,7 +1632,7 @@
       "info": "Raise the dead.",
       "drawOffsetY": -12,
       "population": 1,
-      "range": 80,
+      "range": 2,
       "damage": 5,
       "attackSpeed": 30,
       "projectile": "neutronFragment",
@@ -2633,7 +2633,7 @@
       "projectileStartOffsetY": 24,
       "cost": 70,
       "population": 3,
-      "range": 100,
+      "range": 5,
       "damage": 10,
       "attackSpeed": 25,
       "projectile": "lightning",
@@ -3336,13 +3336,13 @@
       "info": "Projectiles explode in an AoE.",
       "cost": 90,
       "population": 3,
-      "range": 270,
+      "range": 5,
       "damage": 10,
       "attackSpeed": 35,
       "projectile": "missile",
       "critChance": 0.05,
       "critMultiplier": 2,
-      "splashRadius": 45,
+      "splashRadius": 3,
       "burnDamage": 2,
       "render": {
         "animations": {
@@ -3454,7 +3454,7 @@
       "attackSpeed": 50,
       "projectile": "cryoMist",
       "critMultiplier": 1,
-      "splashRadius": 30,
+      "splashRadius": 2,
       "slowEffect": 0.7,
       "render": {
         "animations": {
@@ -6741,7 +6741,7 @@
     },
     "trex": {
       "title": "T-Rex",
-      "hp": 40,
+      "hp": 100,
       "speed": 1.5,
       "value": 10,
       "essence": 15,
@@ -22706,8 +22706,8 @@
   },
   "upgrades": {
     "sentryFrenzy": {
-      "desc": "+25% Attack Speed",
-      "value": 0.75
+      "desc": "+5% Attack Speed",
+      "value": 0.95
     },
     "sentryIntelligence": {
       "desc": "+15% Damage and +10% Range",

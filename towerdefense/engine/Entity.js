@@ -2,7 +2,6 @@ class Entity {
     constructor(game, x, y) {
         this.game = game;
         this.position = { x: x, y: y };
-        this.setPositions();
         this.components = [];
         this.renderers = [];
         this.destroyed = false;        
@@ -11,6 +10,7 @@ class Entity {
         this.lastPosition = {...this.position};
         this.lastGridPosition = {...this.gridPosition};
         this.lastDrawPosition = {...this.drawPosition};
+        this.setPositions();
     }
 
     getComponent(name) {
@@ -38,28 +38,29 @@ class Entity {
         this.gridPosition = this.game.translator.snapToGrid(gridPosition.x, gridPosition.y);      
         this.drawPosition = { x: isoPos.x, y: isoPos.y};
     }
-    update() {           
+    update() {    
+        
         this.setPositions();
         for(let c in this.components) {
             this.components[c].update();   
             if(this.destroyed) break;
-        }  
-        
-        this.lastPosition = {...this.position};
-        this.lastGridPosition = {...this.gridPosition};
-        this.lastDrawPosition = {...this.drawPosition};
+        }     
         return !this.destroyed;
     }
     draw() {
         if( this.renderers.length ) {
             this.renderers.forEach( (r) => r.draw() );
-        }
+        }   
+        
+        this.lastPosition = {...this.position};
+        this.lastGridPosition = {...this.gridPosition};
+        this.lastDrawPosition = {...this.drawPosition}; 
     }
     destroy() {
         this.destroyed = true;
         for(let c in this.components) {
             this.components[c].destroy();   
-        }
+        }   
     }
 }
 export { Entity };
