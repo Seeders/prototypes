@@ -1,0 +1,137 @@
+import { Entity } from "./Entity.js";
+import { SpatialGrid } from "./SpatialGrid.js";
+import { ImageManager } from "./ImageManager.js";
+import { CoordinateTranslator } from './CoordinateTranslator.js';
+import { MapRenderer } from "./MapRenderer.js";
+
+class Engine {
+    constructor() {
+        this.entityId = 0;
+        this.canvas = document.getElementById("gameCanvas");
+        this.finalCtx = this.canvas.getContext("2d");
+        this.canvasBuffer = document.createElement("canvas");
+        this.ctx = this.canvasBuffer.getContext("2d");
+
+        this.entitiesToAdd = [];
+        
+        this.currentTime = Date.now();
+        this.lastTime = Date.now();
+        this.deltaTime = 0;
+    }
+
+    async init(config) {
+        this.gameConfig = config;
+        
+        this.canvasBuffer.setAttribute('width', this.gameConfig.configs.state.canvasWidth);
+        this.canvasBuffer.setAttribute('height', this.gameConfig.configs.state.canvasHeight);
+        this.canvas.setAttribute('width', this.gameConfig.configs.state.canvasWidth);
+        this.canvas.setAttribute('height', this.gameConfig.configs.state.canvasHeight);
+        
+        this.translator = new CoordinateTranslator(this.gameConfig.configs.state, this.gameConfig.levels[this.state.currentLevel].tileMap.terrainMap.length);
+        this.spatialGrid = new SpatialGrid(this.gameConfig.configs.state.canvasWidth, this.gameConfig.configs.state.canvasWidth, this.gameConfig.configs.state.gridSize * 2);
+        this.imageManager = new ImageManager(this.gameConfig.configs.state.imageSize);
+        this.mapRenderer = new MapRenderer(this.canvasBuffer, this.gameConfig.environment, this.imageManager, this.gameConfig.configs.state);
+        
+        // Load all images
+        for(let objectType in this.gameConfig) {
+            await this.imageManager.loadImages(objectType, this.gameConfig[objectType]);
+        }
+        
+        this.imageManager.dispose();
+        this.gameInterval = setInterval(() => { this.gameLoop(); }, 10);
+    }
+
+    update() {
+        this.currentTime = Date.now();
+        this.deltaTime = Math.min(1, (this.currentTime - this.lastTime) / 1000);        
+        this.lastTime = Date.now();
+        
+        if (this.state.gameOver || this.state.victory || this.state.isLevelingUp) return;
+        
+        // Sort entities by y position for proper drawing order
+        this.state.entities.sort((a, b) => {
+            return (b.position.y * this.state.tileMap.length + b.position.x) - (a.position.y * this.state.tileMap.length + a.position.x)
+        });
+
+        // Update all entities
+        for(let i = this.state.entities.length - 1; i >= 0; i--) {
+            let e = this.state.entities[i];
+            let result = e.update();
+            if(!result) {               
+                this.state.entities.splice(i, 1);
+            }
+            e.draw();
+        }   
+    
+        // Add any new entities
+        this.entitiesToAdd.forEach((entity) => this.state.addEntity(entity));
+        this.entitiesToAdd = [];
+    }
+
+    gameLoop() {
+        this.ctx.clearRect(0, 0, this.canvasBuffer.width, this.canvasBuffer.height);
+        this.finalCtx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+
+        this.mapRenderer.renderBG(this.state, { tileMap: this.state.tileMap, paths: this.state.paths });
+        
+        if (!this.state.isPaused) {
+            this.update();
+        } 
+        
+        this.mapRenderer.renderFG();
+        this.finalCtx.drawImage(this.canvasBuffer, 0, 0);
+        this.drawUI();
+    }
+
+    addEntity(entity) {
+        this.entitiesToAdd.push(entity);
+    }
+
+    async loadConfig() {
+        let gameData = localStorage.getItem("objectTypes");
+        if(gameData) {
+            return JSON.parse(gameData);
+        }
+        
+        try {
+            const response = await fetch('/config/game_config.json');
+            if (!response.ok) throw new Error('File not found');
+            return await response.json();
+        } catch (error) {
+            console.error('Error loading config:', error);
+            return null;
+        }
+    }
+
+    createEntity(x, y) {
+        const entity = new Entity(this, x, y);
+        return entity;
+    }
+
+    isPositionInCorner(x, y, cols, rows) {
+        // Convert grid coordinates to relative positions (0 to 1 range)
+        const relX = x / cols;
+        const relY = y / rows;
+        
+        // In an isometric view, the diamond shape is defined by:
+        // Top corner: (0.5, 0)
+        // Right corner: (1, 0.5)
+        // Bottom corner: (0.5, 1)
+        // Left corner: (0, 0.5)
+        
+        // Calculate distance from the center line of the diamond
+        const distFromDiagonal1 = Math.abs(relX + relY - 1);
+        const distFromDiagonal2 = Math.abs(relX - relY);
+        
+        // If the point is far from both diagonals, it's in a corner
+        const cornerThreshold = 0.2; // Adjust this value to control how much of the corners to fill
+        return distFromDiagonal1 > cornerThreshold || distFromDiagonal2 > cornerThreshold;
+    }
+
+    // Abstract UI drawing method to be implemented by subclasses
+    drawUI() {
+        // To be implemented by game subclass
+    }
+}
+
+export { Engine };

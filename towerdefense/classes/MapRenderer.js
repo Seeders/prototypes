@@ -28,12 +28,6 @@ class MapRenderer {
         this.envCacheCtxFG = this.envCacheCanvasFG.getContext('2d');
     }
 
-    clearScreen() {        
-        this.ctx.clearRect(0, 0, this.config.canvasWidth, this.config.canvasHeight);
-        this.envCacheCtxBG.clearRect(0, 0, this.config.canvasWidth, this.config.canvasHeight);
-        this.envCacheCtxFG.clearRect(0, 0, this.config.canvasWidth, this.config.canvasHeight);
-    }
-
     // Call this when map data changes or on initialization
     cacheMap(tileMap, paths) {
            
@@ -49,7 +43,6 @@ class MapRenderer {
     }
 
     renderBG(state, map) {
-        this.clearScreen();
         
         // Generate cache if not already done
         if (!this.isMapCached) {
@@ -143,20 +136,20 @@ class MapRenderer {
             // Randomly choose whether to place on x-axis or y-axis outside the board
             if (Math.random() < 0.5) {
                 // Place on the left or right of the board
-                x = Math.random() < 0.5 ? 
+                x = Math.random() < 0.5 ?
                     boardMinX - Math.random() * expandAmount : // Left side
                     boardMaxX + Math.random() * expandAmount;  // Right side
                 
-                // Random y position with a bit of a buffer
-                y = (boardMinY) + Math.random() * (boardMaxY - boardMinY);
+                // Allow y to be anywhere, including outside the board
+                y = boardMinY - expandAmount + Math.random() * (boardMaxY - boardMinY + 2 * expandAmount);
             } else {
                 // Place on the top or bottom of the board
-                y = Math.random() < 0.5 ? 
+                y = Math.random() < 0.5 ?
                     boardMinY - Math.random() * expandAmount : // Top side
                     boardMaxY + Math.random() * expandAmount;  // Bottom side
                 
-                // Random x position with a bit of a buffer
-                x = (boardMinX) + Math.random() * (boardMaxX - boardMinX);
+                // Allow x to be anywhere, including outside the board
+                x = boardMinX - expandAmount + Math.random() * (boardMaxX - boardMinX + 2 * expandAmount);
             }
             
             // Double-check that the position is actually outside the board

@@ -38,7 +38,9 @@ class Game
         this.entityId = 0;
 
         this.canvas = document.getElementById("gameCanvas");
-        this.ctx = this.canvas.getContext("2d");
+        this.finalCtx = this.canvas.getContext("2d");
+        this.canvasBuffer = document.createElement("canvas");
+        this.ctx = this.canvasBuffer.getContext("2d");
 
         this.entitiesToAdd = [];
         
@@ -52,6 +54,8 @@ class Game
         await this.loadConfig();
         
      
+        this.canvasBuffer.setAttribute('width', this.gameConfig.configs.state.canvasWidth);
+        this.canvasBuffer.setAttribute('height', this.gameConfig.configs.state.canvasHeight);
         this.canvas.setAttribute('width', this.gameConfig.configs.state.canvasWidth);
         this.canvas.setAttribute('height', this.gameConfig.configs.state.canvasHeight);
         this.state = new GameState();
@@ -61,7 +65,7 @@ class Game
         this.uiManager = new UIManager(this.gameConfig);
         this.spatialGrid = new SpatialGrid(this.gameConfig.configs.state.canvasWidth, this.gameConfig.configs.state.canvasWidth, this.gameConfig.configs.state.gridSize * 2);
         this.imageManager = new ImageManager(this.gameConfig.configs.state.imageSize);
-        this.mapRenderer = new MapRenderer(this.canvas, this.gameConfig.environment, this.imageManager, this.gameConfig.configs.state);
+        this.mapRenderer = new MapRenderer(this.canvasBuffer, this.gameConfig.environment, this.imageManager, this.gameConfig.configs.state);
         this.reset();   
         const { tileMap, paths } = this.mapManager.generateMap(this.gameConfig.levels[this.state.currentLevel].tileMap);
         this.state.tileMap = tileMap;
@@ -81,8 +85,9 @@ class Game
 
     // Game Loop
     update() {
+        
         this.currentTime = Date.now();
-        this.deltaTime = (this.currentTime - this.lastTime) / 1000;        
+        this.deltaTime = Math.min(1, (this.currentTime - this.lastTime) / 1000);        
         this.lastTime = Date.now();
         if (this.state.gameOver || this.state.victory || this.state.isLevelingUp) return;
         
@@ -99,7 +104,7 @@ class Game
             }
             e.draw();
         }   
-
+    
         this.entitiesToAdd.forEach((entity) => this.state.addEntity(entity));
         this.entitiesToAdd = [];
         // Update wave status
@@ -455,7 +460,7 @@ class Game
     }
 
     // Draw function
-    draw() {
+    drawUI() {
                 
         this.drawStats();  
 
@@ -480,12 +485,17 @@ class Game
 
     // Main Loop
     gameLoop() {
+            
+        this.ctx.clearRect(0, 0, this.canvasBuffer.width, this.canvasBuffer.height);
+        this.finalCtx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+
         this.mapRenderer.renderBG(this.state, { tileMap: this.state.tileMap, paths: this.state.paths });
         if (!this.state.isPaused) {
             this.update();
         } 
         this.mapRenderer.renderFG();
-        this.draw();
+        this.finalCtx.drawImage(this.canvasBuffer, 0, 0);
+        this.drawUI();
     }
 
     addEntity(entity) {

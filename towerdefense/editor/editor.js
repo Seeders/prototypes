@@ -18,11 +18,20 @@
     // Application state changes
     const state = {
         objectTypes: {
+            configs: {
+                state: {
+                    gridSize : 48,
+                    imageSize: 128,
+                    canvasWidth: 1536,
+                    canvasHeight: 768            
+                }
+            },
             towers: {},
             enemies: {},
             projectiles: {}
         },
         objectTypeDefinitions: [
+            { id: 'configs', name: 'Configs', singular: 'Config' },
             { id: 'towers', name: 'Towers', singular: 'Tower' },
             { id: 'enemies', name: 'Enemies', singular: 'Enemy' },
             { id: 'projectiles', name: 'Projectiles', singular: 'Projectile' },
