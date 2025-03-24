@@ -1,4 +1,4 @@
-import { Component } from "./Component.js";
+import { Component } from "../engine/Component.js";
 
 class Effect extends Component { 
     constructor(game, parent, config, applyFn, amount) {

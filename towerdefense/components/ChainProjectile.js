@@ -1,4 +1,4 @@
-import { Component } from "./Component.js";
+import { Component } from "../engine/Component.js";
 import { calculateDamage } from "../functions/calculateDamage.js";
 
 class ChainProjectile extends Component {

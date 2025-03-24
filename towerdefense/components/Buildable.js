@@ -1,4 +1,4 @@
-import { Component } from "./Component.js";
+import { Component } from "../engine/Component.js";
 
 class Buildable extends Component {
     constructor(game, parent) {

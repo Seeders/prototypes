@@ -1,4 +1,4 @@
-import { Component } from "./Component.js";
+import { Component } from "../engine/Component.js";
 
 class RangeIndicator extends Component {
     constructor(game, parent, image, offsetY) {

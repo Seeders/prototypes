@@ -1,4 +1,4 @@
-import { Component } from "./Component.js";
+import { Component } from "../engine/Component.js";
 
 class PopulationBurden extends Component {
     constructor(game, parent) {

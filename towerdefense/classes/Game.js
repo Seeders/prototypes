@@ -1,13 +1,21 @@
+import { Engine } from "../engine/Engine.js";
+import { GameState } from "./GameState.js";
+import { MapManager } from "../engine/MapManager.js";
+import { UIManager } from "./UIManager.js";
+import { Upgrade } from "./Upgrade.js";
+import { Entity } from "../engine/Entity.js";
+
+// Components
 import { LifeSpan } from "../components/LifeSpan.js";
 import { HitEffectParticle } from "../components/HitEffectParticle.js";
 import { HitEffectRenderer } from "../components/HitEffectRenderer.js";
-import { Stats } from "../components/Stats.js";//
+import { Stats } from "../components/Stats.js";
 import { Renderer } from "../components/Renderer.js";
 import { Animator } from "../components/Animator.js";
 import { Health } from "../components/Health.js";
-import { EssenceBounty } from "../components/EssenceBounty.js";//
-import { FollowPath } from "../components/FollowPath.js";//
-import { SpacialGridEntity } from "../components/SpacialGridEntity.js";//
+import { EssenceBounty } from "../components/EssenceBounty.js";
+import { FollowPath } from "../components/FollowPath.js";
+import { SpacialGridEntity } from "../components/SpacialGridEntity.js";
 import { ArrayTracker } from "../components/ArrayTracker.js";
 import { Leveler } from "../components/Leveler.js";
 import { Buildable } from "../components/Buildable.js";
@@ -17,98 +25,56 @@ import { RangeIndicator } from "../components/RangeIndicator.js";
 import { LightningRenderer } from "../components/LightningRenderer.js";
 import { ChainProjectile } from "../components/ChainProjectile.js";
 import { Projectile } from "../components/Projectile.js";
-
-import { GameState } from "./GameState.js";
-import { MapManager } from "./MapManager.js";
-import { UIManager } from "./UIManager.js";
-import { SpatialGrid } from "./SpatialGrid.js";
-import { ImageManager } from "./ImageManager.js";
-import { Entity } from "./Entity.js";
-import { Upgrade } from "./Upgrade.js";
-import { MapRenderer } from "./MapRenderer.js";
-import { CoordinateTranslator } from './CoordinateTranslator.js'; 
-
-import { calculateStats } from "../functions/calculateStats.js";
 import { EnergyShield } from "../components/EnergyShield.js";
 
-class Game
- {
+import { calculateStats } from "../functions/calculateStats.js";
+
+class Game extends Engine {
     constructor() {
-        
-        this.entityId = 0;
-
-        this.canvas = document.getElementById("gameCanvas");
-        this.finalCtx = this.canvas.getContext("2d");
-        this.canvasBuffer = document.createElement("canvas");
-        this.ctx = this.canvasBuffer.getContext("2d");
-
-        this.entitiesToAdd = [];
-        
-        this.currentTime = Date.now();
-        this.lastTime = Date.now();
-        this.deltaTime = 0;
-
-    }
-    // Initialize the game
-    async init() {
-        await this.loadConfig();
-        
-     
-        this.canvasBuffer.setAttribute('width', this.gameConfig.configs.state.canvasWidth);
-        this.canvasBuffer.setAttribute('height', this.gameConfig.configs.state.canvasHeight);
-        this.canvas.setAttribute('width', this.gameConfig.configs.state.canvasWidth);
-        this.canvas.setAttribute('height', this.gameConfig.configs.state.canvasHeight);
-        this.state = new GameState();
-        this.state.currentLevel = this.gameConfig.configs.state.level; 
-        this.mapManager = new MapManager();
-        this.translator = new CoordinateTranslator(this.gameConfig.configs.state, this.gameConfig.levels[this.state.currentLevel].tileMap.terrainMap.length);
-        this.uiManager = new UIManager(this.gameConfig);
-        this.spatialGrid = new SpatialGrid(this.gameConfig.configs.state.canvasWidth, this.gameConfig.configs.state.canvasWidth, this.gameConfig.configs.state.gridSize * 2);
-        this.imageManager = new ImageManager(this.gameConfig.configs.state.imageSize);
-        this.mapRenderer = new MapRenderer(this.canvasBuffer, this.gameConfig.environment, this.imageManager, this.gameConfig.configs.state);
-        this.reset();   
-        const { tileMap, paths } = this.mapManager.generateMap(this.gameConfig.levels[this.state.currentLevel].tileMap);
-        this.state.tileMap = tileMap;
-        this.state.paths = paths;        
-
-        for(let objectType in this.gameConfig) {
-            await this.imageManager.loadImages(objectType, this.gameConfig[objectType]);
-        }
-        this.setupTowerPlacement();
-        this.imageManager.dispose();
-        this.gameInterval = setInterval(() => { this.gameLoop(); }, 10);
-        this.state.isPaused = true;
-        
-        this.drawStats();
+        super();
     }
     
-
-    // Game Loop
-    update() {
+    async init() {
+        this.gameConfig = await this.loadConfig();
+        if (!this.gameConfig) {
+            console.error("Failed to load game configuration");
+            return;
+        }
         
-        this.currentTime = Date.now();
-        this.deltaTime = Math.min(1, (this.currentTime - this.lastTime) / 1000);        
-        this.lastTime = Date.now();
+        this.state = new GameState();
+        this.state.currentLevel = this.gameConfig.configs.state.level;
+        this.mapManager = new MapManager();
+        this.uiManager = new UIManager(this.gameConfig);
+        
+        this.reset();
+        
+        const { tileMap, paths } = this.mapManager.generateMap(this.gameConfig.levels[this.state.currentLevel].tileMap);
+        this.state.tileMap = tileMap;
+        this.state.paths = paths;
+        
+        await super.init(this.gameConfig);
+        
+        this.setupTowerPlacement();
+        this.state.isPaused = true;
+        this.drawStats();
+        this.initEffectsAndUpgrades();
+    }
+    
+    reset() {
+        this.state.reset();
+        this.uiManager.reset();
+    }
+
+    update() {
+        super.update();
+        
         if (this.state.gameOver || this.state.victory || this.state.isLevelingUp) return;
         
         this.applyActiveUpgrades();
-        this.state.entities.sort((a, b) => {
-            return (b.position.y * this.state.tileMap.length + b.position.x) - (a.position.y * this.state.tileMap.length + a.position.x)
-        });
-
-        for( let i = this.state.entities.length - 1; i >= 0; i-- ) {
-            let e = this.state.entities[i];
-            let result = e.update();
-            if( !result ) {               
-                this.state.entities.splice(i, 1);
-            }
-            e.draw();
-        }   
-    
-        this.entitiesToAdd.forEach((entity) => this.state.addEntity(entity));
-        this.entitiesToAdd = [];
+        
         // Update wave status
         this.updateWaves();
+        
         // Level Up check
         if (this.state.essence >= this.state.essenceToNextLevel && !this.state.isLevelingUp) {
             this.showUpgradeMenu();
@@ -117,72 +83,8 @@ class Game
         // Game over check
         if (this.state.bloodCoreHP <= 0 && !this.state.gameOver) {
             this.gameOver();
-        }      
-    }
-
-    showUpgradeMenu() {
-        if (this.state.isLevelingUp) return; // Prevent re-triggering
-        
-        this.state.isLevelingUp = true;
-        this.state.isPaused = true;
-        
-        this.uiManager.upgradeMenu.style.display = 'block';
-        this.uiManager.overlay.style.display = 'block';
-        this.uiManager.upgradeOptionsDiv.innerHTML = '';
-        
-        // Filter upgrades based on conditions
-        const availableUpgrades = this.upgrades.filter(upgrade => upgrade.canApply(this.state));
-        
-
-        
-        // Choose 3 random upgrades
-        const options = [];
-        while (options.length < 3 && availableUpgrades.length > 0) {
-            const index = Math.floor(Math.random() * availableUpgrades.length);
-            options.push(availableUpgrades[index]);
-            availableUpgrades.splice(index, 1);
         }
-        
-        // Create upgrade options
-        options.forEach(upgrade => {
-            const div = document.createElement('div');
-            div.className = 'upgrade-option';
-            div.innerHTML = `
-                <div class="upgrade-icon">${upgrade.icon}</div>
-                <div class="upgrade-desc">
-                    <div class="upgrade-title">${upgrade.title}</div>
-                    ${upgrade.desc}
-                </div>
-            `;
-            div.onclick = () => this.selectUpgrade(upgrade);
-            this.uiManager.upgradeOptionsDiv.appendChild(div);
-        });
     }
-
-    selectUpgrade(upgrade) {       
-        // Add to active upgrades list if not already
-        if (!this.state.activeUpgrades[upgrade.appliesTo]) {
-            this.state.activeUpgrades[upgrade.appliesTo] = [upgrade];
-        } else {
-            this.state.activeUpgrades[upgrade.appliesTo].push(upgrade);
-        }
-
-        this.applyActiveUpgrades();
-        if(upgrade.onAcquire) {
-            upgrade.onAcquire(this.state);
-        }
-        
-        upgradeMenu.style.display = 'none';
-        overlay.style.display = 'none';
-        
-        this.state.essence -= this.state.essenceToNextLevel;
-        this.state.level++;
-        this.state.essenceToNextLevel = Math.floor(this.state.essenceToNextLevel * 1.4);        
-        
-        this.state.isLevelingUp = false;
-        this.state.isPaused = false;
-    }
-
 
     // Wave management
     updateWaves() {
@@ -197,8 +99,6 @@ class Game
             
             // If this waveset still has enemies to spawn
             if (this.state.enemiesSpawned[i] < this.state.currentWaveEnemies[i].length) {
-                
-                
                 if (this.state.spawnTimer >= this.state.spawnRate) {
                     // Create enemy from the appropriate waveset using the enemy type and start point index
                     const enemyType = this.state.currentWaveEnemies[i][this.state.enemiesSpawned[i]];
@@ -232,6 +132,7 @@ class Game
             }
         }
     }
+
     startNextWave() {
         waveDisplay.textContent = this.state.round + 1;
         this.state.waveSets = this.gameConfig.levels[this.state.currentLevel].wavesets;
@@ -287,12 +188,16 @@ class Game
         let endY = endPath.y;
         let endX = endPath.x;
 
-        const keep =  this.createTower(endX * this.gameConfig.configs.state.gridSize + this.gameConfig.configs.state.gridSize / 2, endY * this.gameConfig.configs.state.gridSize + this.gameConfig.configs.state.gridSize / 2, 'keep');
+        const keep = this.createTower(endX * this.gameConfig.configs.state.gridSize + this.gameConfig.configs.state.gridSize / 2, 
+                                      endY * this.gameConfig.configs.state.gridSize + this.gameConfig.configs.state.gridSize / 2, 
+                                      'keep');
         keep.placed = true;
+        
         const towerButtons = document.querySelectorAll('.tower-option');
         towerButtons.forEach(button => {
             button.addEventListener('click', () => {
-                if( this.state.isPaused ) return;
+                if(this.state.isPaused) return;
+                
                 const type = button.getAttribute('data-type');
                 let cost = this.gameConfig.towers[type].cost;
                 const finalCost = Math.floor(cost * this.state.stats.towerCostMod);
@@ -329,14 +234,20 @@ class Game
             const gridPos = this.translator.isoToGrid(mouseX, mouseY);
             const snappedGrid = this.translator.snapToGrid(gridPos.x, gridPos.y);
             const isoSnappedGridPos = this.translator.gridToIso(snappedGrid.x, snappedGrid.y);
-            const pixelIsoPos = this.translator.pixelToIso( mouseX, mouseY );
-            this.state.mousePosition = { x: mouseX, y: mouseY, isoX: pixelIsoPos.x, isoY: pixelIsoPos.y, gridX: snappedGrid.x, gridY: snappedGrid.y };
-
+            const pixelIsoPos = this.translator.pixelToIso(mouseX, mouseY);
+            this.state.mousePosition = { 
+                x: mouseX, 
+                y: mouseY, 
+                isoX: pixelIsoPos.x, 
+                isoY: pixelIsoPos.y, 
+                gridX: snappedGrid.x, 
+                gridY: snappedGrid.y 
+            };
 
             if (this.state.selectedTowerType && this.state.previewTower) {
-                const snappedPixelPos = this.translator.isoToPixel(isoSnappedGridPos.x, isoSnappedGridPos.y); // If checkValidTowerPosition needs pixels
+                const snappedPixelPos = this.translator.isoToPixel(isoSnappedGridPos.x, isoSnappedGridPos.y);
                 this.state.previewTower.position.x = snappedPixelPos.x + this.gameConfig.configs.state.gridSize / 2;
-                this.state.previewTower.position.y = snappedPixelPos.y + this.gameConfig.configs.state.gridSize / 2; // Adjust if centering needed
+                this.state.previewTower.position.y = snappedPixelPos.y + this.gameConfig.configs.state.gridSize / 2;
                 const isValidPosition = this.checkValidTowerPosition(snappedGrid.x, snappedGrid.y);
                 this.canvas.style.cursor = isValidPosition ? 'pointer' : 'not-allowed';
             }
@@ -378,6 +289,7 @@ class Game
         this.canvas.addEventListener('mouseout', () => {
             this.hideTooltip();
         });
+        
         this.canvas.addEventListener('click', (e) => {
             if (!this.state.selectedTowerType) return;
             
@@ -391,7 +303,7 @@ class Game
 
             // Convert snapped grid back to isometric for preview
             const isoSnappedGridPos = this.translator.gridToIso(snappedGrid.x, snappedGrid.y); 
-            const snappedPixelPos = this.translator.isoToPixel(isoSnappedGridPos.x, isoSnappedGridPos.y); // If checkValidTowerPosition needs pixels
+            const snappedPixelPos = this.translator.isoToPixel(isoSnappedGridPos.x, isoSnappedGridPos.y);
             
             if (this.checkValidTowerPosition(snappedGrid.x, snappedGrid.y)) {
                 // Create the tower
@@ -401,7 +313,9 @@ class Game
                 const finalCost = Math.floor(cost * this.state.stats.towerCostMod);
                 
                 if (this.state.bloodShards >= finalCost && this.state.stats.population + populationCost <= this.state.stats.maxPopulation) {
-                    const tower = this.createTower(snappedPixelPos.x + this.gameConfig.configs.state.gridSize / 2, snappedPixelPos.y + this.gameConfig.configs.state.gridSize / 2, this.state.selectedTowerType);
+                    const tower = this.createTower(snappedPixelPos.x + this.gameConfig.configs.state.gridSize / 2, 
+                                                 snappedPixelPos.y + this.gameConfig.configs.state.gridSize / 2, 
+                                                 this.state.selectedTowerType);
                     tower.placed = true;
                     this.state.tileMap[snappedGrid.y][snappedGrid.x].buildable = false;
                     this.state.tileMap[snappedGrid.y][snappedGrid.x].tower = tower;
@@ -426,12 +340,75 @@ class Game
     }
 
     checkValidTowerPosition(posX, posY) {
-        if( posX >= 0 && posY >= 0 && this.state.tileMap.length > posY && this.state.tileMap[posY].length > posX){
+        if(posX >= 0 && posY >= 0 && this.state.tileMap.length > posY && this.state.tileMap[posY].length > posX){
             return this.state.tileMap[posY][posX].buildable;            
         }
         return false;
     }
-    // Game-over and reset functions
+
+    // Upgrade system
+    showUpgradeMenu() {
+        if (this.state.isLevelingUp) return; // Prevent re-triggering
+        
+        this.state.isLevelingUp = true;
+        this.state.isPaused = true;
+        
+        this.uiManager.upgradeMenu.style.display = 'block';
+        this.uiManager.overlay.style.display = 'block';
+        this.uiManager.upgradeOptionsDiv.innerHTML = '';
+        
+        // Filter upgrades based on conditions
+        const availableUpgrades = this.upgrades.filter(upgrade => upgrade.canApply(this.state));
+        
+        // Choose 3 random upgrades
+        const options = [];
+        while (options.length < 3 && availableUpgrades.length > 0) {
+            const index = Math.floor(Math.random() * availableUpgrades.length);
+            options.push(availableUpgrades[index]);
+            availableUpgrades.splice(index, 1);
+        }
+        
+        // Create upgrade options
+        options.forEach(upgrade => {
+            const div = document.createElement('div');
+            div.className = 'upgrade-option';
+            div.innerHTML = `
+                <div class="upgrade-icon">${upgrade.icon}</div>
+                <div class="upgrade-desc">
+                    <div class="upgrade-title">${upgrade.title}</div>
+                    ${upgrade.desc}
+                </div>
+            `;
+            div.onclick = () => this.selectUpgrade(upgrade);
+            this.uiManager.upgradeOptionsDiv.appendChild(div);
+        });
+    }
+
+    selectUpgrade(upgrade) {       
+        // Add to active upgrades list if not already
+        if (!this.state.activeUpgrades[upgrade.appliesTo]) {
+            this.state.activeUpgrades[upgrade.appliesTo] = [upgrade];
+        } else {
+            this.state.activeUpgrades[upgrade.appliesTo].push(upgrade);
+        }
+
+        this.applyActiveUpgrades();
+        if(upgrade.onAcquire) {
+            upgrade.onAcquire(this.state);
+        }
+        
+        upgradeMenu.style.display = 'none';
+        overlay.style.display = 'none';
+        
+        this.state.essence -= this.state.essenceToNextLevel;
+        this.state.level++;
+        this.state.essenceToNextLevel = Math.floor(this.state.essenceToNextLevel * 1.4);        
+        
+        this.state.isLevelingUp = false;
+        this.state.isPaused = false;
+    }
+
+    // Game-over and victory functions
     gameOver() {
         this.state.gameOver = true;
         this.state.isPaused = true;
@@ -459,112 +436,28 @@ class Game
         tooltip.style.display = 'none';
     }
 
-    // Draw function
-    drawUI() {
-                
-        this.drawStats();  
-
-        // Draw wave timer
-        if (this.state.enemies.length === 0 && this.state.enemiesSpawned >= this.state.numEnemiesInWave && !this.state.victory) {
-            const countdown = Math.ceil((this.state.waveDelay - this.state.waveTimer) / 60);
-            this.ctx.fillStyle = 'white';
-            this.ctx.font = '20px Arial';
-            this.ctx.textAlign = 'center';
-            this.ctx.fillText(`Next Wave in ${countdown}...`, this.canvas.width / 2, 50);
-        }
-    }
-    // Stats updating
-    drawStats() {
-        this.uiManager.shardsDisplay.textContent = Math.floor(this.state.bloodShards);
-        this.uiManager.essenceDisplay.textContent = Math.floor(this.state.essence);
-        this.uiManager.essenceNeededDisplay.textContent = Math.floor(this.state.essenceToNextLevel);
-        this.uiManager.hpDisplay.textContent = Math.floor(this.state.bloodCoreHP);
-        this.uiManager.populationDisplay.textContent = Math.floor(this.state.stats.population);
-        this.uiManager.maxPopulationDisplay.textContent = Math.floor(this.state.stats.maxPopulation);     
-    }
-
-    // Main Loop
-    gameLoop() {
-            
-        this.ctx.clearRect(0, 0, this.canvasBuffer.width, this.canvasBuffer.height);
-        this.finalCtx.clearRect(0, 0, this.canvas.width, this.canvas.height);
-
-        this.mapRenderer.renderBG(this.state, { tileMap: this.state.tileMap, paths: this.state.paths });
-        if (!this.state.isPaused) {
-            this.update();
-        } 
-        this.mapRenderer.renderFG();
-        this.finalCtx.drawImage(this.canvasBuffer, 0, 0);
-        this.drawUI();
-    }
-
-    addEntity(entity) {
-        this.entitiesToAdd.push(entity);
-    }
-   
-    async loadConfig() {
-        let gameData = localStorage.getItem("objectTypes");
-        if(gameData) {
-            this.gameConfig = JSON.parse(gameData);            
-            this.initEffectsAndUpgrades(); 
-            return;
-        }
-        await fetch('/config/game_config.json')
-            .then(response => {
-                if (!response.ok) throw new Error('File not found');
-                return response.json();
-            })
-            .then(config => {
-                this.gameConfig = config;    
-                this.initEffectsAndUpgrades();                
-            })
-            .catch(error => {
-                console.error('Error loading config:', error);
-            });  
-    }
-    isPositionInCorner(x, y, cols, rows) {
-        // Convert grid coordinates to relative positions (0 to 1 range)
-        const relX = x / cols;
-        const relY = y / rows;
-        
-        // In an isometric view, the diamond shape is defined by:
-        // Top corner: (0.5, 0)
-        // Right corner: (1, 0.5)
-        // Bottom corner: (0.5, 1)
-        // Left corner: (0, 0.5)
-        
-        // Calculate distance from the center line of the diamond
-        const distFromDiagonal1 = Math.abs(relX + relY - 1);
-        const distFromDiagonal2 = Math.abs(relX - relY);
-        
-        // If the point is far from both diagonals, it's in a corner
-        const cornerThreshold = 0.2; // Adjust this value to control how much of the corners to fill
-        return distFromDiagonal1 > cornerThreshold || distFromDiagonal2 > cornerThreshold;
-    }
-    reset() { 
-        this.state.reset();
-        this.uiManager.reset();
-    }
+    // Entity creation methods
     createProjectile(type, x, y, target, attacker, projStats) {
         let ownerStats = attacker.getComponent('stats').stats;
         let def = this.gameConfig.projectiles[type];
         let entity = new Entity(this, x, y);
         entity.addComponent(Stats, type, stats);
-        if( def.customRenderer == "lightning" ) {
+        if(def.customRenderer == "lightning") {
             entity.addRenderer(LightningRenderer, ownerStats);
-            entity.addComponent(ChainProjectile, type, attacker, target, projStats );
+            entity.addComponent(ChainProjectile, type, attacker, target, projStats);
         } else {
             entity.addRenderer(Renderer, this.imageManager.getImages("projectiles", type), 0);
             entity.addComponent(Animator, "projectiles", type);
-            entity.addComponent(Projectile, type, attacker, target, projStats );
+            entity.addComponent(Projectile, type, attacker, target, projStats);
         }
         this.addEntity(entity);     
     }
+
     createTower(x, y, type, tracker="towers") {
         let stats = this.gameConfig.towers[type];
         let entity = new Entity(this, x, y);
         entity.addComponent(Stats, type, stats);
-        entity.addRenderer(Renderer, this.imageManager.getImages("towers", type), stats.drawOffsetY ? stats.drawOffsetY : 0 );
+        entity.addRenderer(Renderer, this.imageManager.getImages("towers", type), stats.drawOffsetY ? stats.drawOffsetY : 0);
         entity.addComponent(Animator, "towers", type);
         entity.addComponent(Leveler);
         entity.addComponent(Buildable);
@@ -576,11 +469,12 @@ class Game
         this.addEntity(entity);      
         return entity;  
     }
+
     createPreviewTower(x, y, type) {
         let stats = this.gameConfig.towers[type];
         let entity = new Entity(this, x, y);
         entity.addComponent(Stats, type, stats);
-        entity.addRenderer(Renderer, this.imageManager.getImages("towers", type),  stats.drawOffsetY ? stats.drawOffsetY : 0);
+        entity.addRenderer(Renderer, this.imageManager.getImages("towers", type), stats.drawOffsetY ? stats.drawOffsetY : 0);
         entity.addComponent(Animator, "towers", type);
         entity.addRenderer(RangeIndicator);
         entity.addComponent(Buildable);
@@ -588,20 +482,23 @@ class Game
         this.addEntity(entity);        
         return entity;
     }
-    removeSummon(summon) {
-        this.state.removeEntity(summon);
-    }
+
     createSummon(x, y, type) {
         let stats = this.gameConfig.towers[type];
         let summon = this.createTower(x, y, type);
         summon.addComponent(LifeSpan, stats.lifeSpan);
     }
+
+    removeSummon(summon) {
+        this.state.removeEntity(summon);
+    }
+
     createEnemy(spawnType, pathIndex) {
         let stats = this.gameConfig.enemies[spawnType];
         stats.hp *= 1 + (.01 * this.state.round);
         let entity = new Entity(this, 0, 0);
         entity.addComponent(Stats, spawnType, stats);
-        entity.addRenderer(Renderer, this.imageManager.getImages("enemies", spawnType), stats.drawOffsetY ? stats.drawOffsetY : 0 );
+        entity.addRenderer(Renderer, this.imageManager.getImages("enemies", spawnType), stats.drawOffsetY ? stats.drawOffsetY : 0);
         entity.addComponent(Animator, "enemies", spawnType);
         entity.addRenderer(Health);
         entity.addRenderer(EnergyShield);
@@ -616,12 +513,13 @@ class Game
         let stats = this.gameConfig.environment[type];
         let entity = new Entity(this, x, y);
         entity.addComponent(Stats, type, stats);
-        entity.addRenderer(Renderer, this.imageManager.getImages("environment", type), stats.drawOffsetY ? stats.drawOffsetY : 0 );
+        entity.addRenderer(Renderer, this.imageManager.getImages("environment", type), stats.drawOffsetY ? stats.drawOffsetY : 0);
         entity.addComponent(Animator, "environment", type);
         entity.addComponent(ArrayTracker, tracker);            
         this.addEntity(entity);      
         return entity;  
     }
+
     createHitEffect(x, y, damageType = "default") {
         let entity = new Entity(this, x, y);
         entity.addRenderer(HitEffectRenderer, null, 0);
@@ -761,6 +659,29 @@ class Game
 
         ];
 
+    }
+
+    drawUI() {
+                
+        this.drawStats();  
+
+        // Draw wave timer
+        if (this.state.enemies.length === 0 && this.state.enemiesSpawned >= this.state.numEnemiesInWave && !this.state.victory) {
+            const countdown = Math.ceil((this.state.waveDelay - this.state.waveTimer) / 60);
+            this.ctx.fillStyle = 'white';
+            this.ctx.font = '20px Arial';
+            this.ctx.textAlign = 'center';
+            this.ctx.fillText(`Next Wave in ${countdown}...`, this.canvas.width / 2, 50);
+        }
+    }
+    // Stats updating
+    drawStats() {
+        this.uiManager.shardsDisplay.textContent = Math.floor(this.state.bloodShards);
+        this.uiManager.essenceDisplay.textContent = Math.floor(this.state.essence);
+        this.uiManager.essenceNeededDisplay.textContent = Math.floor(this.state.essenceToNextLevel);
+        this.uiManager.hpDisplay.textContent = Math.floor(this.state.bloodCoreHP);
+        this.uiManager.populationDisplay.textContent = Math.floor(this.state.stats.population);
+        this.uiManager.maxPopulationDisplay.textContent = Math.floor(this.state.stats.maxPopulation);     
     }
 
 }

@@ -1,4 +1,4 @@
-import { Component } from "./Component.js";
+import { Component } from "../engine/Component.js";
 class FollowPath extends Component {
     constructor(game, parent, pathIndex = 0) {
         super(game, parent);

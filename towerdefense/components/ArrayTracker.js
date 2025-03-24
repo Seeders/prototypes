@@ -1,4 +1,4 @@
-import { Component } from "./Component.js";
+import { Component } from "../engine/Component.js";
 
 class ArrayTracker extends Component {
     constructor(game, parent, arr) {

@@ -43,8 +43,18 @@ class Engine {
 
     update() {
         this.currentTime = Date.now();
-        this.deltaTime = Math.min(1, (this.currentTime - this.lastTime) / 1000);        
-        this.lastTime = Date.now();
+    
+        // Only update if a reasonable amount of time has passed
+        const timeSinceLastUpdate = this.currentTime - this.lastTime;
+        
+        // Skip update if more than 1 second has passed (tab was inactive)
+        if (timeSinceLastUpdate > 1000) {
+            this.lastTime = this.currentTime; // Reset timer without updating
+            return;
+        }
+        
+        this.deltaTime = Math.min(1/30, timeSinceLastUpdate / 1000); // Cap at 1/30th of a second        
+        this.lastTime = this.currentTime;
         
         if (this.state.gameOver || this.state.victory || this.state.isLevelingUp) return;
         

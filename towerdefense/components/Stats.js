@@ -1,4 +1,4 @@
-import { Component } from "./Component.js";
+import { Component } from "../engine/Component.js";
 import { calculateStats } from "../functions/calculateStats.js";
 import { Effect } from "./Effect.js";
 

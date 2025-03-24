@@ -1,4 +1,4 @@
-import { Component } from "./Component.js";
+import { Component } from "../engine/Component.js";
 
 class EnergyShield extends Component {
     constructor(game, parent) {

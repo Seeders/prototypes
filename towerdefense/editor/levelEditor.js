@@ -1,7 +1,7 @@
-import { MapManager } from "../classes/MapManager.js";
-import { MapRenderer } from "../classes/MapRenderer.js";
-import { ImageManager } from "../classes/ImageManager.js";
-import { CoordinateTranslator } from "../classes/CoordinateTranslator.js";
+import { MapManager } from "../engine/MapManager.js";
+import { MapRenderer } from "../engine/MapRenderer.js";
+import { ImageManager } from "../engine/ImageManager.js";
+import { CoordinateTranslator } from "../engine/CoordinateTranslator.js";
 (function() {
     // Grid configuration
     const defaultMapSize = 16;

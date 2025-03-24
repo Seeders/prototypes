@@ -1,5 +1,5 @@
-import { Component } from "./Component.js";
-import { Entity } from "./../classes/Entity.js";
+import { Component } from "../engine/Component.js";
+import { Entity } from "../engine/Entity.js";
 import { Explosion } from "./Explosion.js";
 import { calculateDamage } from "../functions/calculateDamage.js";
 

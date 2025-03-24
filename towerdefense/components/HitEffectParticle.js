@@ -1,4 +1,4 @@
-import { Component } from "./Component.js";
+import { Component } from "../engine/Component.js";
 
 class HitEffectParticle extends Component {
     constructor(game, parent, damageType) {

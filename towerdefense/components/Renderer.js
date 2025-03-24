@@ -1,4 +1,4 @@
-import { Component } from "./Component.js";
+import { Component } from "../engine/Component.js";
 
 class Renderer extends Component {
     constructor(game, parent, images, offsetY) {

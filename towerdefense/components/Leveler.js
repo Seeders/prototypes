@@ -1,4 +1,4 @@
-import { Component } from "./Component.js";
+import { Component } from "../engine/Component.js";
 
 class Leveler extends Component {
     constructor(game, parent, level = 1) {
