@@ -4,7 +4,8 @@ import { MapManager } from "../engine/MapManager.js";
 import { UIManager } from "./UIManager.js";
 import { Upgrade } from "./Upgrade.js";
 import { Entity } from "../engine/Entity.js";
-
+import { WaveManager } from "./WaveManager.js";
+import { UpgradeManager } from "./UpgradeManager.js";
 // Components
 import { LifeSpan } from "../components/LifeSpan.js";
 import { HitEffectParticle } from "../components/HitEffectParticle.js";
@@ -54,7 +55,11 @@ class Game extends Engine {
         this.state.tileMapData = this.gameConfig.levels[this.state.currentLevel].tileMap;
 
         await super.init(this.gameConfig);
-        
+        this.waveManager = new WaveManager(
+            this, 
+            (enemyType, pathIndex) => this.createEnemy(enemyType, pathIndex)
+        );
+        this.upgradeManager = new UpgradeManager(this);
         this.setupTowerPlacement();
         this.state.isPaused = true;
         this.drawStats();
@@ -65,124 +70,24 @@ class Game extends Engine {
         this.state.reset();
         this.uiManager.reset();
     }
-
     update() {        
         this.state.stats = {...this.state.defaultStats};
 
         super.update();
         
         if (this.state.gameOver || this.state.victory || this.state.isLevelingUp) return;
-        
-        this.applyActiveUpgrades();
-        
-        // Update wave status
-        this.updateWaves();
-        
-        // Level Up check
-        if (this.state.essence >= this.state.essenceToNextLevel && !this.state.isLevelingUp) {
-            this.showUpgradeMenu();
-        }
-        
+                
+        // Update wave status using WaveManager
+        this.waveManager.update();
+        this.upgradeManager.update();
+
         // Game over check
         if (this.state.bloodCoreHP <= 0 && !this.state.gameOver) {
             this.gameOver();
         }
     }
 
-    // Wave management
-    updateWaves() {
-        this.state.startDelayTimer += this.deltaTime;
-        this.state.spawnTimer += this.deltaTime;
-        // Process all wavesets in parallel
-        for (let i = 0; i < this.state.currentWaveIds.length; i++) {
-            let waveSet = this.gameConfig.wavesets[this.state.waveSets[i]];
-            
-            // Skip if still in start delay
-            if (waveSet.startDelay && this.state.startDelayTimer < waveSet.startDelay) continue;
-            
-            // If this waveset still has enemies to spawn
-            if (this.state.enemiesSpawned[i] < this.state.currentWaveEnemies[i].length) {
-                if (this.state.spawnTimer >= this.state.spawnRate) {
-                    // Create enemy from the appropriate waveset using the enemy type and start point index
-                    const enemyType = this.state.currentWaveEnemies[i][this.state.enemiesSpawned[i]];
-                    const startPointIndex = i; // Each waveset corresponds to a different start point
-                    
-                    this.createEnemy(enemyType, startPointIndex);
-                    this.state.enemiesSpawned[i]++;
-                    this.state.spawnTimer = 0;
-                    
-                    // Calculate total progress across all wavesets
-                    const totalEnemies = this.state.currentWaveEnemies.reduce((sum, wave) => sum + wave.length, 0);
-                    const totalSpawned = this.state.enemiesSpawned.reduce((sum, count) => sum + count, 0);
-                    
-                    // Update wave progress
-                    waveProgress.style.width = (totalSpawned / totalEnemies * 100) + '%';
-                }
-            }
-        }
-        
-        // Check if all wavesets have completed spawning
-        const allWavesetsComplete = this.state.enemiesSpawned.every((spawned, index) => 
-            spawned >= this.state.currentWaveEnemies[index].length
-        );
-        
-        // Move to next wave if all enemies defeated and all wavesets have completed spawning
-        if (this.state.enemies.length === 0 && allWavesetsComplete) {
-            this.state.waveTimer++;
-            
-            if (this.state.waveTimer >= this.state.waveDelay) {
-                this.startNextWave();
-            }
-        }
-    }
 
-    startNextWave() {
-        waveDisplay.textContent = this.state.round + 1;
-        this.state.waveSets = this.gameConfig.levels[this.state.currentLevel].wavesets;
-        this.state.currentWaveIds = [];
-        this.state.currentWaveEnemies = [];
-        this.state.enemiesSpawned = [];
-        
-        let totalWaves = 0;
-        for (let i = 0; i < this.state.waveSets.length; i++) {
-            const waveSetId = this.state.waveSets[i];
-            const waveSet = this.gameConfig.wavesets[waveSetId];
-            
-            // Get the current wave for this waveset based on progress
-            // Check if this waveset has enough waves for the current round
-            if (this.state.round < waveSet.waves.length) {
-                // If the waveset has a wave for this round, use it
-                const currentWaveId = waveSet.waves[this.state.round];
-                
-                // Add this wave to the current active waves
-                this.state.currentWaveIds.push(currentWaveId);
-                this.state.currentWaveEnemies.push(this.gameConfig.waves[currentWaveId].enemies);
-                this.state.enemiesSpawned.push(0);
-            }
-            
-            totalWaves = Math.max(totalWaves, waveSet.waves.length);
-        }
-        
-        // If all wavesets are exhausted, end the game
-        if (this.state.currentWaveIds.length === 0) {
-            this.gameVictory();
-            return;
-        }
-        
-        this.state.maxWaves = totalWaves;
-        this.state.spawnRate = 1;
-        this.state.spawnTimer = 0;
-        this.state.waveTimer = 0;
-        this.state.startDelayTimer = 0;
-        
-        // Reset wave progress bar
-        waveProgress.style.width = '0%';
-        this.state.round++;
-    }
-
-    applyActiveUpgrades() {
-        calculateStats(this.state.stats, this.state.activeUpgrades['global']);    
-    }
 
     // Tower placement system
     setupTowerPlacement() {
@@ -348,68 +253,6 @@ class Game extends Engine {
         return false;
     }
 
-    // Upgrade system
-    showUpgradeMenu() {
-        if (this.state.isLevelingUp) return; // Prevent re-triggering
-        
-        this.state.isLevelingUp = true;
-        this.state.isPaused = true;
-        
-        this.uiManager.upgradeMenu.style.display = 'block';
-        this.uiManager.overlay.style.display = 'block';
-        this.uiManager.upgradeOptionsDiv.innerHTML = '';
-        
-        // Filter upgrades based on conditions
-        const availableUpgrades = this.upgrades.filter(upgrade => upgrade.canApply(this.state));
-        
-        // Choose 3 random upgrades
-        const options = [];
-        while (options.length < 3 && availableUpgrades.length > 0) {
-            const index = Math.floor(Math.random() * availableUpgrades.length);
-            options.push(availableUpgrades[index]);
-            availableUpgrades.splice(index, 1);
-        }
-        
-        // Create upgrade options
-        options.forEach(upgrade => {
-            const div = document.createElement('div');
-            div.className = 'upgrade-option';
-            div.innerHTML = `
-                <div class="upgrade-icon">${upgrade.icon}</div>
-                <div class="upgrade-desc">
-                    <div class="upgrade-title">${upgrade.title}</div>
-                    ${upgrade.desc}
-                </div>
-            `;
-            div.onclick = () => this.selectUpgrade(upgrade);
-            this.uiManager.upgradeOptionsDiv.appendChild(div);
-        });
-    }
-
-    selectUpgrade(upgrade) {       
-        // Add to active upgrades list if not already
-        if (!this.state.activeUpgrades[upgrade.appliesTo]) {
-            this.state.activeUpgrades[upgrade.appliesTo] = [upgrade];
-        } else {
-            this.state.activeUpgrades[upgrade.appliesTo].push(upgrade);
-        }
-
-        this.applyActiveUpgrades();
-        if(upgrade.onAcquire) {
-            upgrade.onAcquire(this.state);
-        }
-        
-        upgradeMenu.style.display = 'none';
-        overlay.style.display = 'none';
-        
-        this.state.essence -= this.state.essenceToNextLevel;
-        this.state.level++;
-        this.state.essenceToNextLevel = Math.floor(this.state.essenceToNextLevel * 1.4);        
-        
-        this.state.isLevelingUp = false;
-        this.state.isPaused = false;
-    }
-
     // Game-over and victory functions
     gameOver() {
         this.state.gameOver = true;
@@ -541,13 +384,6 @@ class Game extends Engine {
         entity.addComponent(HitEffectParticle, damageType);
         entity.addComponent(LifeSpan, 30); // ~0.5 seconds at 60 FPS
         this.addEntity(entity);
-    }
-    applyUpgrade(upgradeId) {
-        const upgrade = this.upgrades.find(u => u.id === upgradeId);
-        if (upgrade && upgrade.canApply(this.state)) {
-            upgrade.apply(this.state);
-            this.uiManager.updateUpgrades(); // Hypothetical UI update
-        }
     }
     initEffectsAndUpgrades() {
         this.effects = {

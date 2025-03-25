@@ -252,8 +252,7 @@ class ImageManager {
             const imageBitmap = await createImageBitmap(imageData);
             images.push(imageBitmap);
         }
-        
-        this.renderer.setRenderTarget(null);
+        if( this.renderer) this.renderer.setRenderTarget(null);
         
         // Cleanup object geometries and materials
         objectGroup.traverse((obj) => {
@@ -268,7 +267,7 @@ class ImageManager {
         });
         
         // Remove object group from scene
-        this.scene.remove(objectGroup);
+        if( this.scene ) this.scene.remove(objectGroup);
         
         return images;
     }
