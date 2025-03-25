@@ -51,7 +51,7 @@
         }
     });
     canvas.addEventListener('mousemove', (e) => {
-        if (isDrawing && !currentTool == "pencil") draw(e);
+        if (isDrawing && currentTool == "pencil") draw(e);
     });
     canvas.addEventListener('mouseup', () => isDrawing = false);
     canvas.addEventListener('mouseleave', () => isDrawing = false);

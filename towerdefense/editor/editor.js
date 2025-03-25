@@ -591,6 +591,7 @@
 
         document.getElementById('create-duplicate-object-btn').addEventListener('click', duplicateObject);
 
+        document.getElementById('toggleEditorButton').addEventListener('click', toggleEditor);
 
         // Tab navigation
         elements.tabs.forEach(tab => {
@@ -609,6 +610,20 @@
         document.body.addEventListener('saveTileMap', (event) => {
             document.getElementById('tilemap-value').value = JSON.stringify(event.detail);
         });
+    }
+
+
+    function toggleEditor() {
+        if(elements.editor.offsetParent === null){
+            elements.editor.setAttribute('style', 'display: block');
+            elements.terrainEditorContainer.setAttribute('style', 'height: 50vh');
+            elements.graphicsEditorContainer.setAttribute('style', 'height: 50vh');
+        } else {
+            elements.editor.setAttribute('style', 'display: none');
+            elements.terrainEditorContainer.setAttribute('style', 'height: 100vh');
+            elements.graphicsEditorContainer.setAttribute('style', 'height: 100vh');        
+        }
+
     }
 
     /**
