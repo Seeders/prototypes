@@ -80,11 +80,12 @@ class MapManager {
             {x: 0, y: -1}, // Up
             {x: 1, y: 0},  // Right
             {x: 0, y: 1},  // Down
-            {x: -1, y: 0},  // Left
-            {x: 1, y: 1}, // Up
-            {x: 1, y: -1},  // Right
-            {x: -1, y: 1},  // Down
-            {x: -1, y: -1}  // Left
+            {x: -1, y: 0}  // Left
+            
+            // {x: 1, y: 1}, // Up
+            // {x: 1, y: -1},  // Right
+            // {x: -1, y: 1},  // Down
+            // {x: -1, y: -1}  // Left
         ];
         
         // Main loop

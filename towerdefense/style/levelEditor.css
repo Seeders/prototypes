@@ -81,3 +81,14 @@
 #translate-left { grid-column: 1; grid-row: 1; }
 #translate-right { grid-column: 2; grid-row: 2; }
 #translate-down { grid-column: 1; grid-row: 2; }
+
+#terrain-image-editor { 
+  border: 1px solid black; 
+  image-rendering: pixelated; 
+  width: 960px; 
+  height: 480px; 
+}
+
+#terrainForm .modal-content {
+  max-width: 960px;
+}

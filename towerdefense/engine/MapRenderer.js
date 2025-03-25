@@ -1,6 +1,7 @@
 import { CoordinateTranslator } from "./CoordinateTranslator.js";
+import { TileMap } from "./TileMap.js";
 class MapRenderer {
-    constructor(canvas, environment, imageManager, config) {   
+    constructor(canvas, environment, imageManager, levelName, config, terrainBGColor) {   
         this.config = config;
         this.imageManager = imageManager;
         this.environment = environment;
@@ -9,7 +10,8 @@ class MapRenderer {
         this.hoverCell = { x: -1, y: -1 };
         this.showRange = false;
         this.isMapCached = false; // Flag to track if map needs redrawing
-        
+        this.currentLevel = levelName;
+        this.terrainBGColor = terrainBGColor;
         // Create off-screen canvas for caching
         this.mapCacheCanvas = document.createElement('canvas');
         this.mapCacheCanvas.width = this.config.canvasWidth;
@@ -26,38 +28,79 @@ class MapRenderer {
         this.envCacheCanvasFG.width = this.config.canvasWidth;
         this.envCacheCanvasFG.height = this.config.canvasHeight / 2;
         this.envCacheCtxFG = this.envCacheCanvasFG.getContext('2d');
+
+        this.terrainCanvas = document.createElement('canvas');
+        this.terrainCanvas.width = this.config.canvasWidth;
+        this.terrainCanvas.height = this.config.canvasWidth;
+        this.terrainCtx = this.terrainCanvas.getContext('2d');
+        
+        this.terrainImages = this.imageManager.getImages("levels", this.currentLevel);
+        this.tileMap = new TileMap(this.terrainCanvas, this.config.gridSize, this.terrainImages);
     }
 
+    setLevel(level) {
+        this.currentLevel = level;
+        this.terrainImages = this.imageManager.getImages("levels", level);
+
+    }
+
+    drawTileMap(tileMapData) {
+        let terrainLayers = [];        
+        tileMapData.terrainTypes.forEach((terrainType) => {
+            terrainLayers.push(terrainType.type);
+        });
+        let mapSize = tileMapData.terrainMap.length;
+        let mapByLayer = [];
+        for(let i = 0; i < mapSize; i++) {
+            mapByLayer[i] = [];
+            for( let j = 0; j < mapSize; j++ ) {
+                let tile = tileMapData.terrainMap[i][j];
+                let tileIndex = terrainLayers.indexOf(tile);
+                mapByLayer[i][j] = tileIndex;
+            }
+        }
+
+
+        this.tileMap.load(mapByLayer);
+    }
+    clearMap() {
+        this.ctx.clearRect(0, 0, this.config.canvasWidth, this.config.canvasHeight);
+        this.ctx.fillStyle = this.terrainBGColor;        
+        this.ctx.fillRect(0, 0, this.config.canvasWidth, this.config.canvasHeight);
+    }
     // Call this when map data changes or on initialization
-    cacheMap(tileMap, paths) {
+    cacheMap(tileMapData, tileMap, paths) {
+        this.terrainCtx.clearRect(0, 0, this.config.canvasWidth, this.config.canvasHeight);
            
-        this.translator = new CoordinateTranslator(this.config, tileMap.length);
+        this.translator = new CoordinateTranslator(this.config, tileMapData.length);
         // Clear the cache canvas
         this.mapCacheCtx.clearRect(0, 0, this.config.canvasWidth, this.config.canvasHeight);
         
         // Draw the map onto the cache canvas
-        this.drawMap(tileMap, paths);
+        this.drawTileMap(tileMapData);
+        this.drawPaths(this.mapCacheCtx, paths);
         
         // Mark cache as valid
         this.isMapCached = true;
     }
 
-    renderBG(state, map) {
-        
+    renderBG(state, tileMapData, tileMap, paths, offset = 0) {
+        this.clearMap();
         // Generate cache if not already done
         if (!this.isMapCached) {
-            this.cacheMap(map.tileMap, map.paths);
+            this.cacheMap(tileMapData, tileMap, paths);            
         }        
   
         // Draw cached map image to main canvas
-        this.ctx.drawImage(this.mapCacheCanvas, 0, 0);
-        this.ctx.drawImage(this.envCacheCanvasBG, 0, 0);
+        this.ctx.drawImage(this.terrainCanvas, 0, -this.config.canvasHeight / 4 + offset );
+        //this.ctx.drawImage(this.mapCacheCanvas, 0,  -this.config.canvasHeight / 2);
+        //this.ctx.drawImage(this.envCacheCanvasBG, 0, 0);
     }
     renderFG() {  
         this.ctx.drawImage(this.envCacheCanvasFG, 0, this.config.canvasHeight / 2);
     }    
 
-    drawMap(tileMap, paths) {
+    drawMap(tileMap) {
 
         this.mapCacheCtx.fillStyle = '#4a7c59';
         this.mapCacheCtx.fillRect(0, 0, this.config.canvasWidth, this.config.canvasHeight);
@@ -86,9 +129,15 @@ class MapRenderer {
             }
         }
         
-        this.mapCacheCtx.strokeStyle = '#ffd166';
-        this.mapCacheCtx.lineWidth = 2;
-        this.mapCacheCtx.beginPath();
+       
+        this.drawEnvironment(tileMap.length);
+    }
+
+    drawPaths(ctx, paths) {
+        const tileHeight = this.config.gridSize * 0.5;
+        ctx.strokeStyle = '#ffd166';
+        ctx.lineWidth = 2;
+        ctx.beginPath();
         
         paths.forEach(path => {
             // First point in path
@@ -96,7 +145,7 @@ class MapRenderer {
             const firstIsoX = firstIsoCoords.x;
             const firstIsoY = firstIsoCoords.y + tileHeight / 2; // Add half tile height for center of tile
             
-            this.mapCacheCtx.moveTo(firstIsoX, firstIsoY);
+            ctx.moveTo(firstIsoX, firstIsoY);
             
             // Remaining points in path
             path.forEach(location => {
@@ -104,12 +153,11 @@ class MapRenderer {
                 const isoX = isoCoords.x;
                 const isoY = isoCoords.y + tileHeight / 2; // Add half tile height for center of tile
                 
-                this.mapCacheCtx.lineTo(isoX, isoY);
+                ctx.lineTo(isoX, isoY);
             });
         });
         
-        this.mapCacheCtx.stroke();
-        this.drawEnvironment(tileMap.length);
+        ctx.stroke();
     }
 
     drawEnvironment(size) {

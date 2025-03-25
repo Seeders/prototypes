@@ -1,5 +1,6 @@
 // tileMapModule.js
-import CanvasUtility from "./Utility/CanvasUtility"
+import { CanvasUtility } from "./CanvasUtility.js"
+
 class TileAnalysis {
     constructor() {
       this.heightIndex = 0;
@@ -71,13 +72,11 @@ class TileAnalysis {
 
 class TileMap {
 
-	constructor(assetManager, canvas, tileSize, layers, asset_prefix="") {
-		this.assetManager = assetManager;
+	constructor(canvas, tileSize, layerSpriteSheets) {
 		this.canvas = canvas;
 		this.tileSize = tileSize;
 		this.numColumns = 0;
-		this.layers = layers;
-		this.asset_prefix = asset_prefix;
+		this.layerSpriteSheets = layerSpriteSheets;
 		this.tileMap = [];
 		this.canvasUtility = new CanvasUtility();
 
@@ -89,23 +88,59 @@ class TileMap {
 		// Load all textures
 
 		if(!this.layerTextures || this.layerTextures.length == 0) {
-			this.layerTextures = [];    
-			var textures = [];        
-			this.layers.forEach((layer, index) => {
-				textures[index] = this.extractSpritesFromSheet(
-					this.assetManager.assets[`${this.asset_prefix}${layer}_sheet`], // Assumes sprite sheet is loaded here
-					4, 2 // Number of columns and rows in the sprite sheet
-				);
-			});
+			this.layerTextures = []; 
 	
-			this.layers.forEach((layer, index) => {      
-				const moleculeData = this.buildBaseMolecules(textures[index]);
+			this.layerSpriteSheets.forEach((layerSprites, index) => {      
+				const moleculeData = this.buildBaseMolecules(layerSprites.sprites);
 				this.layerTextures[index] = moleculeData;
 			});
 		}
 
 		let analyzedMap = this.analyzeMap(this.tileMap);
-		this.drawMap(analyzedMap, this.layerTextures, this.canvas);
+		this.drawMap(analyzedMap);
+
+        this.drawIsometric();
+
+    }
+
+    drawIsometric() {
+        let ctx = this.canvas.getContext('2d');
+        // Save the original state
+        ctx.save();
+        
+        // Create an off-screen canvas to hold original drawing
+        const offscreen = document.createElement('canvas');
+        offscreen.width = this.canvas.width;
+        offscreen.height = this.canvas.height;
+        const offCtx = offscreen.getContext('2d');
+        offCtx.drawImage(this.canvas, 0, 0);
+        
+        // Clear the main canvas
+        ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+        
+        // Move to center for rotation
+        ctx.translate(this.canvas.width / 2, this.canvas.height / 2);
+        
+        // Apply isometric transformation
+        const scale = .56;    // Adjust overall size
+        const isoAngle = Math.atan(1 / 2); // ≈ 26.565° (classic isometric angle)
+        const cosA = Math.cos(isoAngle);   // ≈ 0.8944
+        const sinA = Math.sin(isoAngle);   // ≈ 0.4472
+        
+        ctx.transform(
+            cosA * scale,    // scaleX
+            sinA * scale,    // skewY
+            -cosA * scale,   // skewX
+            sinA * scale,    // scaleY
+            0,               // translateX
+            0                // translateY
+        );
+        
+        // Draw the transformed image centered
+        ctx.drawImage(offscreen, -this.canvas.width / 2, -this.canvas.height / 2);
+        
+        // Restore original state
+        ctx.restore();
     }
 
     drawTexture(texture, x, y) {
@@ -642,11 +677,7 @@ class TileMap {
 	}	
 	
 	addVariationImage(imageData, tileAnalysis) {
-		let layer = this.layers[tileAnalysis.heightIndex];
-		let variation = parseInt(Math.random() * 2) + 1
-		const img = this.assetManager.assets[`${this.asset_prefix}${layer}0_${variation}`];
-	
-		// Create an instance of CanvasUtility
+		const img = this.layerSpriteSheets[tileAnalysis.heightIndex];
 	
 		if (img && Math.random() < .25) {
 			this.canvasUtility.setSize(imageData.width, imageData.height);
@@ -764,5 +795,5 @@ class TileMap {
 	}
   }
   
-  export default TileMap;
+  export { TileMap };
   

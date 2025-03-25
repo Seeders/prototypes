@@ -416,7 +416,7 @@
             data = object.render;
         } else if(object.tileMap) {
             eventName = "editTileMap";
-            data = { config: state.objectTypes['configs']['state'],tileMap: object.tileMap, environment: state.objectTypes["environment"] }
+            data = { config: state.objectTypes['configs']['state'], tileMap: object.tileMap, environment: state.objectTypes["environment"] }
         }
         if( data ) {
             // Create a custom event with data

@@ -98,11 +98,68 @@ class ImageManager {
 
     async loadImages(prefix, config) {
         for (const [type, cfg] of Object.entries(config)) {
-            if (!cfg.render || !cfg.render.animations) continue;
-            this.images[`${prefix}_${type}`] = await this.createAnimatedPlaceholder(cfg);
+            if (cfg.render && cfg.render.animations) {
+                this.images[`${prefix}_${type}`] = await this.createAnimatedPlaceholder(cfg);
+            } else if (cfg.tileMap && cfg.tileMap.terrainTypes) {
+                console.log(`${prefix}_${type}`);
+                this.images[`${prefix}_${type}`] = this.createTerrainImages(cfg);
+            }
         }
     }
 
+    createTerrainImages(config) {
+        let terrainTiles = [];
+        config.tileMap.terrainTypes.forEach((terrainType) => {   
+            let tileWidth = 24;
+            let sprites = [];
+            const pixelData = terrainType.image; // Single 2D array with all sprites
+            if(pixelData){
+                // Create 8 sprite canvases from different regions
+                for (let spriteIdx = 0; spriteIdx < 8; spriteIdx++) {
+                    const canvas = document.createElement('canvas');
+                    canvas.width = canvas.height = tileWidth;
+                    let ctx = canvas.getContext('2d');
+                    const imageData = ctx.createImageData(tileWidth, tileWidth);
+                    const data = imageData.data;
+        
+                    // Calculate source coordinates based on sprite index
+                    // Assuming 2 rows × 4 columns layout
+                    const spriteX = (spriteIdx % 4) * tileWidth;  // 0, 24, 48, 72
+                    const spriteY = Math.floor(spriteIdx / 4) * tileWidth;  // 0, 24
+        
+                    // Extract pixels for this sprite
+                    for (let y = 0; y < tileWidth; y++) {
+                        for (let x = 0; x < tileWidth; x++) {
+                            const i = (y * tileWidth + x) * 4;
+                            // Offset into the source image
+                            const sourceY = spriteY + y;
+                            const sourceX = spriteX + x;
+                            const hex = pixelData[sourceY]?.[sourceX] || '#000000';
+                            const r = parseInt(hex.slice(1, 3), 16);
+                            const g = parseInt(hex.slice(3, 5), 16);
+                            const b = parseInt(hex.slice(5, 7), 16);
+                            let alpha = 255;
+                            if(hex=="#ffffff") alpha = 0;
+
+                            data[i] = r;
+                            data[i + 1] = g;
+                            data[i + 2] = b;
+                            data[i + 3] = alpha;
+                        }
+                    }
+        
+                    ctx.putImageData(imageData, 0, 0);
+                    sprites.push(canvas);
+                }
+                
+                terrainTiles.push({ 
+                    type: terrainType.type, 
+                    sprites: sprites 
+                });
+            }
+        });
+        return terrainTiles;
+    }
     async createAnimatedPlaceholder(config) {
         const animations = {};
         for (const [animType, frames] of Object.entries(config.render.animations)) {

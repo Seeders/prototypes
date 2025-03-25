@@ -66,8 +66,12 @@
                         <div>
                             <h3 style="margin-bottom: 20px; color: #e0e0e0; font-size: 18px;">Settings</h3>
                             <div class="form-row">
-                                <label for="iso-frustum">Map Size:</label>
+                                <label for="terrainMapSize">Map Size:</label>
                                 <input type="number" id="terrainMapSize" value="48" step="1" min="1">
+                            </div>
+                            <div class="form-row">
+                                <label for="terrainBGColor">Map Background Color:</label>
+                                <input type="color" id="terrainBGColor" />
                             </div>
                         </div>                   
                         <div id="terrainsPanel">
@@ -236,6 +240,20 @@
                     <input type="color" id="terrainColor">
                 </div>
                 <div class="form-group">
+                    <label for="terrainImage">Sprite Sheet:</label>
+                    <input type="textarea" id="terrainImage">
+                </div>
+                <div class="form-group">
+                    <div class="controls">
+                        <input type="color" id="terrain-image-color-picker" value="#ff0000">
+                        <button id="terrain-pencil-button">Pencil</button>
+                        <button id="terrain-flood-fill-button">Fill</button>
+                        <button id="terrain-clear-image-button">Clear</button>
+                        <button id="terrain-save-image-button">Save</button>
+                    </div>
+                    <canvas id="terrain-image-editor" width="96" height="48"></canvas>
+                </div>
+                <div class="form-group">
                     <label for="terrainBuildable">Buildable:</label>
                     <input type="checkbox" id="terrainBuildable">
                 </div>
@@ -249,6 +267,7 @@
 
     <script src="./editor/graphicsEditor.js" type="module" ></script>
     <script src="./editor/levelEditor.js" type="module" ></script>
+    <script src="./editor/imageEditor.js" type="module" ></script>
     <script src="./editor/editor.js" type="module" ></script>
     
 </body>

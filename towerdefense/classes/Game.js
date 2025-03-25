@@ -51,6 +51,7 @@ class Game extends Engine {
         const { tileMap, paths } = this.mapManager.generateMap(this.gameConfig.levels[this.state.currentLevel].tileMap);
         this.state.tileMap = tileMap;
         this.state.paths = paths;
+        this.state.tileMapData = this.gameConfig.levels[this.state.currentLevel].tileMap;
         
         await super.init(this.gameConfig);
         

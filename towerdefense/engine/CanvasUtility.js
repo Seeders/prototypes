@@ -1,4 +1,4 @@
-export default class CanvasUtility {
+class CanvasUtility {
     constructor() {
         this.canvas = document.createElement('canvas');
         this.ctx = this.canvas.getContext('2d', { willReadFrequently: true });
@@ -124,3 +124,5 @@ export default class CanvasUtility {
         return this.ctx.getImageData(0, 0, this.canvas.width, this.canvas.height);
     }
 }
+
+export {CanvasUtility }

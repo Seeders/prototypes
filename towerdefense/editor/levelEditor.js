@@ -140,7 +140,8 @@ import { CoordinateTranslator } from "../engine/CoordinateTranslator.js";
         document.getElementById('editingType').value = '';
         document.getElementById('terrainType').value = '';
         document.getElementById('terrainColor').value = '#cccccc';
-        document.getElementById('terrainColorText').value = '#cccccc';        
+        document.getElementById('terrainColorText').value = '#cccccc';  
+        document.getElementById('terrainImage').value = '[]';        
         document.getElementById('terrainBuildable').checked = false;         
     }
     
@@ -152,7 +153,16 @@ import { CoordinateTranslator } from "../engine/CoordinateTranslator.js";
         document.getElementById('terrainType').value = terrain.type;
         document.getElementById('terrainColor').value = terrain.color;
         document.getElementById('terrainColorText').value = terrain.color;
+        document.getElementById('terrainImage').value = JSON.stringify(terrain.image);   
         document.getElementById('terrainBuildable').checked = terrain.buildable;
+        // Create a custom event with data
+        const myCustomEvent = new CustomEvent('editTerrainImage', {
+            bubbles: true,
+            cancelable: true
+        });
+
+        // Dispatch the event
+        document.body.dispatchEvent(myCustomEvent);
     }
     
     function hideTerrainForm() {
@@ -163,6 +173,7 @@ import { CoordinateTranslator } from "../engine/CoordinateTranslator.js";
         const editingType = document.getElementById('editingType').value;
         const newType = document.getElementById('terrainType').value.trim();
         const newColor = document.getElementById('terrainColorText').value;
+        const newImage = JSON.parse(document.getElementById('terrainImage').value);
         const newBuildable = document.getElementById('terrainBuildable').checked;
         
         if (!newType) {
@@ -198,7 +209,7 @@ import { CoordinateTranslator } from "../engine/CoordinateTranslator.js";
                 }
                 
                 // Update the terrain type
-                tileMap.terrainTypes[index] = { type: newType, color: newColor, buildable: newBuildable };
+                tileMap.terrainTypes[index] = { type: newType, color: newColor, image: newImage, buildable: newBuildable };
             }
         } else {
             // Adding new terrain
@@ -209,7 +220,7 @@ import { CoordinateTranslator } from "../engine/CoordinateTranslator.js";
             }
             
             // Add new terrain type
-            tileMap.terrainTypes.push({ type: newType, color: newColor, buildable: newBuildable });
+            tileMap.terrainTypes.push({ type: newType, color: newColor, image: newImage, buildable: newBuildable });
         }
         
         // Update UI and CSS
@@ -341,7 +352,10 @@ import { CoordinateTranslator } from "../engine/CoordinateTranslator.js";
             initGridCanvas();
             exportMap();
         });
-        
+        document.getElementById('terrainBGColor').addEventListener('change', function(ev) {
+            tileMap.terrainBGColor = ev.target.value;
+            canvasEl.backgroundColor = ev.target.value;
+        }); 
         // Handle mouseup event (stop dragging)
         document.addEventListener('mouseup', () => {
             isMouseDown = false;
@@ -372,7 +386,11 @@ import { CoordinateTranslator } from "../engine/CoordinateTranslator.js";
             canvasEl.height = event.detail.config.canvasHeight;
             environment = event.detail.environment;
             tileMap = event.detail.tileMap;
-            mapRenderer = new MapRenderer(canvasEl, environment, imageManager, event.detail.config);
+            let bgColor = tileMap.terrainBGColor || "#7aad7b";
+            document.getElementById('terrainBGColor').value = bgColor;
+            canvasEl.backgroundColor = bgColor;
+            imageManager.loadImages("levels", { level: { tileMap: tileMap }});
+            mapRenderer = new MapRenderer(canvasEl, environment, imageManager, 'level', event.detail.config, bgColor);
                 // Update grid size if it's different
             if (tileMap.size && tileMap.size !== mapSize) {
                 mapSize = tileMap.size;
@@ -430,13 +448,14 @@ import { CoordinateTranslator } from "../engine/CoordinateTranslator.js";
     async function initGridCanvas() {
         // Initialize the canvas with our map renderer
         imageManager = new ImageManager(config.imageSize);
+      
+        await imageManager.loadImages("environment", environment);
+        await imageManager.loadImages("levels", { level: { tileMap: tileMap }});
         
         // Initialize the map renderer
         if (!mapRenderer) {
-            mapRenderer = new MapRenderer(canvasEl, environment, imageManager, config);
+            mapRenderer = new MapRenderer(canvasEl, environment, imageManager, 'level', config, tileMap.terrainBGColor);
         }
-      
-        await imageManager.loadImages("environment", environment);
       
         
         // Render the initial map
@@ -474,13 +493,11 @@ import { CoordinateTranslator } from "../engine/CoordinateTranslator.js";
     }
 
     function updateCanvasWithData() {
-        
         mapManager = new MapManager();
         mapRenderer.isMapCached = false;
         let map = mapManager.generateMap(tileMap);
-        
-        mapRenderer.renderBG({}, { tileMap: map.tileMap, paths: [] });
-        mapRenderer.renderFG();
+        mapRenderer.renderBG({}, tileMap, map.tileMap, [], -canvasEl.height / 4);
+        //mapRenderer.renderFG();
       
     }
     

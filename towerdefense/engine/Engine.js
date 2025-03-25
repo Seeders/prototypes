@@ -30,13 +30,15 @@ class Engine {
         this.translator = new CoordinateTranslator(this.gameConfig.configs.state, this.gameConfig.levels[this.state.currentLevel].tileMap.terrainMap.length);
         this.spatialGrid = new SpatialGrid(this.gameConfig.levels[this.state.currentLevel].tileMap.terrainMap.length, this.gameConfig.configs.state.gridSize);
         this.imageManager = new ImageManager(this.gameConfig.configs.state.imageSize);
-        this.mapRenderer = new MapRenderer(this.canvasBuffer, this.gameConfig.environment, this.imageManager, this.gameConfig.configs.state);
-        
+     
+
         // Load all images
         for(let objectType in this.gameConfig) {
             await this.imageManager.loadImages(objectType, this.gameConfig[objectType]);
-        }
+        }   
         
+        this.mapRenderer = new MapRenderer(this.canvasBuffer, this.gameConfig.environment, this.imageManager, this.gameConfig.configs.state.level, this.gameConfig.configs.state, this.gameConfig.levels[this.state.currentLevel].tileMap.terrainBGColor );
+   
         this.imageManager.dispose();
         this.animationFrameId = requestAnimationFrame(() => this.gameLoop());
     }
@@ -82,7 +84,7 @@ class Engine {
         this.ctx.clearRect(0, 0, this.canvasBuffer.width, this.canvasBuffer.height);
         this.finalCtx.clearRect(0, 0, this.canvas.width, this.canvas.height);
 
-        this.mapRenderer.renderBG(this.state, { tileMap: this.state.tileMap, paths: this.state.paths });
+        this.mapRenderer.renderBG(this.state, this.state.tileMapData, this.state.tileMap, this.state.paths, - this.canvas.height / 4);
         
         if (!this.state.isPaused) {
             this.update();
