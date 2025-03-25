@@ -404,6 +404,7 @@ import { CoordinateTranslator } from "../engine/CoordinateTranslator.js";
         document.getElementById('terrainBGColor').addEventListener('change', function(ev) {
             tileMap.terrainBGColor = ev.target.value;
             canvasEl.backgroundColor = ev.target.value;
+            exportMap();
         }); 
         // Handle mouseup event (stop dragging)
         document.addEventListener('mouseup', () => {

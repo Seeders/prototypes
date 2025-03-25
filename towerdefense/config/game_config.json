@@ -1,7 +1,7 @@
 {
   "configs": {
     "state": {
-      "level": "level2",
+      "level": "level1",
       "gridSize": 48,
       "imageSize": 128,
       "canvasWidth": 1536,
@@ -24885,7 +24885,8 @@
             "grass",
             "grass"
           ]
-        ]
+        ],
+        "terrainBGColor": "#73a874"
       }
     },
     "level2": {

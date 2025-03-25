@@ -63,10 +63,10 @@ class MapRenderer {
 
         this.tileMap.load(mapByLayer, isometric);
     }
-    clearMap() {
+    clearMap(tileMapData) {
         this.ctx.clearRect(0, 0, this.config.canvasWidth, this.config.canvasHeight);
-       // this.ctx.fillStyle = '#4a7c59';        
-       // this.ctx.fillRect(0, 0, this.config.canvasWidth, this.config.canvasHeight);
+        this.ctx.fillStyle = tileMapData.terrainBGColor;        
+        this.ctx.fillRect(0, 0, this.config.canvasWidth, this.config.canvasHeight);
     }
     // Call this when map data changes or on initialization
     cacheMap(tileMapData, tileMap, paths, isometric) {
@@ -85,7 +85,7 @@ class MapRenderer {
     }
 
     renderBG(state, tileMapData, tileMap, paths, isometric) {
-        this.clearMap();
+        this.clearMap(tileMapData);
         // Generate cache if not already done
         if (!this.isMapCached) {
             this.cacheMap(tileMapData, tileMap, paths, isometric);            
