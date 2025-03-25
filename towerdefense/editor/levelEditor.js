@@ -542,10 +542,12 @@ import { CoordinateTranslator } from "../engine/CoordinateTranslator.js";
     }
 
     function updateCanvasWithData() {
-        mapManager = new MapManager();
-        mapRenderer.isMapCached = false;
-        let map = mapManager.generateMap(tileMap);
-        mapRenderer.renderBG({}, tileMap, map.tileMap, []);
+        if(tileMap.terrainMap.length > 0){
+            mapManager = new MapManager();
+            mapRenderer.isMapCached = false;
+            let map = mapManager.generateMap(tileMap);
+            mapRenderer.renderBG({}, tileMap, map.tileMap, [], true);
+        }
         //mapRenderer.renderFG();
       
     }

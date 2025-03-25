@@ -84,7 +84,7 @@ class Engine {
         this.ctx.clearRect(0, 0, this.canvasBuffer.width, this.canvasBuffer.height);
         this.finalCtx.clearRect(0, 0, this.canvas.width, this.canvas.height);
 
-        this.mapRenderer.renderBG(this.state, this.state.tileMapData, this.state.tileMap, this.state.paths);
+        this.mapRenderer.renderBG(this.state, this.state.tileMapData, this.state.tileMap, this.state.paths, true);
         
         if (!this.state.isPaused) {
             this.update();

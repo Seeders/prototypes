@@ -52,7 +52,7 @@ class Game extends Engine {
         this.state.tileMap = tileMap;
         this.state.paths = paths;
         this.state.tileMapData = this.gameConfig.levels[this.state.currentLevel].tileMap;
-        
+
         await super.init(this.gameConfig);
         
         this.setupTowerPlacement();
@@ -453,7 +453,20 @@ class Game extends Engine {
             entity.addComponent(Projectile, type, attacker, target, projStats);
         }
         this.addEntity(entity);     
+    }    // Entity creation methods
+    createParticle(type, x, y) {
+
+        let def = this.gameConfig.particles[type];
+        let entity = new Entity(this, x, y);
+        entity.addComponent(Stats, type, stats);
+
+        entity.addRenderer(Renderer, this.imageManager.getImages("particles", type));
+        entity.addComponent(Animator, "particles", type);
+        entity.addComponent(LifeSpan, def.lifeSpan);
+    
+        this.addEntity(entity);     
     }
+
 
     createTower(x, y, type, tracker="towers") {
         let stats = this.gameConfig.towers[type];

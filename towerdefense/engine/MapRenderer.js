@@ -44,7 +44,7 @@ class MapRenderer {
 
     }
 
-    drawTileMap(tileMapData) {
+    drawTileMap(tileMapData, isometric) {
         let terrainLayers = [];        
         tileMapData.terrainTypes.forEach((terrainType) => {
             terrainLayers.push(terrainType.type);
@@ -61,15 +61,15 @@ class MapRenderer {
         }
 
 
-        this.tileMap.load(mapByLayer);
+        this.tileMap.load(mapByLayer, isometric);
     }
     clearMap() {
         this.ctx.clearRect(0, 0, this.config.canvasWidth, this.config.canvasHeight);
-        this.ctx.fillStyle = this.terrainBGColor;        
-        this.ctx.fillRect(0, 0, this.config.canvasWidth, this.config.canvasHeight);
+       // this.ctx.fillStyle = '#4a7c59';        
+       // this.ctx.fillRect(0, 0, this.config.canvasWidth, this.config.canvasHeight);
     }
     // Call this when map data changes or on initialization
-    cacheMap(tileMapData, tileMap, paths) {
+    cacheMap(tileMapData, tileMap, paths, isometric) {
         this.terrainCtx.clearRect(0, 0, this.config.canvasWidth, this.config.canvasHeight);
            
         this.translator = new CoordinateTranslator(this.config, tileMapData.length);
@@ -77,22 +77,23 @@ class MapRenderer {
         this.mapCacheCtx.clearRect(0, 0, this.config.canvasWidth, this.config.canvasHeight);
         
         // Draw the map onto the cache canvas
-        this.drawTileMap(tileMapData);
+        this.drawTileMap(tileMapData, isometric);
         this.drawPaths(this.mapCacheCtx, paths);
         
         // Mark cache as valid
         this.isMapCached = true;
     }
 
-    renderBG(state, tileMapData, tileMap, paths) {
+    renderBG(state, tileMapData, tileMap, paths, isometric) {
         this.clearMap();
         // Generate cache if not already done
         if (!this.isMapCached) {
-            this.cacheMap(tileMapData, tileMap, paths);            
+            this.cacheMap(tileMapData, tileMap, paths, isometric);            
         }        
   
         // Draw cached map image to main canvas
         this.ctx.drawImage(this.terrainCanvas, 0, -tileMap.length * this.config.gridSize / 4 );
+       //this.ctx.drawImage(this.terrainCanvas, 0, 0);
         //this.ctx.drawImage(this.mapCacheCanvas, 0,  -this.config.canvasHeight / 2);
         //this.ctx.drawImage(this.envCacheCanvasBG, 0, 0);
     }

@@ -13,11 +13,11 @@ class Projectile extends Component {
         this.stats = stats;
         this.piercedEnemies = [];
         this.ownerStats = this.owner.getComponent("stats").stats;
-        
+        this.distanceTraveled = 0;
+        this.distanceToSpawnParticle = 24;
     }
 
     update() {
-    
         // Remove if target is gone
         if (!this.target || this.target.destroyed) {
             this.parent.destroy();
@@ -133,11 +133,26 @@ class Projectile extends Component {
             this.parent.destroy();
         }
         
+
+
         // Move projectile
         let dist = Math.sqrt(distSq);
         const speed = this.stats.speed;
         this.parent.position.x += (dx / dist) * speed;
         this.parent.position.y += (dy / dist) * speed;
+
+        const tDx = this.parent.lastPosition.x - this.parent.position.x;
+        const tDy = this.parent.lastPosition.y - this.parent.position.y;
+        const tdistSq = tDx * tDx + tDy * tDy;
+        let tDist = Math.sqrt(tdistSq);
+        
+
+        this.distanceTraveled += tDist;
+        if( this.def.particle && this.distanceTraveled > this.distanceToSpawnParticle ) {
+            this.game.createParticle( this.def.particle, this.parent.position.x, this.parent.position.y);
+            this.distanceTraveled = 0;
+            this.distanceToSpawnParticle += Math.random()*3;
+        }
     }
 }
 

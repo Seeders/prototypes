@@ -82,7 +82,7 @@ class TileMap {
 
 	}
 
-    load(map){
+    load(map, isometric){
 		this.tileMap = map;
 		this.numColumns = this.tileMap.length;
 		// Load all textures
@@ -98,8 +98,9 @@ class TileMap {
 
 		let analyzedMap = this.analyzeMap(this.tileMap);
 		this.drawMap(analyzedMap);
-
-        this.drawIsometric();
+        if(isometric){
+            this.drawIsometric();
+        }
 
     }
 
