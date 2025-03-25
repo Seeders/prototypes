@@ -121,3 +121,8 @@
   width: 960px;
   height: 480px;
 }
+
+#terrain-image-display {
+  width: 960px;
+  image-rendering: pixelated;
+}
