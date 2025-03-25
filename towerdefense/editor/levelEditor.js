@@ -37,8 +37,7 @@ import { CoordinateTranslator } from "../engine/CoordinateTranslator.js";
     async function init() {
         setupTerrainTypesUI();
         setupEventListeners();
-        updateTerrainStyles();
-        await initGridCanvas();        
+        updateTerrainStyles();   
         // Apply initial terrain CSS
     }
     
