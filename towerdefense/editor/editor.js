@@ -877,7 +877,13 @@
                 
                 // Render initial UI
                 renderObjectList();
-                updateSidebarButtons();                    
+                updateSidebarButtons();            
+                
+                if( config.configs.editor ) {
+                    //document.getElementById("editor_theme").setAttribute("href",`./style/editor_theme_${config.configs.editor.theme}.css`);
+                    let styleTag = document.getElementById("theme_style");
+                    styleTag.innerHTML = config.themes[config.configs.editor.theme].css;
+                }
                 
                 if (Object.keys(state.objectTypes[state.selectedType]).length > 0) {
                     selectObject(Object.keys(state.objectTypes[state.selectedType])[0]);
