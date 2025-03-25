@@ -84,7 +84,7 @@ class MapRenderer {
         this.isMapCached = true;
     }
 
-    renderBG(state, tileMapData, tileMap, paths, offset = 0) {
+    renderBG(state, tileMapData, tileMap, paths) {
         this.clearMap();
         // Generate cache if not already done
         if (!this.isMapCached) {
@@ -92,7 +92,7 @@ class MapRenderer {
         }        
   
         // Draw cached map image to main canvas
-        this.ctx.drawImage(this.terrainCanvas, 0, -this.config.canvasHeight / 4 + offset );
+        this.ctx.drawImage(this.terrainCanvas, 0, -tileMap.length * this.config.gridSize / 4 );
         //this.ctx.drawImage(this.mapCacheCanvas, 0,  -this.config.canvasHeight / 2);
         //this.ctx.drawImage(this.envCacheCanvasBG, 0, 0);
     }

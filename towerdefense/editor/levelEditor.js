@@ -17,22 +17,23 @@ import { CoordinateTranslator } from "../engine/CoordinateTranslator.js";
     let tileMap = {
         size: 16,
         terrainTypes : [
-            { type: "start", color: "#ffff00" },
-            { type: "end", color: "#ff0000" },
-            { type: "path", color: "#eeae9e" },
-            { type: "grass", color: "#8bc34a" },
-            { type: "water", color: "#64b5f6" },
-            { type: "rock", color: "#9e9e9e" }
+            { type: "start", color: "#ffff00", image: [] },
+            { type: "end", color: "#ff0000", image: [] },
+            { type: "path", color: "#eeae9e", image: [] },
+            { type: "grass", color: "#8bc34a", image: [] },
+            { type: "water", color: "#64b5f6", image: [] },
+            { type: "rock", color: "#9e9e9e", image: [] }
         ],
         terrainMap: []
     };    
     let environment = [];
+    let terrainTypesContainer;
     const canvasEl = document.getElementById('grid');
     let imageManager = new ImageManager(config.imageSize);
     let mapRenderer = null;
     let mapManager = null;
     let translator = new CoordinateTranslator(config, tileMap.size);
-        
+    let draggedItem = null;    
     async function init() {
         setupTerrainTypesUI();
         setupEventListeners();
@@ -53,13 +54,20 @@ import { CoordinateTranslator } from "../engine/CoordinateTranslator.js";
         }
         
         // Create new terrain types container
-        const terrainTypesContainer = document.createElement('div');
+        terrainTypesContainer = document.createElement('div');
         terrainTypesContainer.className = 'terrain-types-container';
         
         // Add terrain options from terrainTypes array
         tileMap.terrainTypes.forEach(terrain => {
             const terrainItem = document.createElement('div');
             terrainItem.className = 'terrain-item';
+            terrainItem.draggable = true; // Make the item draggable
+            
+            // Add drag event listeners
+            terrainItem.addEventListener('dragstart', handleDragStart);
+            terrainItem.addEventListener('dragover', handleDragOver);
+            terrainItem.addEventListener('drop', handleDrop);
+            terrainItem.addEventListener('dragend', handleDragEnd);
             
             // Color option
             const option = document.createElement('div');
@@ -132,6 +140,47 @@ import { CoordinateTranslator } from "../engine/CoordinateTranslator.js";
         document.getElementById('saveTerrainBtn').addEventListener('click', saveTerrainType);
         document.getElementById('cancelTerrainBtn').addEventListener('click', hideTerrainForm);
     }
+    function handleDragStart(e) {
+        draggedItem = this;
+        e.dataTransfer.effectAllowed = 'move';
+        e.dataTransfer.setData('text/html', this.innerHTML);
+        this.style.opacity = '0.4';
+    }
+    
+    function handleDragOver(e) {
+        e.preventDefault();
+        e.dataTransfer.dropEffect = 'move';
+        return false;
+    }
+    
+    function handleDrop(e) {
+        e.preventDefault();
+        if (draggedItem !== this) {
+            // Swap the positions in the DOM
+            const allItems = Array.from(terrainTypesContainer.querySelectorAll('.terrain-item'));
+            const draggedIndex = allItems.indexOf(draggedItem);
+            const dropIndex = allItems.indexOf(this);
+    
+            // Update the terrainTypes array
+            const temp = tileMap.terrainTypes[draggedIndex];
+            tileMap.terrainTypes[draggedIndex] = tileMap.terrainTypes[dropIndex];
+            tileMap.terrainTypes[dropIndex] = temp;
+    
+            // Update the DOM
+            if (draggedIndex < dropIndex) {
+                this.parentNode.insertBefore(draggedItem, this.nextSibling);
+            } else {
+                this.parentNode.insertBefore(draggedItem, this);
+            }
+            exportMap() 
+        }
+        return false;
+    }
+    
+    function handleDragEnd(e) {
+        this.style.opacity = '1';
+        draggedItem = null;
+    }
     
     function showAddTerrainForm() {
         const form = document.getElementById('terrainForm');
@@ -153,7 +202,7 @@ import { CoordinateTranslator } from "../engine/CoordinateTranslator.js";
         document.getElementById('terrainType').value = terrain.type;
         document.getElementById('terrainColor').value = terrain.color;
         document.getElementById('terrainColorText').value = terrain.color;
-        document.getElementById('terrainImage').value = JSON.stringify(terrain.image);   
+        document.getElementById('terrainImage').value = JSON.stringify(terrain.image || []);   
         document.getElementById('terrainBuildable').checked = terrain.buildable;
         // Create a custom event with data
         const myCustomEvent = new CustomEvent('editTerrainImage', {
@@ -496,7 +545,7 @@ import { CoordinateTranslator } from "../engine/CoordinateTranslator.js";
         mapManager = new MapManager();
         mapRenderer.isMapCached = false;
         let map = mapManager.generateMap(tileMap);
-        mapRenderer.renderBG({}, tileMap, map.tileMap, [], -canvasEl.height / 4);
+        mapRenderer.renderBG({}, tileMap, map.tileMap, []);
         //mapRenderer.renderFG();
       
     }

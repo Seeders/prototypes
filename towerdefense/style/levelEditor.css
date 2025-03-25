@@ -92,3 +92,14 @@
 #terrainForm .modal-content {
   max-width: 960px;
 }
+
+.terrain-item {
+  /* Your existing styles */
+  cursor: move; /* Shows it's draggable */
+  user-select: none; /* Prevents text selection while dragging */
+}
+
+.terrain-item:hover {
+  /* Optional: Add a hover effect to indicate draggability */
+  opacity: 0.8;
+}
