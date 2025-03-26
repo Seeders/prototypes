@@ -18,34 +18,6 @@
       "defaultPrompt": "I am developing a 2D tower defense game featuring a simple 3d art style.  Generate a new ${type} object based on the following context.    Please provide ONLY a valid JSON object with keys MATCHING EXACTLY to the context above. It absolutely MUST have an appropriate 'id' field. Ensure all existing key types are maintained. Do not wrap the json object with any other text."
     }
   },
-  "entities": {
-    "game": {
-      "title": "Game",
-      "components": [
-        "game"
-      ]
-    },
-    "waveManager": {
-      "title": "WaveManager",
-      "components": [
-        "waveManager"
-      ]
-    },
-    "upgradeManager": {
-      "title": "Upgrade Manager",
-      "script": ""
-    }
-  },
-  "components": {
-    "game": {
-      "title": "Game",
-      "script": "constructor(game, parent) {\n   super(game, parent);\n   this.game.addEntity(this.game.createEntityFromConfig(0, 0, 'waveManager', (enemyType, pathIndex) => this.game.createEnemy(enemyType, pathIndex)));\n}"
-    },
-    "waveManager": {
-      "title": "Wave Manager",
-      "script": "constructor(game, parent,  createEnemyCallback) {                \n        super(game, parent)\n        this.createEnemy = createEnemyCallback;\n        \n        this.resetWaveState();\n    }\n\n    resetWaveState() {\n        this.game.state.waveSets = this.game.gameConfig.levels[this.game.state.currentLevel].wavesets;\n        this.game.state.currentWaveIds = [];\n        this.game.state.currentWaveEnemies = [];\n        this.game.state.enemiesSpawned = [];\n        this.game.state.spawnTimers = []; // Array for individual spawn timers\n        this.game.state.spawnRate = 1;    // Base spawn rate (can be modified per waveset if needed)\n        this.game.state.waveTimer = 0;\n        this.game.state.startDelayTimer = 0;\n        this.game.state.round = 0;\n    }\n\n    update() {\n        // Skip wave updates if game is over or in certain states\n        if (this.game.state.gameOver || this.game.state.victory || this.game.state.isLevelingUp) return;\n\n        this.game.state.startDelayTimer += this.game.deltaTime;\n\n        // Process all wavesets in parallel\n        for (let i = 0; i < this.game.state.currentWaveIds.length; i++) {\n            let waveSet = this.game.gameConfig.wavesets[this.game.state.waveSets[i]];\n            \n            // Skip if still in start delay\n            if (waveSet.startDelay && this.game.state.startDelayTimer < waveSet.startDelay) continue;\n            \n            // Update individual spawn timer for this waveset\n            this.game.state.spawnTimers[i] += this.game.deltaTime;\n\n            // If this waveset still has enemies to spawn\n            if (this.game.state.enemiesSpawned[i] < this.game.state.currentWaveEnemies[i].length) {\n                if (this.game.state.spawnTimers[i] >= this.game.state.spawnRate) {\n                    // Create enemy from the appropriate waveset using the enemy type and start point index\n                    const enemyType = this.game.state.currentWaveEnemies[i][this.game.state.enemiesSpawned[i]];\n                    const startPointIndex = i;\n                    \n                    this.createEnemy(enemyType, startPointIndex);\n                    this.game.state.enemiesSpawned[i]++;\n                    this.game.state.spawnTimers[i] = 0; // Reset this waveset's timer\n                    \n                    // Calculate total progress across all wavesets\n                    const totalEnemies = this.game.state.currentWaveEnemies.reduce((sum, wave) => sum + wave.length, 0);\n                    const totalSpawned = this.game.state.enemiesSpawned.reduce((sum, count) => sum + count, 0);\n                    \n                    // Update wave progress bar\n                    document.getElementById('waveProgress').style.width = (totalSpawned / totalEnemies * 100) + '%';\n                }\n            }\n        }\n        \n        // Check if all wavesets have completed spawning\n        const allWavesetsComplete = this.game.state.enemiesSpawned.every((spawned, index) => \n            spawned >= this.game.state.currentWaveEnemies[index].length\n        );\n        \n        // Move to next wave if all enemies defeated and all wavesets have completed spawning\n        if (this.game.state.enemies.length === 0 && allWavesetsComplete) {\n            this.game.state.waveTimer++;\n            \n            if (this.game.state.waveTimer >= this.game.state.waveDelay) {\n                this.startNextWave();\n            }\n        }\n    }\n\n    startNextWave() {\n        document.getElementById('waveDisplay').textContent = this.game.state.round + 1;\n        \n        this.game.state.currentWaveIds = [];\n        this.game.state.currentWaveEnemies = [];\n        this.game.state.enemiesSpawned = [];\n        this.game.state.spawnTimers = [];\n        \n        let totalWaves = 0;\n        for (let i = 0; i < this.game.state.waveSets.length; i++) {\n            const waveSetId = this.game.state.waveSets[i];\n            const waveSet = this.game.gameConfig.wavesets[waveSetId];\n            \n            // Check if this waveset has enough waves for the current round\n            if (this.game.state.round < waveSet.waves.length) {\n                const currentWaveId = waveSet.waves[this.game.state.round];\n                \n                // Add this wave to the current active waves\n                this.game.state.currentWaveIds.push(currentWaveId);\n                this.game.state.currentWaveEnemies.push(this.game.gameConfig.waves[currentWaveId].enemies);\n                this.game.state.enemiesSpawned.push(0);\n                this.game.state.spawnTimers.push(0); // Initialize spawn timer for this waveset\n            }\n            \n            totalWaves = Math.max(totalWaves, waveSet.waves.length);\n        }\n        \n        // If all wavesets are exhausted, end the game\n        if (this.game.state.currentWaveIds.length === 0) {\n            this.game.state.victory = true;\n            this.game.state.isPaused = true;\n            document.getElementById('victoryMenu').style.display = 'block';\n            document.getElementById('overlay').style.display = 'block';\n            return;\n        }\n        \n        this.game.state.maxWaves = totalWaves;\n        this.game.state.spawnRate = 5;\n        this.game.state.waveTimer = 0;\n        this.game.state.startDelayTimer = 0;\n        \n        // Reset wave progress bar\n        document.getElementById('waveProgress').style.width = '0%';\n        this.game.state.round++;\n    }"
-    }
-  },
   "projectiles": {
     "plasmaBolt": {
       "damageType": "physical",
@@ -23260,6 +23232,399 @@
           ]
         }
       }
+    },
+    "spike_ball": {
+      "hp": 50,
+      "speed": 0.5,
+      "value": 10,
+      "essence": 15,
+      "render": {
+        "animations": {
+          "idle": [
+            {
+              "shapes": [
+                {
+                  "type": "sphere",
+                  "size": 10,
+                  "color": "#3c1008",
+                  "x": 0,
+                  "y": 0,
+                  "z": 0,
+                  "rotationX": 0,
+                  "rotationY": 0,
+                  "rotationZ": 0,
+                  "name": "core"
+                },
+                {
+                  "type": "cylinder",
+                  "size": 2,
+                  "height": 4,
+                  "color": "#663300",
+                  "x": 0,
+                  "y": 0,
+                  "z": -5,
+                  "rotationX": 90,
+                  "rotationY": 0,
+                  "rotationZ": 0,
+                  "name": "spike-1"
+                },
+                {
+                  "type": "cylinder",
+                  "size": 2,
+                  "height": 4,
+                  "color": "#663300",
+                  "x": 8.66,
+                  "y": 0,
+                  "z": -5,
+                  "rotationX": 90,
+                  "rotationY": 60,
+                  "rotationZ": 0,
+                  "name": "spike-2"
+                },
+                {
+                  "type": "cylinder",
+                  "size": 2,
+                  "height": 4,
+                  "color": "#663300",
+                  "x": 8.66,
+                  "y": 0,
+                  "z": 5,
+                  "rotationX": 90,
+                  "rotationY": 120,
+                  "rotationZ": 0,
+                  "name": "spike-3"
+                },
+                {
+                  "type": "cylinder",
+                  "size": 2,
+                  "height": 4,
+                  "color": "#663300",
+                  "x": -8.66,
+                  "y": 0,
+                  "z": -5,
+                  "rotationX": 90,
+                  "rotationY": 180,
+                  "rotationZ": 0,
+                  "name": "spike-4"
+                },
+                {
+                  "type": "cylinder",
+                  "size": 2,
+                  "height": 4,
+                  "color": "#663300",
+                  "x": -8.66,
+                  "y": 0,
+                  "z": 5,
+                  "rotationX": 90,
+                  "rotationY": 240,
+                  "rotationZ": 0,
+                  "name": "spike-5"
+                },
+                {
+                  "type": "cylinder",
+                  "size": 2,
+                  "height": 4,
+                  "color": "#663300",
+                  "x": 0,
+                  "y": 0,
+                  "z": 5,
+                  "rotationX": 90,
+                  "rotationY": 300,
+                  "rotationZ": 0,
+                  "name": "spike-6"
+                }
+              ]
+            },
+            {
+              "shapes": [
+                {
+                  "type": "sphere",
+                  "size": 10,
+                  "color": "#3c1008",
+                  "x": 0,
+                  "y": 0.5,
+                  "z": 0,
+                  "rotationX": 0,
+                  "rotationY": 0,
+                  "rotationZ": 0,
+                  "name": "core"
+                },
+                {
+                  "type": "cylinder",
+                  "size": 2,
+                  "height": 4,
+                  "color": "#663300",
+                  "x": 0,
+                  "y": 0.5,
+                  "z": -5,
+                  "rotationX": 90,
+                  "rotationY": 0,
+                  "rotationZ": 0,
+                  "name": "spike-1"
+                },
+                {
+                  "type": "cylinder",
+                  "size": 2,
+                  "height": 4,
+                  "color": "#663300",
+                  "x": 8.66,
+                  "y": 0.5,
+                  "z": -5,
+                  "rotationX": 90,
+                  "rotationY": 60,
+                  "rotationZ": 0,
+                  "name": "spike-2"
+                },
+                {
+                  "type": "cylinder",
+                  "size": 2,
+                  "height": 4,
+                  "color": "#663300",
+                  "x": 8.66,
+                  "y": 0.5,
+                  "z": 5,
+                  "rotationX": 90,
+                  "rotationY": 120,
+                  "rotationZ": 0,
+                  "name": "spike-3"
+                },
+                {
+                  "type": "cylinder",
+                  "size": 2,
+                  "height": 4,
+                  "color": "#663300",
+                  "x": -8.66,
+                  "y": 0.5,
+                  "z": -5,
+                  "rotationX": 90,
+                  "rotationY": 180,
+                  "rotationZ": 0,
+                  "name": "spike-4"
+                },
+                {
+                  "type": "cylinder",
+                  "size": 2,
+                  "height": 4,
+                  "color": "#663300",
+                  "x": -8.66,
+                  "y": 0.5,
+                  "z": 5,
+                  "rotationX": 90,
+                  "rotationY": 240,
+                  "rotationZ": 0,
+                  "name": "spike-5"
+                },
+                {
+                  "type": "cylinder",
+                  "size": 2,
+                  "height": 4,
+                  "color": "#663300",
+                  "x": 0,
+                  "y": 0.5,
+                  "z": 5,
+                  "rotationX": 90,
+                  "rotationY": 300,
+                  "rotationZ": 0,
+                  "name": "spike-6"
+                }
+              ]
+            }
+          ],
+          "walk": [
+            {
+              "shapes": [
+                {
+                  "type": "sphere",
+                  "size": 10,
+                  "color": "#3c1008",
+                  "x": 0,
+                  "y": 0,
+                  "z": 0,
+                  "rotationX": 0,
+                  "rotationY": 0,
+                  "rotationZ": 0,
+                  "name": "core"
+                },
+                {
+                  "type": "cylinder",
+                  "size": 2,
+                  "height": 4,
+                  "color": "#663300",
+                  "x": 0,
+                  "y": 0,
+                  "z": -5,
+                  "rotationX": 90,
+                  "rotationY": 0,
+                  "rotationZ": 10,
+                  "name": "spike-1"
+                },
+                {
+                  "type": "cylinder",
+                  "size": 2,
+                  "height": 4,
+                  "color": "#663300",
+                  "x": 8.66,
+                  "y": 0,
+                  "z": -5,
+                  "rotationX": 90,
+                  "rotationY": 60,
+                  "rotationZ": 10,
+                  "name": "spike-2"
+                },
+                {
+                  "type": "cylinder",
+                  "size": 2,
+                  "height": 4,
+                  "color": "#663300",
+                  "x": 8.66,
+                  "y": 0,
+                  "z": 5,
+                  "rotationX": 90,
+                  "rotationY": 120,
+                  "rotationZ": 10,
+                  "name": "spike-3"
+                },
+                {
+                  "type": "cylinder",
+                  "size": 2,
+                  "height": 4,
+                  "color": "#663300",
+                  "x": -8.66,
+                  "y": 0,
+                  "z": -5,
+                  "rotationX": 90,
+                  "rotationY": 180,
+                  "rotationZ": 10,
+                  "name": "spike-4"
+                },
+                {
+                  "type": "cylinder",
+                  "size": 2,
+                  "height": 4,
+                  "color": "#663300",
+                  "x": -8.66,
+                  "y": 0,
+                  "z": 5,
+                  "rotationX": 90,
+                  "rotationY": 240,
+                  "rotationZ": 10,
+                  "name": "spike-5"
+                },
+                {
+                  "type": "cylinder",
+                  "size": 2,
+                  "height": 4,
+                  "color": "#663300",
+                  "x": 0,
+                  "y": 0,
+                  "z": 5,
+                  "rotationX": 90,
+                  "rotationY": 300,
+                  "rotationZ": 10,
+                  "name": "spike-6"
+                }
+              ]
+            },
+            {
+              "shapes": [
+                {
+                  "type": "sphere",
+                  "size": 10,
+                  "color": "#3c1008",
+                  "x": 0,
+                  "y": 0.5,
+                  "z": 0,
+                  "rotationX": 0,
+                  "rotationY": 0,
+                  "rotationZ": 0,
+                  "name": "core"
+                },
+                {
+                  "type": "cylinder",
+                  "size": 2,
+                  "height": 4,
+                  "color": "#663300",
+                  "x": 0,
+                  "y": 0.5,
+                  "z": -5,
+                  "rotationX": 90,
+                  "rotationY": 0,
+                  "rotationZ": -10,
+                  "name": "spike-1"
+                },
+                {
+                  "type": "cylinder",
+                  "size": 2,
+                  "height": 4,
+                  "color": "#663300",
+                  "x": 8.66,
+                  "y": 0.5,
+                  "z": -5,
+                  "rotationX": 90,
+                  "rotationY": 60,
+                  "rotationZ": -10,
+                  "name": "spike-2"
+                },
+                {
+                  "type": "cylinder",
+                  "size": 2,
+                  "height": 4,
+                  "color": "#663300",
+                  "x": 8.66,
+                  "y": 0.5,
+                  "z": 5,
+                  "rotationX": 90,
+                  "rotationY": 120,
+                  "rotationZ": -10,
+                  "name": "spike-3"
+                },
+                {
+                  "type": "cylinder",
+                  "size": 2,
+                  "height": 4,
+                  "color": "#663300",
+                  "x": -8.66,
+                  "y": 0.5,
+                  "z": -5,
+                  "rotationX": 90,
+                  "rotationY": 180,
+                  "rotationZ": -10,
+                  "name": "spike-4"
+                },
+                {
+                  "type": "cylinder",
+                  "size": 2,
+                  "height": 4,
+                  "color": "#663300",
+                  "x": -8.66,
+                  "y": 0.5,
+                  "z": 5,
+                  "rotationX": 90,
+                  "rotationY": 240,
+                  "rotationZ": -10,
+                  "name": "spike-5"
+                },
+                {
+                  "type": "cylinder",
+                  "size": 2,
+                  "height": 4,
+                  "color": "#663300",
+                  "x": 0,
+                  "y": 0.5,
+                  "z": 5,
+                  "rotationX": 90,
+                  "rotationY": 300,
+                  "rotationZ": -10,
+                  "name": "spike-6"
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "title": "spike_ball",
+      "description": "A rolling spike ball monster with spinning spikes",
+      "id": "spike_ball"
     }
   },
   "environment": {
@@ -26593,16 +26958,6 @@
       "id": "configs",
       "name": "Configs",
       "singular": "Config"
-    },
-    {
-      "id": "entities",
-      "name": "Entities",
-      "singular": "Entity"
-    },
-    {
-      "id": "components",
-      "name": "Components",
-      "singular": "Component"
     },
     {
       "id": "towers",
