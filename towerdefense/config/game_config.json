@@ -1,6 +1,6 @@
 {
   "configs": {
-    "state": {
+    "game": {
       "level": "level1",
       "gridSize": 48,
       "imageSize": 128,
@@ -9,7 +9,7 @@
     },
     "editor": {
       "title": "Editor Config",
-      "theme": "videogame"
+      "theme": "medieval"
     },
     "ai": {
       "title": "AI",
@@ -3604,7 +3604,7 @@
       "range": 4,
       "damage": 8,
       "attackSpeed": 40,
-      "projectile": "",
+      "projectile": "plasmaBolt",
       "critChance": 0.05,
       "critMultiplier": 2,
       "splashRadius": 2,
@@ -3615,39 +3615,46 @@
               "shapes": [
                 {
                   "type": "box",
-                  "width": 1.5,
-                  "height": 3,
-                  "color": "#4a697d"
+                  "width": 15,
+                  "height": 30,
+                  "color": "#738884",
+                  "x": 2.25,
+                  "y": 6.75,
+                  "z": 0
                 },
                 {
                   "type": "box",
-                  "x": -0.25,
-                  "y": 1.5,
-                  "width": 1,
-                  "height": 1.5,
-                  "color": "#4a697d"
+                  "x": 0.2,
+                  "y": 21.75,
+                  "width": 10,
+                  "height": 15,
+                  "color": "#73520d",
+                  "z": 0
                 },
                 {
                   "type": "box",
-                  "x": -0.75,
-                  "y": 3,
-                  "width": 2.5,
-                  "height": 0.5,
-                  "color": "#4a697d"
+                  "x": -5.25,
+                  "y": 36.75,
+                  "width": 25,
+                  "height": 5,
+                  "color": "#4a697d",
+                  "z": 0
                 },
                 {
                   "type": "circle",
                   "radius": 0.5,
-                  "x": -1.25,
-                  "y": 3.5,
-                  "color": "#e6e6fa"
+                  "x": -10.25,
+                  "y": 41.75,
+                  "color": "#e6e6fa",
+                  "z": 0
                 },
                 {
                   "type": "circle",
                   "radius": 0.5,
-                  "x": 0.75,
-                  "y": 3.5,
-                  "color": "#e6e6fa"
+                  "x": 9.75,
+                  "y": 41.75,
+                  "color": "#e6e6fa",
+                  "z": 0
                 },
                 {
                   "type": "line",
@@ -3661,8 +3668,11 @@
                       "y": 4
                     }
                   ],
-                  "width": 0.2,
-                  "color": "#87CEEB"
+                  "width": 2,
+                  "color": "#87CEEB",
+                  "x": 2.25,
+                  "y": 6.75,
+                  "z": 0
                 }
               ]
             }

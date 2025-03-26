@@ -250,7 +250,34 @@ class GameEditor {
         valueInput.className = 'property-value';
         
         propertyItem.appendChild(valueInput);
-        if (matchingTypePlural || matchingTypeSingular) {
+        if( matchingTypeSingular ) {
+            // Create a container for the reference selector and value display
+            const refContainer = document.createElement('div');
+            refContainer.className = 'ref-container';
+
+            // Create a select element for choosing objects
+            const selectElement = document.createElement('select');
+            selectElement.className = 'ref-select property-value';
+            valueInput.remove();
+
+            // Determine which type we're referencing
+            const typeId = matchingTypePlural ? matchingTypePlural.id : matchingTypeSingular.id;
+
+            // Add options based on available objects of that type
+            selectElement.innerHTML = `<option value="">-- Select ${matchingTypePlural ? matchingTypePlural.singular : matchingTypeSingular.singular} --</option>`;
+
+            Object.keys(this.state.objectTypes[typeId] || {}).forEach(objId => {
+                const option = document.createElement('option');
+                option.value = objId;
+                option.textContent = this.state.objectTypes[typeId][objId].title || objId;
+                selectElement.appendChild(option);
+            });
+            selectElement.value = value;
+            // Add the select to the container
+            refContainer.appendChild(selectElement);            
+
+            propertyItem.appendChild(refContainer);
+        } else if (matchingTypePlural) {
             // Create a container for the reference selector and value display
             const refContainer = document.createElement('div');
             refContainer.className = 'ref-container';

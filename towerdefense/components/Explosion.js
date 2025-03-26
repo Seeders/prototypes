@@ -3,7 +3,7 @@ import { Component } from "../engine/Component.js";
 class Explosion extends Component {
     constructor(game, parent, radius) {
         super(game, parent);
-        this.maxRadius = radius * this.game.gameConfig.configs.state.gridSize;
+        this.maxRadius = radius * this.game.gameConfig.configs.game.gridSize;
         this.currentRadius = 0;
         this.alpha = 1;
     }

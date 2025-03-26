@@ -2,7 +2,7 @@ import { Component } from "../engine/Component.js";
 class FollowPath extends Component {
     constructor(game, parent, pathIndex = 0) {
         super(game, parent);
-        this.gridSize = this.game.gameConfig.configs.state.gridSize;
+        this.gridSize = this.game.gameConfig.configs.game.gridSize;
         this.pathIndex = pathIndex;
         this.indexInPath = 0;
         this.x = this.game.state.paths[this.pathIndex][this.indexInPath].x;
@@ -12,7 +12,7 @@ class FollowPath extends Component {
 
     update() {
         this.stats = this.getComponent('stats').stats;
-        this.gridSize = this.game.gameConfig.configs.state.gridSize;
+        this.gridSize = this.game.gameConfig.configs.game.gridSize;
         if (this.indexInPath < this.game.state.paths[this.pathIndex].length - 1) {
             const target = this.game.state.paths[this.pathIndex][this.indexInPath + 1];
             const dx = target.x * this.gridSize + (this.gridSize / 2) - this.parent.position.x;

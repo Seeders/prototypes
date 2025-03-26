@@ -22,14 +22,14 @@ class Engine {
     async init(config) {
         this.gameConfig = config;
         
-        this.canvasBuffer.setAttribute('width', this.gameConfig.configs.state.canvasWidth);
-        this.canvasBuffer.setAttribute('height', this.gameConfig.configs.state.canvasHeight);
-        this.canvas.setAttribute('width', this.gameConfig.configs.state.canvasWidth);
-        this.canvas.setAttribute('height', this.gameConfig.configs.state.canvasHeight);
+        this.canvasBuffer.setAttribute('width', this.gameConfig.configs.game.canvasWidth);
+        this.canvasBuffer.setAttribute('height', this.gameConfig.configs.game.canvasHeight);
+        this.canvas.setAttribute('width', this.gameConfig.configs.game.canvasWidth);
+        this.canvas.setAttribute('height', this.gameConfig.configs.game.canvasHeight);
         
-        this.translator = new CoordinateTranslator(this.gameConfig.configs.state, this.gameConfig.levels[this.state.currentLevel].tileMap.terrainMap.length);
-        this.spatialGrid = new SpatialGrid(this.gameConfig.levels[this.state.currentLevel].tileMap.terrainMap.length, this.gameConfig.configs.state.gridSize);
-        this.imageManager = new ImageManager(this.gameConfig.configs.state.imageSize);
+        this.translator = new CoordinateTranslator(this.gameConfig.configs.game, this.gameConfig.levels[this.state.currentLevel].tileMap.terrainMap.length);
+        this.spatialGrid = new SpatialGrid(this.gameConfig.levels[this.state.currentLevel].tileMap.terrainMap.length, this.gameConfig.configs.game.gridSize);
+        this.imageManager = new ImageManager(this.gameConfig.configs.game.imageSize);
      
 
         // Load all images
@@ -37,7 +37,7 @@ class Engine {
             await this.imageManager.loadImages(objectType, this.gameConfig[objectType]);
         }   
         
-        this.mapRenderer = new MapRenderer(this.canvasBuffer, this.gameConfig.environment, this.imageManager, this.gameConfig.configs.state.level, this.gameConfig.configs.state, this.gameConfig.levels[this.state.currentLevel].tileMap.terrainBGColor );
+        this.mapRenderer = new MapRenderer(this.canvasBuffer, this.gameConfig.environment, this.imageManager, this.gameConfig.configs.game.level, this.gameConfig.configs.game, this.gameConfig.levels[this.state.currentLevel].tileMap.terrainBGColor );
    
         this.imageManager.dispose();
         this.animationFrameId = requestAnimationFrame(() => this.gameLoop());

@@ -51,7 +51,7 @@ class ChainProjectile extends Component {
                 const dx = enemy.position.x - this.target.position.x;
                 const dy = enemy.position.y - this.target.position.y;
                 const distSq = dx * dx + dy * dy;
-                let gridSize = this.game.gameConfig.configs.state.gridSize;
+                let gridSize = this.game.gameConfig.configs.game.gridSize;
                 if (distSq <= this.ownerStats.range * this.ownerStats.range * gridSize * gridSize) {
                     let enemyHealth = enemy.getComponent("health");
                     let enemyEnergyShield = enemy.getComponent("energyshield");

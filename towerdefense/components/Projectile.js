@@ -52,7 +52,7 @@ class Projectile extends Component {
                     const dy = enemy.position.y - this.target.position.y;
                     const distSq1 = dx * dx + dy * dy;
                     
-                    let gridSize = this.game.gameConfig.configs.state.gridSize;
+                    let gridSize = this.game.gameConfig.configs.game.gridSize;
                     // Compare with squared splash radius for efficiency
                     const splashRadiusSq = this.stats.splashRadius * this.stats.splashRadius * gridSize * gridSize;
                     if (distSq1 <= splashRadiusSq) {
@@ -116,7 +116,7 @@ class Projectile extends Component {
                         const dx = enemy.position.x - this.parent.position.x;
                         const dy = enemy.position.y - this.parent.position.y;
                         const distSq2 = dx * dx + dy * dy;
-                        const gridSize = this.game.gameConfig.configs.state.gridSize;
+                        const gridSize = this.game.gameConfig.configs.game.gridSize;
                         if (distSq2 < this.ownerStats.range * this.ownerStats.range * gridSize * gridSize) {
                             newTarget = enemy;
                             break;

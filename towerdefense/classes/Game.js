@@ -43,7 +43,7 @@ class Game extends Engine {
         }
         
         this.state = new GameState();
-        this.state.currentLevel = this.gameConfig.configs.state.level;
+        this.state.currentLevel = this.gameConfig.configs.game.level;
         this.mapManager = new MapManager();
         this.uiManager = new UIManager(this.gameConfig);
         
@@ -95,8 +95,8 @@ class Game extends Engine {
         let endY = endPath.y;
         let endX = endPath.x;
 
-        const keep = this.createTower(endX * this.gameConfig.configs.state.gridSize + this.gameConfig.configs.state.gridSize / 2, 
-                                      endY * this.gameConfig.configs.state.gridSize + this.gameConfig.configs.state.gridSize / 2, 
+        const keep = this.createTower(endX * this.gameConfig.configs.game.gridSize + this.gameConfig.configs.game.gridSize / 2, 
+                                      endY * this.gameConfig.configs.game.gridSize + this.gameConfig.configs.game.gridSize / 2, 
                                       'keep');
         keep.placed = true;
         
@@ -153,8 +153,8 @@ class Game extends Engine {
 
             if (this.state.selectedTowerType && this.state.previewTower) {
                 const snappedPixelPos = this.translator.isoToPixel(isoSnappedGridPos.x, isoSnappedGridPos.y);
-                this.state.previewTower.position.x = snappedPixelPos.x + this.gameConfig.configs.state.gridSize / 2;
-                this.state.previewTower.position.y = snappedPixelPos.y + this.gameConfig.configs.state.gridSize / 2;
+                this.state.previewTower.position.x = snappedPixelPos.x + this.gameConfig.configs.game.gridSize / 2;
+                this.state.previewTower.position.y = snappedPixelPos.y + this.gameConfig.configs.game.gridSize / 2;
                 const isValidPosition = this.checkValidTowerPosition(snappedGrid.x, snappedGrid.y);
                 this.canvas.style.cursor = isValidPosition ? 'pointer' : 'not-allowed';
             }
@@ -220,8 +220,8 @@ class Game extends Engine {
                 const finalCost = Math.floor(cost * this.state.stats.towerCostMod);
                 
                 if (this.state.bloodShards >= finalCost && this.state.stats.population + populationCost <= this.state.stats.maxPopulation) {
-                    const tower = this.createTower(snappedPixelPos.x + this.gameConfig.configs.state.gridSize / 2, 
-                                                 snappedPixelPos.y + this.gameConfig.configs.state.gridSize / 2, 
+                    const tower = this.createTower(snappedPixelPos.x + this.gameConfig.configs.game.gridSize / 2, 
+                                                 snappedPixelPos.y + this.gameConfig.configs.game.gridSize / 2, 
                                                  this.state.selectedTowerType);
                     tower.placed = true;
                     this.state.tileMap[snappedGrid.y][snappedGrid.x].buildable = false;
