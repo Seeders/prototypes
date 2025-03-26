@@ -1,6 +1,7 @@
 import { TerrainMapEditor } from "./TerrainMapEditor.js";
 import { GraphicsEditor } from "./GraphicsEditor.js";
 import {AIPromptPanel} from "./AIPromptPanel.js";
+import { ScriptEditor } from "./ScriptEditor.js";
 
 class GameEditor {
     constructor() {
@@ -181,6 +182,7 @@ class GameEditor {
             </div>
         `;
         
+        this.scriptEditor.render();
         // Add event listener
         document.getElementById('ai-prompt-btn').addEventListener('click', () => {
             this.aiPromptPanel.showModal();
@@ -231,22 +233,33 @@ class GameEditor {
         
         propertyItem.appendChild(keyInput);
         // Regular property input (not a reference)
-        const valueInput = document.createElement('input');
+        let valueInput = document.createElement('input');
         let type = 'text';
         if (key === 'color') {
             type = 'color';
+            valueInput.type = type;
+            valueInput.value = value;
         } else if (key === 'render') {
+            valueInput = document.createElement('textarea');
             type = 'textarea';
             value = JSON.stringify(value);
+            valueInput.textContent = value;
             valueInput.setAttribute('id', 'render-value');
-        } else if (key === 'tileMap') {
+        } else if(key === "script" ){ 
+            valueInput = document.createElement('textarea');
+            valueInput.textContent = value;
+            type = 'textarea';            
+        } else if (key === "tileMap" ) {
+            valueInput = document.createElement('textarea');
             type = 'textarea';
             value = JSON.stringify(value);
+            valueInput.textContent = value;
             valueInput.setAttribute('id', 'tilemap-value');
-        } 
-        valueInput.type = type;
+        } else {
+            valueInput.type = type;
+            valueInput.value = value;
+        }
         valueInput.placeholder = 'Value';
-        valueInput.value = value;
         valueInput.className = 'property-value';
         
         propertyItem.appendChild(valueInput);
@@ -794,6 +807,7 @@ class GameEditor {
         this.graphicsEditor = new GraphicsEditor();        
  
         this.aiPromptPanel = new AIPromptPanel(this);
+        this.scriptEditor = new ScriptEditor(this); // Initialize ScriptEditor
         
 
     }

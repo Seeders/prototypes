@@ -1,6 +1,8 @@
-class WaveManager {
-    constructor(game, createEnemyCallback) {                
-        this.game = game;
+import { Component } from '../engine/Component.js';
+
+class WaveManager extends Component {
+    constructor(game, parent,  createEnemyCallback) {                
+        super(game, parent)
         this.createEnemy = createEnemyCallback;
         
         this.resetWaveState();

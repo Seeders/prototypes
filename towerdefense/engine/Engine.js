@@ -1,8 +1,11 @@
 import { Entity } from "./Entity.js";
+import { Component } from "./Component.js";
 import { SpatialGrid } from "./SpatialGrid.js";
 import { ImageManager } from "./ImageManager.js";
 import { CoordinateTranslator } from './CoordinateTranslator.js';
 import { MapRenderer } from "./MapRenderer.js";
+import { calculateDamage } from "../functions/calculateDamage.js";
+import { calculateStats } from "../functions/calculateStats.js";
 
 class Engine {
     constructor() {
@@ -41,6 +44,92 @@ class Engine {
    
         this.imageManager.dispose();
         this.animationFrameId = requestAnimationFrame(() => this.gameLoop());
+
+        this.scriptCache = new Map(); // Cache compiled scripts
+        this.setupScriptEnvironment();
+
+    }
+
+    setupScriptEnvironment() {
+        // Safe execution context
+        this.scriptContext = {
+            game: this,
+            Entity: Entity,
+            Component: Component,            
+            calculateDamage: calculateDamage,
+            calculateStats: calculateStats,
+            // Add other necessary globals or utilities
+            Math: Math,
+            console: {
+                log: (...args) => console.log('[Script]', ...args),
+                error: (...args) => console.error('[Script]', ...args)
+            }
+        };
+    }
+
+    createEntityFromConfig(x, y, type, params) {
+        const entity = new Entity(this, x, y);
+        const def = this.gameConfig.entities[type];
+        
+        //TODO: collect from def.components[] and compile them
+        if (def.components) {
+            def.components.forEach((componentType)  => {
+                let componentDef = this.gameConfig.components[componentType]
+                if( componentDef.script) {
+                    const scriptComponent = this.compileScript(componentDef.script, type);
+                    entity.addComponent(scriptComponent, params);
+                }
+            })
+        } 
+        return entity;
+    }
+
+    compileScript(scriptText, typeName) {
+        if (this.scriptCache.has(typeName)) {
+            return this.scriptCache.get(typeName);
+        }
+
+        try {
+            // Default constructor if none is provided in scriptText
+            const defaultConstructor = `
+                constructor(game, parent, params) {
+                    super(game, parent);
+                    this.params = params;
+                }
+            `;
+
+            // Check if scriptText contains a constructor
+            const constructorMatch = scriptText.match(/constructor\s*\([^)]*\)\s*{[^}]*}/);
+            let classBody = scriptText;
+
+            // If no constructor is found, prepend the default one
+            if (!constructorMatch) {
+                classBody = `${defaultConstructor}\n${scriptText}`;
+            }
+            // If a constructor is found, it will override the default one entirely
+
+            const scriptFunction = new Function(
+                'game', 'parent', 'params', 'Component', 'calculateStats', 'calculateDamage',
+                `return class ${typeName}Script extends Component {
+                    ${classBody}
+                }`
+            );
+
+            const ScriptClass = scriptFunction(
+                this.scriptContext.game,
+                null, // parent will be set by entity
+                {},   // initial params
+                this.scriptContext.Component,
+                this.scriptContext.calculateStats,
+                this.scriptContext.calculateDamage
+            );
+
+            this.scriptCache.set(typeName, ScriptClass);
+            return ScriptClass;
+        } catch (error) {
+            console.error(`Error compiling script for ${typeName}:`, error);
+            return Projectile; // Fallback to default
+        }
     }
 
     update() {

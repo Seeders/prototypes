@@ -130,6 +130,10 @@ textarea {
     resize: vertical;
 }
 
+textarea.property-value {
+    width: 50%;
+}
+
 button {
     padding: 8px 16px;
     border-radius: 0;
@@ -437,4 +441,44 @@ button:after {
 @keyframes loading {
     0% { transform: translateX(-100%); }
     100% { transform: translateX(100%); }
+}
+
+
+
+/* styles.css */
+.script-editor-container {
+    margin-top: 20px;
+}
+
+.script-editor {
+    width: 100%;
+    min-height: 200px;
+    font-family: monospace;
+    padding: 10px;
+    border: 1px solid #ccc;
+    resize: vertical;
+}
+
+.tabs {
+    display: flex;
+    border-bottom: 1px solid #ccc;
+    margin-bottom: 10px;
+}
+
+.tab {
+    padding: 10px 20px;
+    cursor: pointer;
+}
+
+.tab.active {
+    background-color: #f0f0f0;
+    border-bottom: 2px solid #007bff;
+}
+
+.tab-content {
+    display: none;
+}
+
+.tab-content.active {
+    display: block;
 }

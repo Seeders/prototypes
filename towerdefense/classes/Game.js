@@ -55,15 +55,13 @@ class Game extends Engine {
         this.state.tileMapData = this.gameConfig.levels[this.state.currentLevel].tileMap;
 
         await super.init(this.gameConfig);
-        this.waveManager = new WaveManager(
-            this, 
-            (enemyType, pathIndex) => this.createEnemy(enemyType, pathIndex)
-        );
+ 
         this.upgradeManager = new UpgradeManager(this);
         this.setupTowerPlacement();
         this.state.isPaused = true;
         this.drawStats();
         this.initEffectsAndUpgrades();
+        this.addEntity(this.createEntityFromConfig(0, 0, 'game'));
     }
     
     reset() {
@@ -78,7 +76,7 @@ class Game extends Engine {
         if (this.state.gameOver || this.state.victory || this.state.isLevelingUp) return;
                 
         // Update wave status using WaveManager
-        this.waveManager.update();
+       // this.waveManager.update();
         this.upgradeManager.update();
 
         // Game over check
