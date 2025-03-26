@@ -349,7 +349,9 @@ class Game extends Engine {
         let stats = this.gameConfig.enemies[spawnType];
         stats.hp *= 1 + (.01 * this.state.round);
         let entity = new Entity(this, 0, 0);
-        entity.addComponent(Stats, spawnType, stats);
+       // this.addEntity(this.createEntityFromConfig(0, 0, 'enemy'));
+        const ScriptComponent = this.scriptCache.get("stats");
+        entity.addComponent(ScriptComponent, spawnType, stats);
         entity.addRenderer(Renderer, this.imageManager.getImages("enemies", spawnType));
         entity.addComponent(Animator, "enemies", spawnType);
         entity.addRenderer(Health);

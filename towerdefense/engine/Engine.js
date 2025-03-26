@@ -78,7 +78,7 @@ class Engine {
             }
         }
     }
-    createEntityFromConfig(x, y, type, params) {
+    createEntityFromConfig(x, y, type, ...params) {
         const entity = new Entity(this, x, y);
         const def = this.gameConfig.entities[type];
 
@@ -88,7 +88,7 @@ class Engine {
                 if (componentDef.script) {
                     const ScriptComponent = this.scriptCache.get(componentType);
                     if (ScriptComponent) {
-                        entity.addComponent(ScriptComponent, ...(Array.isArray(params) ? params : [params]));
+                        entity.addComponent(ScriptComponent, ...params);
                     }
                 }
             });
@@ -117,7 +117,7 @@ class Engine {
             const scriptFunction = new Function(
                 'engine',
                 `
-                    return class ${typeName}Script extends engine.Component {
+                    return class ${typeName} extends engine.Component {
                         ${classBody}
                     }
                 `

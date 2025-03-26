@@ -14,7 +14,7 @@ class Entity {
     }
 
     getComponent(name) {
-        return this.components[name.toLowerCase()];
+        return this.components[name.toLowerCase()] || this.components[`${name.toLowerCase()}`];
     }
     addRenderer(ComponentClass, ...params) {
         let renderer = this.addComponent(ComponentClass, ...params);
