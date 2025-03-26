@@ -81,43 +81,55 @@ Generate a new ${type} object based on the following existing context:
 
 ${JSON.stringify(object, null, 2)}
 
-Please provide ONLY a valid JSON object with properties similar to the context above. Ensure all existing key types are maintained.
+Please provide ONLY a valid JSON object with properties MATCHING EXACTLY to the context above. Ensure all existing key types are maintained.  Do not wrap the json object with any other text.
         `;
         return contextDescription.trim();
     }
+	async sendPromptToAI() {
+		const prompt = this.elements.promptTextarea.value;
+		
+		try {
+			this.elements.previewArea.textContent = "Generating...";
+			const response = await fetch('http://127.0.0.1:11434/api/generate', {
+				method: 'POST',
+				headers: {
+					'Content-Type': 'application/json'
+				},
+				body: JSON.stringify({ prompt: prompt, model: "deepseek-r1:32b", jsonOnly: true, stream: false })
+			});
 
-    async sendPromptToAI() {
-        const prompt = this.elements.promptTextarea.value;
-        
-        try {
-            const response = await fetch('/ai-generate', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({ prompt })
-            });
+			if (!response.ok) {
+				throw new Error('AI generation failed');
+			}
 
-            if (!response.ok) {
-                throw new Error('AI generation failed');
-            }
+			const responseData = await response.json();
+			console.log('Raw API response:', responseData); // Log for debugging
 
-            const responseData = await response.json();
-            
-            // Validate JSON response
-            try {
-                const parsedResponse = JSON.parse(responseData.result);
-                this.elements.previewArea.textContent = JSON.stringify(parsedResponse, null, 2);
-                this.elements.applyBtn.style.display = 'block';
-            } catch (parseError) {
-                this.elements.previewArea.textContent = 'Invalid JSON response from AI';
-                this.elements.applyBtn.style.display = 'none';
-            }
-        } catch (error) {
-            console.error('AI Generation Error:', error);
-            this.elements.previewArea.textContent = `Error: ${error.message}`;
-        }
-    }
+			// Extract the relevant field (e.g., 'response' or 'result')
+			const aiOutput = responseData.response || responseData.result || responseData;
+
+			// Strip <think> tags and their contents
+			  const cleanedOutput = aiOutput
+				.replace(/<think\s*>[\s\S]*?<\/think\s*>/gi, '') // More permissive regex
+				.replace(/<think[\s\S]*?\/>/gi, '') // Handle self-closing tags
+				.trim();
+			console.log('Cleaned output:', cleanedOutput); // Log after cleaning
+
+			// Validate JSON response
+			try {
+				const parsedResponse = JSON.parse(cleanedOutput);
+				this.elements.previewArea.textContent = JSON.stringify(parsedResponse, null, 2);
+				this.elements.applyBtn.style.display = 'block';
+			} catch (parseError) {
+				console.error('JSON Parse Error:', parseError);
+				this.elements.previewArea.textContent = 'Invalid JSON response from AI:\n' + cleanedOutput;
+				this.elements.applyBtn.style.display = 'none';
+			}
+		} catch (error) {
+			console.error('AI Generation Error:', error);
+			this.elements.previewArea.textContent = `Error: ${error.message}`;
+		}
+	}
 
     applyAIResponse() {
         try {
@@ -127,7 +139,7 @@ Please provide ONLY a valid JSON object with properties similar to the context a
             const { selectedType, selectedObject } = this.gameEditor.state;
             
             // Update the current object with AI-generated data
-            this.gameEditor.state.objectTypes[selectedType][selectedObject] = parsedResponse;
+            this.gameEditor.state.objectTypes[selectedType][parsedResponse.title] = parsedResponse;
             
             // Re-render and select the object
             this.gameEditor.renderObjectList();
