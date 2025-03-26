@@ -18,7 +18,7 @@ class GameState {
         this.entities = [];
         // If stats is present, create defaultStats as a copy
         if (this.modifierSet) {
-            this.stats = gameConfig.modifierSet[this.modifierSet];
+            this.stats = gameConfig.modifierSets[this.modifierSet];
             this.defaultStats = { ...this.stats };
         }     
     }
