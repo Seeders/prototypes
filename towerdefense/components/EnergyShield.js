@@ -3,7 +3,7 @@ import { Component } from "../engine/Component.js";
 class EnergyShield extends Component {
     init(){
         // Get stats component for reference
-        let statsComp = parent.getComponent('stats');
+        let statsComp = this.parent.getComponent('stats');
         
         // Shield configuration with defaults
         this.maxEnergyShield = statsComp.stats.energyShield || 0;

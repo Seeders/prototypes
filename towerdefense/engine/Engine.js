@@ -43,22 +43,24 @@ class Engine {
         this.mapRenderer = new MapRenderer(this.canvasBuffer, this.gameConfig.environment, this.imageManager, this.gameConfig.configs.game.level, this.gameConfig.configs.game, this.gameConfig.levels[this.state.currentLevel].tileMap.terrainBGColor );
    
         this.imageManager.dispose();
-        this.animationFrameId = requestAnimationFrame(() => this.gameLoop());
 
         this.scriptCache = new Map(); // Cache compiled scripts
         this.setupScriptEnvironment();
+        this.preCompileScripts();
+        this.animationFrameId = requestAnimationFrame(() => this.gameLoop());
 
     }
 
     setupScriptEnvironment() {
-        // Safe execution context
+        // Safe execution context with all imported modules
         this.scriptContext = {
             game: this,
             Entity: Entity,
-            Component: Component,            
+            Component: Component,
             calculateDamage: calculateDamage,
             calculateStats: calculateStats,
-            // Add other necessary globals or utilities
+            // Add a way to access other compiled scripts
+            getScript: (typeName) => this.scriptCache.get(typeName) || this.compileScript(this.gameConfig.components[typeName].script, typeName),
             Math: Math,
             console: {
                 log: (...args) => console.log('[Script]', ...args),
@@ -67,22 +69,33 @@ class Engine {
         };
     }
 
+    // Pre-compile all scripts to ensure availability
+    preCompileScripts() {
+        for (let componentType in this.gameConfig.components) {
+            const componentDef = this.gameConfig.components[componentType];
+            if (componentDef.script) {
+                this.compileScript(componentDef.script, componentType);
+            }
+        }
+    }
     createEntityFromConfig(x, y, type, params) {
         const entity = new Entity(this, x, y);
         const def = this.gameConfig.entities[type];
-        
-        //TODO: collect from def.components[] and compile them
+
         if (def.components) {
-            def.components.forEach((componentType)  => {
-                let componentDef = this.gameConfig.components[componentType]
-                if( componentDef.script) {
-                    const scriptComponent = this.compileScript(componentDef.script, type);
-                    entity.addComponent(scriptComponent, params);
+            def.components.forEach((componentType) => {
+                const componentDef = this.gameConfig.components[componentType];
+                if (componentDef.script) {
+                    const ScriptComponent = this.scriptCache.get(componentType);
+                    if (ScriptComponent) {
+                        entity.addComponent(ScriptComponent, ...(Array.isArray(params) ? params : [params]));
+                    }
                 }
-            })
-        } 
+            });
+        }
         return entity;
     }
+
 
     compileScript(scriptText, typeName) {
         if (this.scriptCache.has(typeName)) {
@@ -90,41 +103,32 @@ class Engine {
         }
 
         try {
-            // Default constructor if none is provided in scriptText
             const defaultConstructor = `
-                constructor(game, parent) {
+                constructor(game, parent, ...params) {
                     super(game, parent);
+                    this.init(...params);
                 }
             `;
 
-            // Check if scriptText contains a constructor
             const constructorMatch = scriptText.match(/constructor\s*\([^)]*\)\s*{[^}]*}/);
-            let classBody = scriptText;
+            let classBody = constructorMatch ? scriptText : `${defaultConstructor}\n${scriptText}`;
 
-            // If no constructor is found, prepend the default one
-            if (!constructorMatch) {
-                classBody = `${defaultConstructor}\n${scriptText}`;
-            }
-            // If a constructor is found, it will override the default one entirely
+            // Inject scriptContext into the Function scope
             const scriptFunction = new Function(
-                'game', 'parent', 'params', 'Component',
-                `return class ${typeName}Script extends Component {
-                    ${classBody}
-                }`
+                'engine',
+                `
+                    return class ${typeName}Script extends engine.Component {
+                        ${classBody}
+                    }
+                `
             );
 
-            const ScriptClass = scriptFunction(
-                this.scriptContext.game,
-                null, // parent will be set by entity
-                {},   // initial params
-                this.scriptContext.Component
-            );
-
+            const ScriptClass = scriptFunction(this.scriptContext);
             this.scriptCache.set(typeName, ScriptClass);
             return ScriptClass;
         } catch (error) {
             console.error(`Error compiling script for ${typeName}:`, error);
-            return Projectile; // Fallback to default
+            return Component; // Fallback to base Component
         }
     }
 

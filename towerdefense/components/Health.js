@@ -2,7 +2,7 @@ import { Component } from "../engine/Component.js";
 
 class Health extends Component { 
     init(){
-        let statsComp = parent.getComponent('stats');
+        let statsComp = this.parent.getComponent('stats');
         this.hp = statsComp.stats.hp;
         
         statsComp.addStat('maxHp', this.hp);
