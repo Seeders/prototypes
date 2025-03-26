@@ -126,26 +126,6 @@ class Engine {
         return entity;
     }
 
-    isPositionInCorner(x, y, cols, rows) {
-        // Convert grid coordinates to relative positions (0 to 1 range)
-        const relX = x / cols;
-        const relY = y / rows;
-        
-        // In an isometric view, the diamond shape is defined by:
-        // Top corner: (0.5, 0)
-        // Right corner: (1, 0.5)
-        // Bottom corner: (0.5, 1)
-        // Left corner: (0, 0.5)
-        
-        // Calculate distance from the center line of the diamond
-        const distFromDiagonal1 = Math.abs(relX + relY - 1);
-        const distFromDiagonal2 = Math.abs(relX - relY);
-        
-        // If the point is far from both diagonals, it's in a corner
-        const cornerThreshold = 0.2; // Adjust this value to control how much of the corners to fill
-        return distFromDiagonal1 > cornerThreshold || distFromDiagonal2 > cornerThreshold;
-    }
-
     // Abstract UI drawing method to be implemented by subclasses
     drawUI() {
     }
