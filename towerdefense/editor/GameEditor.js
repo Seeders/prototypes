@@ -432,7 +432,7 @@ class GameEditor {
             data = object.render;
         } else if(object.tileMap) {
             eventName = "editTileMap";
-            data = { config: this.state.objectTypes['configs']['state'], tileMap: object.tileMap, environment: this.state.objectTypes["environment"] }
+            data = { config: this.state.objectTypes['configs']['game'], tileMap: object.tileMap, environment: this.state.objectTypes["environment"] }
         }
         if( data ) {
             // Create a custom event with data
