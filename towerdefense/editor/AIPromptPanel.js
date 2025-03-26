@@ -81,7 +81,7 @@ class AIPromptPanel {
         const prompt = `${this.elements.prePromptTextarea.value} \n\n ${this.elements.promptTextarea.value}`;
 
         try {
-            this.elements.previewArea.value = "Generating the following prompt..."; // Use .value for textarea
+            this.elements.previewArea.value = "Generating ..."; // Use .value for textarea
 
             const { aiEndPoint, aiModel, apiKey, headers, requestBody } = this.prepareAIConfig(prompt);
             console.log('Request config:', { aiEndPoint, aiModel, apiKey, headers, requestBody });
