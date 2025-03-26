@@ -420,11 +420,11 @@ class GameEditor {
     renderPreview() {
         if (this.state.selectedObject && this.state.objectTypes[this.state.selectedType][this.state.selectedObject]) {
             const object = this.state.objectTypes[this.state.selectedType][this.state.selectedObject];
-            this.drawObject(object, this.state.objectPosition);               
+            this.drawObject(object);               
         }
     }
 
-    drawObject(object, position) {
+    drawObject(object) {
         let data = null;
         let eventName = "";
         if(object.render) {
