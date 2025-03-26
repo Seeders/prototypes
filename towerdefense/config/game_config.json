@@ -9,10 +9,13 @@
     },
     "editor": {
       "title": "Editor Config",
-      "theme": "videogame",
+      "theme": "videogame"
+    },
+    "ai": {
+      "title": "AI",
       "aiEndPoint": "http://127.0.0.1:11434/api/generate",
       "aiModel": "deepseek-r1:32b",
-      "defaultPrompt": "I am developing a 2D tower defense game featuring a minimalist art style where players strategically deploy towers to prevent enemies from reaching key objectives. The game includes resource management, strategic upgrades, and dynamic enemy waves.  Generate a new ${type} object based on the following context.    Please provide ONLY a valid JSON object with keys MATCHING EXACTLY to the context above. It absolutely MUST have an appropriate 'id' field. Ensure all existing key types are maintained. Do not wrap the json object with any other text."
+      "defaultPrompt": "I am developing a 2D tower defense game featuring a simple 3d art style.  Generate a new ${type} object based on the following context.    Please provide ONLY a valid JSON object with keys MATCHING EXACTLY to the context above. It absolutely MUST have an appropriate 'id' field. Ensure all existing key types are maintained. Do not wrap the json object with any other text."
     }
   },
   "projectiles": {

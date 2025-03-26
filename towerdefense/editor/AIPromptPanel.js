@@ -39,7 +39,7 @@ class AIPromptPanel {
             </div>
         `;
         document.body.appendChild(modal);
-
+        this.config = this.gameEditor.state.objectTypes.configs.ai;
         // Cache elements
         this.elements = {
             aiPromptModal: modal,
@@ -72,7 +72,7 @@ class AIPromptPanel {
 
     generateContextPrompt(object) {
         const type = this.gameEditor.getSingularType(this.gameEditor.state.selectedType);
-		let defaultPrompt = this.gameEditor.state.objectTypes.configs.editor.defaultPrompt.trim().replace(/\$\{type\}/g, type);
+		let defaultPrompt = this.config.defaultPrompt.trim().replace(/\$\{type\}/g, type);
         return `${defaultPrompt}\n\nContext Object: \n\n${JSON.stringify(object, null, 2)}`;
 		
     }
@@ -114,19 +114,18 @@ class AIPromptPanel {
     }
 
     prepareAIConfig(prompt) {
-        const config = this.gameEditor.state.objectTypes.configs.editor;
         let updated = false;
 
-        let aiEndPoint = config.aiEndPoint || "http://127.0.0.1:11434/api/generate";
-        let aiModel = config.aiModel || "deepseek-r1:32b";
-        const apiKey = config.aiApiKey || "";
+        let aiEndPoint = this.config.aiEndPoint || "http://127.0.0.1:11434/api/generate";
+        let aiModel = this.config.aiModel || "deepseek-r1:32b";
+        const apiKey = this.config.aiApiKey || "";
 
-        if (!config.aiEndPoint) {
-            config.aiEndPoint = aiEndPoint;
+        if (!this.config.aiEndPoint) {
+            this.config.aiEndPoint = aiEndPoint;
             updated = true;
         }
-        if (!config.aiModel) {
-            config.aiModel = aiModel;
+        if (!this.config.aiModel) {
+            this.config.aiModel = aiModel;
             updated = true;
         }
         if (updated) {
