@@ -11,7 +11,8 @@ class GameEditor {
             DEFAULT_TOWER_SIZE: 30,
             DEFAULT_TOWER_COLOR: '#ffffff',
             DEFAULT_RENDER: {animations:{idle:[{shapes:[]}]}},
-            DEFAULT_TILEMAP: {}
+            DEFAULT_TILEMAP: {},
+            DEFAULT_SCRIPT: 'init(){\n\n}'
         };
 
         // Application state
@@ -168,8 +169,9 @@ class GameEditor {
             <div class="actions">
                 <div>                    
                     <button id="add-property-btn">Add Custom Property</button>
-                    <button id="add-renderer-btn">Add Renderer</button>
+                    <button id="add-renderer-btn">Add Render</button>
                     <button id="add-tileMap-btn">Add TileMap</button>
+                    <button id="add-script-btn">Add Script</button>
                     <button id="ai-prompt-btn">AI Generate</button>
                 </div>
             </div>
@@ -200,6 +202,9 @@ class GameEditor {
         });
         document.getElementById('add-tileMap-btn').addEventListener('click', () => {
             this.addCustomProperty(customPropertiesContainer, 'tileMap', this.CONFIG.DEFAULT_TILEMAP);
+        });
+        document.getElementById('add-script-btn').addEventListener('click', () => {
+            this.addCustomProperty(customPropertiesContainer, 'script', this.CONFIG.DEFAULT_SCRIPT);
         });
         
         document.getElementById('save-object-btn').addEventListener('click', () => this.saveObject());

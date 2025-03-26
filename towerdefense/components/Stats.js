@@ -3,8 +3,9 @@ import { calculateStats } from "../functions/calculateStats.js";
 import { Effect } from "./Effect.js";
 
 class Stats extends Component { 
-    init( type, stats ) {        
-        this.type = type;
+    init( {objectType, spawnType} ) { 
+        let stats = this.game.gameConfig[objectType][spawnType];
+        this.type = spawnType;
         this.stats = {...stats};
         this.defaultStats = {...this.stats};
         this.activeEffects = {};

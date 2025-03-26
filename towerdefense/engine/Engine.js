@@ -77,8 +77,14 @@ class Engine {
                 this.compileScript(componentDef.script, componentType);
             }
         }
+        for (let componentType in this.gameConfig.renderers) {
+            const componentDef = this.gameConfig.renderers[componentType];
+            if (componentDef.script) {
+                this.compileScript(componentDef.script, componentType);
+            }
+        }
     }
-    createEntityFromConfig(x, y, type, ...params) {
+    createEntityFromConfig(x, y, type, params) {
         const entity = new Entity(this, x, y);
         const def = this.gameConfig.entities[type];
 
@@ -88,7 +94,18 @@ class Engine {
                 if (componentDef.script) {
                     const ScriptComponent = this.scriptCache.get(componentType);
                     if (ScriptComponent) {
-                        entity.addComponent(ScriptComponent, ...params);
+                        entity.addComponent(ScriptComponent, params);                  
+                    }
+                }
+            });
+        }
+        if (def.renderers) {
+            def.renderers.forEach((rendererType) => {
+                const componentDef = this.gameConfig.renderers[rendererType];
+                if (componentDef.script) {
+                    const ScriptComponent = this.scriptCache.get(rendererType);
+                    if (ScriptComponent) {
+                        entity.addRenderer(ScriptComponent, params);                  
                     }
                 }
             });
@@ -104,9 +121,8 @@ class Engine {
 
         try {
             const defaultConstructor = `
-                constructor(game, parent, ...params) {
-                    super(game, parent);
-                    this.init(...params);
+                constructor(game, parent, params) {
+                    super(game, parent, params);
                 }
             `;
 

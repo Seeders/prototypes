@@ -305,31 +305,34 @@ class Game extends Engine {
     }
 
 
-    createTower(x, y, type, tracker="towers") {
-        let stats = this.gameConfig.towers[type];
-        let entity = new Entity(this, x, y);
-        entity.addComponent(Stats, type, stats);
-        entity.addRenderer(Renderer, this.imageManager.getImages("towers", type), 1);
-        entity.addComponent(Animator, "towers", type);
-        entity.addComponent(Leveler);
-        entity.addComponent(Buildable);
-        entity.addComponent(PopulationBurden);
-        entity.addComponent(Attacker);
-        entity.addRenderer(RangeIndicator);
-        entity.addComponent(ArrayTracker, tracker);
+    createTower(x, y, spawnType, objectType="towers") {
+        let setDirection = 1;
+        let entity = this.createEntityFromConfig(x, y, 'tower', { objectType, spawnType, setDirection });
+        this.addEntity(entity);
+        return entity;
+        // let stats = this.gameConfig.towers[spawnType];
+        // let entity = new Entity(this, x, y);
+        // entity.addComponent(Stats, spawnType, stats);
+        // entity.addRenderer(Renderer, { images: this.imageManager.getImages(objectType, spawnType), setDirection:  1});
+        // entity.addComponent(Animator, { objectType: objectType, spawnType: spawnType });
+        // entity.addComponent(Leveler);
+        // entity.addComponent(Buildable);
+        // entity.addComponent(PopulationBurden);
+        // entity.addComponent(Attacker);
+        // entity.addRenderer(RangeIndicator);
+        // entity.addComponent(ArrayTracker, { objectType: objectType });
         
-        this.addEntity(entity);      
-        return entity;  
+        // this.addEntity(entity);      
+        // return entity;  
     }
 
-    createPreviewTower(x, y, type) {
-        let stats = this.gameConfig.towers[type];
-        let entity = new Entity(this, x, y);
-        entity.addComponent(Stats, type, stats);
-        entity.addRenderer(Renderer, this.imageManager.getImages("towers", type), 1);
-        entity.addComponent(Animator, "towers", type);
-        entity.addRenderer(RangeIndicator);
-        entity.addComponent(Buildable);
+    createPreviewTower(x, y, spawnType) {        
+        let entity = this.createEntityFromConfig(x, y, 'previewTower', { objectType: "towers", spawnType: spawnType, setDirection: 1  });
+        // let entity = new Entity(this, x, y);
+        // entity.addComponent(Stats, { objectType: "towers", spawnType: type });
+        // entity.addRenderer(Renderer, { objectType: "towers", spawnType: type, setDirection: 1 });
+        // entity.addComponent(Animator, { objectType: "towers", spawnType: type });
+        // entity.addRenderer(RangeIndicator);
         
         this.addEntity(entity);        
         return entity;
@@ -349,9 +352,11 @@ class Game extends Engine {
         let stats = this.gameConfig.enemies[spawnType];
         stats.hp *= 1 + (.01 * this.state.round);
         let entity = new Entity(this, 0, 0);
-       // this.addEntity(this.createEntityFromConfig(0, 0, 'enemy'));
-        const ScriptComponent = this.scriptCache.get("stats");
-        entity.addComponent(ScriptComponent, spawnType, stats);
+        let objectType = "enemies";
+        this.addEntity(this.createEntityFromConfig(0, 0, 'enemy', { objectType, spawnType, pathIndex }));
+       //ask ai how to pass these params in to a config entity definition and all the correct components
+        const statsComponent = this.scriptCache.get("stats");
+        entity.addComponent(statsComponent, spawnType, stats);
         entity.addRenderer(Renderer, this.imageManager.getImages("enemies", spawnType));
         entity.addComponent(Animator, "enemies", spawnType);
         entity.addRenderer(Health);

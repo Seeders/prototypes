@@ -1,8 +1,8 @@
 import { Component } from "../engine/Component.js";
 
 class Animator extends Component {
-    init(prefix, type) {
-        this.animations = this.game.imageManager.getImages(prefix, type); // { "idle": [...], "walk": [...] }
+    init({ objectType, spawnType }) {
+        this.animations = this.game.imageManager.getImages(objectType, spawnType); // { "idle": [...], "walk": [...] }
         this.currentAnimation = "idle";
         if(this.animations.walk) this.currentAnimation = "walk";
         this.currentFrame = 0;

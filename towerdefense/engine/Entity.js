@@ -16,13 +16,13 @@ class Entity {
     getComponent(name) {
         return this.components[name.toLowerCase()] || this.components[`${name.toLowerCase()}`];
     }
-    addRenderer(ComponentClass, ...params) {
-        let renderer = this.addComponent(ComponentClass, ...params);
+    addRenderer(ComponentClass, params) {
+        let renderer = this.addComponent(ComponentClass, params);
         this.renderers.push(renderer);
         return renderer;
     }
-    addComponent(ComponentClass, ...params) {
-        const component = new ComponentClass(this.game, this, ...params);
+    addComponent(ComponentClass, params) {
+        const component = new ComponentClass(this.game, this, params);
         this.components[ComponentClass.name.toLowerCase()] = component;
         return component;
     }
