@@ -1,5 +1,6 @@
 import { TerrainMapEditor } from "./TerrainMapEditor.js";
 import { GraphicsEditor } from "./GraphicsEditor.js";
+import {AIPromptPanel} from "./AIPromptPanel.js";
 
 class GameEditor {
     constructor() {
@@ -162,20 +163,28 @@ class GameEditor {
                 <div class="property-list" id="custom-properties">
                     <!-- Custom properties will be rendered here -->
                 </div>
-                <button id="add-property-btn" style="margin-top: 10px;">Add Custom Property</button>
-                <button id="add-renderer-btn" style="margin-top: 10px;">Add Renderer</button>
-                <button id="add-tileMap-btn" style="margin-top: 10px;">Add TileMap</button>
+            </div>            
+            <div class="actions">
+                <div>                    
+                    <button id="add-property-btn">Add Custom Property</button>
+                    <button id="add-renderer-btn">Add Renderer</button>
+                    <button id="add-tileMap-btn">Add TileMap</button>
+                    <button id="ai-prompt-btn">AI Generate</button>
+                </div>
             </div>
-            
             <div class="actions">
                 <div>
                     <button class="primary" id="save-object-btn">Save ${singularType}</button>
                     <button id="revert-changes-btn">Revert Changes</button>
+                    <button class="danger" id="delete-object-btn">Delete ${singularType}</button>
                 </div>
-                <button class="danger" id="delete-object-btn">Delete ${singularType}</button>
             </div>
         `;
         
+        // Add event listener
+        document.getElementById('ai-prompt-btn').addEventListener('click', () => {
+            this.aiPromptPanel.showModal();
+        });
         // Setup property editor
         const customPropertiesContainer = document.getElementById('custom-properties');
         this.renderCustomProperties(customPropertiesContainer, this.state.objectTypes[this.state.selectedType][this.state.selectedObject]);
@@ -752,10 +761,14 @@ class GameEditor {
     }
 
     // Initialization methods
-    setupTerrainMapEditor() {
-        let terrainMapEditor = new TerrainMapEditor();
-        terrainMapEditor.init();
-        let graphicsEditor = new GraphicsEditor();        
+    initModules() {
+        this.terrainMapEditor = new TerrainMapEditor();
+        this.terrainMapEditor.init();
+        this.graphicsEditor = new GraphicsEditor();        
+ 
+        this.aiPromptPanel = new AIPromptPanel(this);
+        
+
     }
 
     setupEventListeners() {
@@ -840,8 +853,7 @@ class GameEditor {
                     this.state.objectTypeDefinitions = this.state.objectTypes.objectTypeDefinitions;
                     delete this.state.objectTypes.objectTypeDefinitions;                           
                 }
-                this.setupTerrainMapEditor();
-
+                this.initModules();
                 // Set up event listeners
                 this.setupEventListeners();
                 

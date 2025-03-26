@@ -1,7 +1,7 @@
 {
   "configs": {
     "state": {
-      "level": "level2",
+      "level": "level1",
       "gridSize": 48,
       "imageSize": 128,
       "canvasWidth": 1536,
@@ -14947,7 +14947,7 @@
                   "y": 16,
                   "z": -6.4,
                   "rotationX": -19,
-                  "color": "#000080"
+                  "color": "#00008b"
                 },
                 {
                   "type": "box",
@@ -15072,7 +15072,7 @@
                   "x": 0,
                   "y": 36,
                   "z": 40,
-                  "color": "#2A2Aa5"
+                  "color": "#2A2AA5"
                 },
                 {
                   "type": "box",
@@ -15202,7 +15202,7 @@
                   "y": 32,
                   "z": 10,
                   "rotationX": -20,
-                  "color": "#2a2Aa5"
+                  "color": "#2A2AA5"
                 },
                 {
                   "type": "cone",
@@ -15212,7 +15212,7 @@
                   "y": 30,
                   "z": -8,
                   "rotationX": -32,
-                  "color": "#2a2Aa5"
+                  "color": "#2A2AA5"
                 },
                 {
                   "type": "cone",
@@ -15222,7 +15222,7 @@
                   "y": 18,
                   "z": -24,
                   "rotationX": -75,
-                  "color": "#2A2Aa5"
+                  "color": "#2A2AA5"
                 },
                 {
                   "type": "cone",
@@ -15232,7 +15232,7 @@
                   "y": 12,
                   "z": -38,
                   "rotationX": -75,
-                  "color": "#2A2Aa5"
+                  "color": "#2A2AA5"
                 },
                 {
                   "type": "box",
@@ -15240,11 +15240,69 @@
                   "height": 1,
                   "depth": 28,
                   "x": 18,
-                  "y": 20,
+                  "y": 24,
                   "z": -4,
-                  "rotationY": 15,
+                  "rotationY": -30,
                   "rotationZ": 12,
-                  "color": "#2A2Aa5"
+                  "color": "#2A2AA5",
+                  "rotationX": -5,
+                  "name": "wing-left-0"
+                },
+                {
+                  "type": "box",
+                  "width": 6,
+                  "height": 1,
+                  "depth": 20,
+                  "x": -40,
+                  "y": 12,
+                  "z": -25,
+                  "rotationY": 15,
+                  "rotationZ": 15,
+                  "color": "#2A2AA5",
+                  "rotationX": -25,
+                  "name": "wing-right-2"
+                },
+                {
+                  "type": "box",
+                  "width": 18,
+                  "height": 1,
+                  "depth": 24,
+                  "x": 30,
+                  "y": 19,
+                  "z": -15,
+                  "rotationY": 15,
+                  "rotationZ": -15,
+                  "color": "#2A2AA5",
+                  "rotationX": -15,
+                  "name": "wing-left-1"
+                },
+                {
+                  "type": "box",
+                  "width": 18,
+                  "height": 1,
+                  "depth": 24,
+                  "x": -30,
+                  "y": 19,
+                  "z": -15,
+                  "rotationY": -15,
+                  "rotationZ": 15,
+                  "color": "#2A2AA5",
+                  "rotationX": -15,
+                  "name": "wing-right-1"
+                },
+                {
+                  "type": "box",
+                  "width": 6,
+                  "height": 1,
+                  "depth": 20,
+                  "x": 40,
+                  "y": 12,
+                  "z": -25,
+                  "rotationY": -15,
+                  "rotationZ": -15,
+                  "color": "#2A2AA5",
+                  "rotationX": -25,
+                  "name": "wing-left-2"
                 },
                 {
                   "type": "box",
@@ -15252,59 +15310,13 @@
                   "height": 1,
                   "depth": 28,
                   "x": -18,
-                  "y": 20,
+                  "y": 24,
                   "z": -4,
-                  "rotationY": -15,
+                  "rotationY": 30,
                   "rotationZ": -12,
-                  "color": "#2A2Aa5"
-                },
-                {
-                  "type": "box",
-                  "width": 18,
-                  "height": 1,
-                  "depth": 24,
-                  "x": 18,
-                  "y": 23,
-                  "z": -4,
-                  "rotationY": 15,
-                  "rotationZ": 24,
-                  "color": "#2A2Aa5"
-                },
-                {
-                  "type": "box",
-                  "width": 18,
-                  "height": 1,
-                  "depth": 24,
-                  "x": -18,
-                  "y": 23,
-                  "z": -4,
-                  "rotationY": -15,
-                  "rotationZ": -24,
-                  "color": "#2A2Aa5"
-                },
-                {
-                  "type": "box",
-                  "width": 16,
-                  "height": 1,
-                  "depth": 20,
-                  "x": 18,
-                  "y": 26,
-                  "z": -4,
-                  "rotationY": 15,
-                  "rotationZ": 36,
-                  "color": "#2A2Aa5"
-                },
-                {
-                  "type": "box",
-                  "width": 16,
-                  "height": 1,
-                  "depth": 20,
-                  "x": -18,
-                  "y": 26,
-                  "z": -4,
-                  "rotationY": -15,
-                  "rotationZ": -36,
-                  "color": "#2A2Aa5"
+                  "color": "#2A2AA5",
+                  "rotationX": -5,
+                  "name": "wing-right-0"
                 }
               ]
             }
@@ -15449,7 +15461,7 @@
                   "x": 0,
                   "y": 39,
                   "z": 40,
-                  "color": "#2A2Aa5"
+                  "color": "#2A2AA5"
                 },
                 {
                   "type": "box",
@@ -15587,7 +15599,7 @@
                   "y": 35,
                   "z": 10,
                   "rotationX": -20,
-                  "color": "#2A2Aa5"
+                  "color": "#2A2AA5"
                 },
                 {
                   "type": "cone",
@@ -15597,7 +15609,7 @@
                   "y": 33,
                   "z": -8,
                   "rotationX": -32,
-                  "color": "#2A2Aa5"
+                  "color": "#2A2AA5"
                 },
                 {
                   "type": "cone",
@@ -15608,7 +15620,7 @@
                   "z": -24,
                   "rotationX": -75,
                   "rotationZ": 5,
-                  "color": "#2A2Aa5"
+                  "color": "#2A2AA5"
                 },
                 {
                   "type": "cone",
@@ -15619,7 +15631,7 @@
                   "z": -38,
                   "rotationX": -75,
                   "rotationZ": 8,
-                  "color": "#2A2Aa5"
+                  "color": "#2A2AA5"
                 },
                 {
                   "type": "box",
@@ -15627,11 +15639,69 @@
                   "height": 1,
                   "depth": 28,
                   "x": 18,
-                  "y": 23,
+                  "y": 24,
                   "z": -4,
+                  "rotationY": -30,
+                  "rotationZ": 12,
+                  "color": "#2A2AA5",
+                  "rotationX": -5,
+                  "name": "wing-left-0"
+                },
+                {
+                  "type": "box",
+                  "width": 6,
+                  "height": 1,
+                  "depth": 20,
+                  "x": -40,
+                  "y": 12,
+                  "z": -25,
                   "rotationY": 15,
-                  "rotationZ": 18,
-                  "color": "#2A2Aa5"
+                  "rotationZ": 15,
+                  "color": "#2A2AA5",
+                  "rotationX": -25,
+                  "name": "wing-right-2"
+                },
+                {
+                  "type": "box",
+                  "width": 18,
+                  "height": 1,
+                  "depth": 24,
+                  "x": 30,
+                  "y": 19,
+                  "z": -15,
+                  "rotationY": 15,
+                  "rotationZ": -15,
+                  "color": "#2A2AA5",
+                  "rotationX": -15,
+                  "name": "wing-left-1"
+                },
+                {
+                  "type": "box",
+                  "width": 18,
+                  "height": 1,
+                  "depth": 24,
+                  "x": -30,
+                  "y": 19,
+                  "z": -15,
+                  "rotationY": -15,
+                  "rotationZ": 15,
+                  "color": "#2A2AA5",
+                  "rotationX": -15,
+                  "name": "wing-right-1"
+                },
+                {
+                  "type": "box",
+                  "width": 6,
+                  "height": 1,
+                  "depth": 20,
+                  "x": 40,
+                  "y": 12,
+                  "z": -25,
+                  "rotationY": -15,
+                  "rotationZ": -15,
+                  "color": "#2A2AA5",
+                  "rotationX": -25,
+                  "name": "wing-left-2"
                 },
                 {
                   "type": "box",
@@ -15639,59 +15709,13 @@
                   "height": 1,
                   "depth": 28,
                   "x": -18,
-                  "y": 23,
+                  "y": 24,
                   "z": -4,
-                  "rotationY": -15,
-                  "rotationZ": -6,
-                  "color": "#2A2Aa5"
-                },
-                {
-                  "type": "box",
-                  "width": 18,
-                  "height": 1,
-                  "depth": 24,
-                  "x": 18,
-                  "y": 26,
-                  "z": -4,
-                  "rotationY": 15,
-                  "rotationZ": 30,
-                  "color": "#2A2Aa5"
-                },
-                {
-                  "type": "box",
-                  "width": 18,
-                  "height": 1,
-                  "depth": 24,
-                  "x": -18,
-                  "y": 26,
-                  "z": -4,
-                  "rotationY": -15,
-                  "rotationZ": -18,
-                  "color": "#2A2Aa5"
-                },
-                {
-                  "type": "box",
-                  "width": 16,
-                  "height": 1,
-                  "depth": 20,
-                  "x": 18,
-                  "y": 29,
-                  "z": -4,
-                  "rotationY": 15,
-                  "rotationZ": 42,
-                  "color": "#2A2Aa5"
-                },
-                {
-                  "type": "box",
-                  "width": 16,
-                  "height": 1,
-                  "depth": 20,
-                  "x": -18,
-                  "y": 29,
-                  "z": -4,
-                  "rotationY": -15,
-                  "rotationZ": -30,
-                  "color": "#2A2Aa5"
+                  "rotationY": 30,
+                  "rotationZ": -12,
+                  "color": "#2A2AA5",
+                  "rotationX": -5,
+                  "name": "wing-right-0"
                 }
               ]
             },
@@ -15831,7 +15855,7 @@
                   "x": 0,
                   "y": 40.5,
                   "z": 40,
-                  "color": "#2A2Aa5"
+                  "color": "#2A2AA5"
                 },
                 {
                   "type": "box",
@@ -15969,7 +15993,7 @@
                   "y": 36.5,
                   "z": 10,
                   "rotationX": -20,
-                  "color": "#2A2Aa5"
+                  "color": "#2A2AA5"
                 },
                 {
                   "type": "cone",
@@ -15979,7 +16003,7 @@
                   "y": 34.5,
                   "z": -8,
                   "rotationX": -32,
-                  "color": "#2A2Aa5"
+                  "color": "#2A2AA5"
                 },
                 {
                   "type": "cone",
@@ -15989,7 +16013,7 @@
                   "y": 22,
                   "z": -24,
                   "rotationX": -75,
-                  "color": "#2A2Aa5"
+                  "color": "#2A2AA5"
                 },
                 {
                   "type": "cone",
@@ -15999,7 +16023,7 @@
                   "y": 16,
                   "z": -38,
                   "rotationX": -75,
-                  "color": "#2A2Aa5"
+                  "color": "#2A2AA5"
                 },
                 {
                   "type": "box",
@@ -16007,11 +16031,69 @@
                   "height": 1,
                   "depth": 28,
                   "x": 18,
-                  "y": 24.5,
+                  "y": 25.5,
                   "z": -4,
+                  "rotationY": -30,
+                  "rotationZ": 12,
+                  "color": "#2A2AA5",
+                  "rotationX": -5,
+                  "name": "wing-left-0"
+                },
+                {
+                  "type": "box",
+                  "width": 6,
+                  "height": 1,
+                  "depth": 20,
+                  "x": -40,
+                  "y": 12,
+                  "z": -25,
                   "rotationY": 15,
-                  "rotationZ": 8,
-                  "color": "#2A2Aa5"
+                  "rotationZ": 15,
+                  "color": "#2A2AA5",
+                  "rotationX": -25,
+                  "name": "wing-right-2"
+                },
+                {
+                  "type": "box",
+                  "width": 18,
+                  "height": 1,
+                  "depth": 24,
+                  "x": 30,
+                  "y": 20,
+                  "z": -15,
+                  "rotationY": 15,
+                  "rotationZ": -15,
+                  "color": "#2A2AA5",
+                  "rotationX": -15,
+                  "name": "wing-left-1"
+                },
+                {
+                  "type": "box",
+                  "width": 18,
+                  "height": 1,
+                  "depth": 24,
+                  "x": -30,
+                  "y": 20,
+                  "z": -15,
+                  "rotationY": -15,
+                  "rotationZ": 15,
+                  "color": "#2A2AA5",
+                  "rotationX": -15,
+                  "name": "wing-right-1"
+                },
+                {
+                  "type": "box",
+                  "width": 6,
+                  "height": 1,
+                  "depth": 20,
+                  "x": 40,
+                  "y": 12,
+                  "z": -25,
+                  "rotationY": -15,
+                  "rotationZ": -15,
+                  "color": "#2A2AA5",
+                  "rotationX": -25,
+                  "name": "wing-left-2"
                 },
                 {
                   "type": "box",
@@ -16019,59 +16101,13 @@
                   "height": 1,
                   "depth": 28,
                   "x": -18,
-                  "y": 24.5,
+                  "y": 25.5,
                   "z": -4,
-                  "rotationY": -15,
-                  "rotationZ": -16,
-                  "color": "#2A2Aa5"
-                },
-                {
-                  "type": "box",
-                  "width": 18,
-                  "height": 1,
-                  "depth": 24,
-                  "x": 18,
-                  "y": 27.5,
-                  "z": -4,
-                  "rotationY": 15,
-                  "rotationZ": 20,
-                  "color": "#2A2Aa5"
-                },
-                {
-                  "type": "box",
-                  "width": 18,
-                  "height": 1,
-                  "depth": 24,
-                  "x": -18,
-                  "y": 27.5,
-                  "z": -4,
-                  "rotationY": -15,
-                  "rotationZ": -28,
-                  "color": "#2A2Aa5"
-                },
-                {
-                  "type": "box",
-                  "width": 16,
-                  "height": 1,
-                  "depth": 20,
-                  "x": 18,
-                  "y": 30.5,
-                  "z": -4,
-                  "rotationY": 15,
-                  "rotationZ": 32,
-                  "color": "#2A2Aa5"
-                },
-                {
-                  "type": "box",
-                  "width": 16,
-                  "height": 1,
-                  "depth": 20,
-                  "x": -18,
-                  "y": 30.5,
-                  "z": -4,
-                  "rotationY": -15,
-                  "rotationZ": -40,
-                  "color": "#2A2Aa5"
+                  "rotationY": 30,
+                  "rotationZ": -12,
+                  "color": "#2A2AA5",
+                  "rotationX": -5,
+                  "name": "wing-right-0"
                 }
               ]
             },
@@ -16214,7 +16250,7 @@
                   "x": 0,
                   "y": 41,
                   "z": 40,
-                  "color": "#2A2Aa5"
+                  "color": "#2A2AA5"
                 },
                 {
                   "type": "box",
@@ -16352,7 +16388,7 @@
                   "y": 37,
                   "z": 10,
                   "rotationX": -20,
-                  "color": "#2A2Aa5"
+                  "color": "#2A2AA5"
                 },
                 {
                   "type": "cone",
@@ -16362,7 +16398,7 @@
                   "y": 35,
                   "z": -8,
                   "rotationX": -32,
-                  "color": "#2A2Aa5"
+                  "color": "#2A2AA5"
                 },
                 {
                   "type": "cone",
@@ -16373,7 +16409,7 @@
                   "z": -24,
                   "rotationX": -75,
                   "rotationZ": -5,
-                  "color": "#2A2Aa5"
+                  "color": "#2A2AA5"
                 },
                 {
                   "type": "cone",
@@ -16384,7 +16420,7 @@
                   "z": -38,
                   "rotationX": -75,
                   "rotationZ": -8,
-                  "color": "#2A2Aa5"
+                  "color": "#2A2AA5"
                 },
                 {
                   "type": "box",
@@ -16392,11 +16428,69 @@
                   "height": 1,
                   "depth": 28,
                   "x": 18,
-                  "y": 25,
+                  "y": 26,
                   "z": -4,
+                  "rotationY": -30,
+                  "rotationZ": 12,
+                  "color": "#2A2AA5",
+                  "rotationX": -5,
+                  "name": "wing-left-0"
+                },
+                {
+                  "type": "box",
+                  "width": 6,
+                  "height": 1,
+                  "depth": 20,
+                  "x": -40,
+                  "y": 12.5,
+                  "z": -25,
                   "rotationY": 15,
-                  "rotationZ": 6,
-                  "color": "#2A2Aa5"
+                  "rotationZ": 15,
+                  "color": "#2A2AA5",
+                  "rotationX": -25,
+                  "name": "wing-right-2"
+                },
+                {
+                  "type": "box",
+                  "width": 18,
+                  "height": 1,
+                  "depth": 24,
+                  "x": 30,
+                  "y": 20,
+                  "z": -15,
+                  "rotationY": 15,
+                  "rotationZ": -15,
+                  "color": "#2A2AA5",
+                  "rotationX": -15,
+                  "name": "wing-left-1"
+                },
+                {
+                  "type": "box",
+                  "width": 18,
+                  "height": 1,
+                  "depth": 24,
+                  "x": -30,
+                  "y": 20,
+                  "z": -15,
+                  "rotationY": -15,
+                  "rotationZ": 15,
+                  "color": "#2A2AA5",
+                  "rotationX": -15,
+                  "name": "wing-right-1"
+                },
+                {
+                  "type": "box",
+                  "width": 6,
+                  "height": 1,
+                  "depth": 20,
+                  "x": 40,
+                  "y": 12.5,
+                  "z": -25,
+                  "rotationY": -15,
+                  "rotationZ": -15,
+                  "color": "#2A2AA5",
+                  "rotationX": -25,
+                  "name": "wing-left-2"
                 },
                 {
                   "type": "box",
@@ -16404,59 +16498,13 @@
                   "height": 1,
                   "depth": 28,
                   "x": -18,
-                  "y": 25,
+                  "y": 26,
                   "z": -4,
-                  "rotationY": -15,
-                  "rotationZ": -18,
-                  "color": "#2A2Aa5"
-                },
-                {
-                  "type": "box",
-                  "width": 18,
-                  "height": 1,
-                  "depth": 24,
-                  "x": 18,
-                  "y": 28,
-                  "z": -4,
-                  "rotationY": 15,
-                  "rotationZ": 18,
-                  "color": "#2A2Aa5"
-                },
-                {
-                  "type": "box",
-                  "width": 18,
-                  "height": 1,
-                  "depth": 24,
-                  "x": -18,
-                  "y": 28,
-                  "z": -4,
-                  "rotationY": -15,
-                  "rotationZ": -30,
-                  "color": "#2A2Aa5"
-                },
-                {
-                  "type": "box",
-                  "width": 16,
-                  "height": 1,
-                  "depth": 20,
-                  "x": 18,
-                  "y": 31,
-                  "z": -4,
-                  "rotationY": 15,
-                  "rotationZ": 30,
-                  "color": "#2A2Aa5"
-                },
-                {
-                  "type": "box",
-                  "width": 16,
-                  "height": 1,
-                  "depth": 20,
-                  "x": -18,
-                  "y": 31,
-                  "z": -4,
-                  "rotationY": -15,
-                  "rotationZ": -42,
-                  "color": "#2A2Aa5"
+                  "rotationY": 30,
+                  "rotationZ": -12,
+                  "color": "#2A2AA5",
+                  "rotationX": -5,
+                  "name": "wing-right-0"
                 }
               ]
             },
@@ -16596,7 +16644,7 @@
                   "x": 0,
                   "y": 40.5,
                   "z": 40,
-                  "color": "#2A2Aa5"
+                  "color": "#2A2AA5"
                 },
                 {
                   "type": "box",
@@ -16734,7 +16782,7 @@
                   "y": 36.5,
                   "z": 10,
                   "rotationX": -20,
-                  "color": "#2A2Aa5"
+                  "color": "#2A2AA5"
                 },
                 {
                   "type": "cone",
@@ -16744,7 +16792,7 @@
                   "y": 34.5,
                   "z": -8,
                   "rotationX": -32,
-                  "color": "#2A2Aa5"
+                  "color": "#2A2AA5"
                 },
                 {
                   "type": "cone",
@@ -16754,7 +16802,7 @@
                   "y": 22,
                   "z": -24,
                   "rotationX": -75,
-                  "color": "#2A2Aa5"
+                  "color": "#2A2AA5"
                 },
                 {
                   "type": "cone",
@@ -16764,7 +16812,7 @@
                   "y": 16,
                   "z": -38,
                   "rotationX": -75,
-                  "color": "#2A2Aa5"
+                  "color": "#2A2AA5"
                 },
                 {
                   "type": "box",
@@ -16772,11 +16820,69 @@
                   "height": 1,
                   "depth": 28,
                   "x": 18,
-                  "y": 24.5,
+                  "y": 25.5,
                   "z": -4,
+                  "rotationY": -30,
+                  "rotationZ": 12,
+                  "color": "#2A2AA5",
+                  "rotationX": -5,
+                  "name": "wing-left-0"
+                },
+                {
+                  "type": "box",
+                  "width": 6,
+                  "height": 1,
+                  "depth": 20,
+                  "x": -40,
+                  "y": 12,
+                  "z": -25,
                   "rotationY": 15,
-                  "rotationZ": 8,
-                  "color": "#2A2Aa5"
+                  "rotationZ": 15,
+                  "color": "#2A2AA5",
+                  "rotationX": -25,
+                  "name": "wing-right-2"
+                },
+                {
+                  "type": "box",
+                  "width": 18,
+                  "height": 1,
+                  "depth": 24,
+                  "x": 30,
+                  "y": 20,
+                  "z": -15,
+                  "rotationY": 15,
+                  "rotationZ": -15,
+                  "color": "#2A2AA5",
+                  "rotationX": -15,
+                  "name": "wing-left-1"
+                },
+                {
+                  "type": "box",
+                  "width": 18,
+                  "height": 1,
+                  "depth": 24,
+                  "x": -30,
+                  "y": 20,
+                  "z": -15,
+                  "rotationY": -15,
+                  "rotationZ": 15,
+                  "color": "#2A2AA5",
+                  "rotationX": -15,
+                  "name": "wing-right-1"
+                },
+                {
+                  "type": "box",
+                  "width": 6,
+                  "height": 1,
+                  "depth": 20,
+                  "x": 40,
+                  "y": 12,
+                  "z": -25,
+                  "rotationY": -15,
+                  "rotationZ": -15,
+                  "color": "#2A2AA5",
+                  "rotationX": -25,
+                  "name": "wing-left-2"
                 },
                 {
                   "type": "box",
@@ -16784,59 +16890,13 @@
                   "height": 1,
                   "depth": 28,
                   "x": -18,
-                  "y": 24.5,
+                  "y": 25.5,
                   "z": -4,
-                  "rotationY": -15,
-                  "rotationZ": -16,
-                  "color": "#2A2Aa5"
-                },
-                {
-                  "type": "box",
-                  "width": 18,
-                  "height": 1,
-                  "depth": 24,
-                  "x": 18,
-                  "y": 27.5,
-                  "z": -4,
-                  "rotationY": 15,
-                  "rotationZ": 20,
-                  "color": "#2A2Aa5"
-                },
-                {
-                  "type": "box",
-                  "width": 18,
-                  "height": 1,
-                  "depth": 24,
-                  "x": -18,
-                  "y": 27.5,
-                  "z": -4,
-                  "rotationY": -15,
-                  "rotationZ": -28,
-                  "color": "#2A2Aa5"
-                },
-                {
-                  "type": "box",
-                  "width": 16,
-                  "height": 1,
-                  "depth": 20,
-                  "x": 18,
-                  "y": 30.5,
-                  "z": -4,
-                  "rotationY": 15,
-                  "rotationZ": 32,
-                  "color": "#2A2Aa5"
-                },
-                {
-                  "type": "box",
-                  "width": 16,
-                  "height": 1,
-                  "depth": 20,
-                  "x": -18,
-                  "y": 30.5,
-                  "z": -4,
-                  "rotationY": -15,
-                  "rotationZ": -40,
-                  "color": "#2A2Aa5"
+                  "rotationY": 30,
+                  "rotationZ": -12,
+                  "color": "#2A2AA5",
+                  "rotationX": -5,
+                  "name": "wing-right-0"
                 }
               ]
             }
@@ -17161,11 +17221,69 @@
                   "height": 1,
                   "depth": 28,
                   "x": 18,
-                  "y": 20,
+                  "y": 24,
                   "z": -4,
-                  "rotationY": 15,
+                  "rotationY": -30,
                   "rotationZ": 12,
-                  "color": "#2AA52A"
+                  "color": "#2AA52A",
+                  "rotationX": -5,
+                  "name": "wing-left-0"
+                },
+                {
+                  "type": "box",
+                  "width": 6,
+                  "height": 1,
+                  "depth": 20,
+                  "x": -40,
+                  "y": 12,
+                  "z": -25,
+                  "rotationY": 15,
+                  "rotationZ": 15,
+                  "color": "#2AA52A",
+                  "rotationX": -25,
+                  "name": "wing-right-2"
+                },
+                {
+                  "type": "box",
+                  "width": 18,
+                  "height": 1,
+                  "depth": 24,
+                  "x": 30,
+                  "y": 19,
+                  "z": -15,
+                  "rotationY": 15,
+                  "rotationZ": -15,
+                  "color": "#2AA52A",
+                  "rotationX": -15,
+                  "name": "wing-left-1"
+                },
+                {
+                  "type": "box",
+                  "width": 18,
+                  "height": 1,
+                  "depth": 24,
+                  "x": -30,
+                  "y": 19,
+                  "z": -15,
+                  "rotationY": -15,
+                  "rotationZ": 15,
+                  "color": "#2AA52A",
+                  "rotationX": -15,
+                  "name": "wing-right-1"
+                },
+                {
+                  "type": "box",
+                  "width": 6,
+                  "height": 1,
+                  "depth": 20,
+                  "x": 40,
+                  "y": 12,
+                  "z": -25,
+                  "rotationY": -15,
+                  "rotationZ": -15,
+                  "color": "#2AA52A",
+                  "rotationX": -25,
+                  "name": "wing-left-2"
                 },
                 {
                   "type": "box",
@@ -17173,59 +17291,13 @@
                   "height": 1,
                   "depth": 28,
                   "x": -18,
-                  "y": 20,
+                  "y": 24,
                   "z": -4,
-                  "rotationY": -15,
+                  "rotationY": 30,
                   "rotationZ": -12,
-                  "color": "#2AA52A"
-                },
-                {
-                  "type": "box",
-                  "width": 18,
-                  "height": 1,
-                  "depth": 24,
-                  "x": 18,
-                  "y": 23,
-                  "z": -4,
-                  "rotationY": 15,
-                  "rotationZ": 24,
-                  "color": "#2AA52A"
-                },
-                {
-                  "type": "box",
-                  "width": 18,
-                  "height": 1,
-                  "depth": 24,
-                  "x": -18,
-                  "y": 23,
-                  "z": -4,
-                  "rotationY": -15,
-                  "rotationZ": -24,
-                  "color": "#2AA52A"
-                },
-                {
-                  "type": "box",
-                  "width": 16,
-                  "height": 1,
-                  "depth": 20,
-                  "x": 18,
-                  "y": 26,
-                  "z": -4,
-                  "rotationY": 15,
-                  "rotationZ": 36,
-                  "color": "#2AA52A"
-                },
-                {
-                  "type": "box",
-                  "width": 16,
-                  "height": 1,
-                  "depth": 20,
-                  "x": -18,
-                  "y": 26,
-                  "z": -4,
-                  "rotationY": -15,
-                  "rotationZ": -36,
-                  "color": "#2AA52A"
+                  "color": "#2AA52A",
+                  "rotationX": -5,
+                  "name": "wing-right-0"
                 }
               ]
             }
@@ -17548,11 +17620,69 @@
                   "height": 1,
                   "depth": 28,
                   "x": 18,
-                  "y": 23,
+                  "y": 24,
                   "z": -4,
+                  "rotationY": -30,
+                  "rotationZ": 12,
+                  "color": "#2AA52A",
+                  "rotationX": -5,
+                  "name": "wing-left-0"
+                },
+                {
+                  "type": "box",
+                  "width": 6,
+                  "height": 1,
+                  "depth": 20,
+                  "x": -40,
+                  "y": 12,
+                  "z": -25,
                   "rotationY": 15,
-                  "rotationZ": 18,
-                  "color": "#2AA52A"
+                  "rotationZ": 15,
+                  "color": "#2AA52A",
+                  "rotationX": -25,
+                  "name": "wing-right-2"
+                },
+                {
+                  "type": "box",
+                  "width": 18,
+                  "height": 1,
+                  "depth": 24,
+                  "x": 30,
+                  "y": 19,
+                  "z": -15,
+                  "rotationY": 15,
+                  "rotationZ": -15,
+                  "color": "#2AA52A",
+                  "rotationX": -15,
+                  "name": "wing-left-1"
+                },
+                {
+                  "type": "box",
+                  "width": 18,
+                  "height": 1,
+                  "depth": 24,
+                  "x": -30,
+                  "y": 19,
+                  "z": -15,
+                  "rotationY": -15,
+                  "rotationZ": 15,
+                  "color": "#2AA52A",
+                  "rotationX": -15,
+                  "name": "wing-right-1"
+                },
+                {
+                  "type": "box",
+                  "width": 6,
+                  "height": 1,
+                  "depth": 20,
+                  "x": 40,
+                  "y": 12,
+                  "z": -25,
+                  "rotationY": -15,
+                  "rotationZ": -15,
+                  "color": "#2AA52A",
+                  "rotationX": -25,
+                  "name": "wing-left-2"
                 },
                 {
                   "type": "box",
@@ -17560,59 +17690,13 @@
                   "height": 1,
                   "depth": 28,
                   "x": -18,
-                  "y": 23,
+                  "y": 24,
                   "z": -4,
-                  "rotationY": -15,
-                  "rotationZ": -6,
-                  "color": "#2AA52A"
-                },
-                {
-                  "type": "box",
-                  "width": 18,
-                  "height": 1,
-                  "depth": 24,
-                  "x": 18,
-                  "y": 26,
-                  "z": -4,
-                  "rotationY": 15,
-                  "rotationZ": 30,
-                  "color": "#2AA52A"
-                },
-                {
-                  "type": "box",
-                  "width": 18,
-                  "height": 1,
-                  "depth": 24,
-                  "x": -18,
-                  "y": 26,
-                  "z": -4,
-                  "rotationY": -15,
-                  "rotationZ": -18,
-                  "color": "#2AA52A"
-                },
-                {
-                  "type": "box",
-                  "width": 16,
-                  "height": 1,
-                  "depth": 20,
-                  "x": 18,
-                  "y": 29,
-                  "z": -4,
-                  "rotationY": 15,
-                  "rotationZ": 42,
-                  "color": "#2AA52A"
-                },
-                {
-                  "type": "box",
-                  "width": 16,
-                  "height": 1,
-                  "depth": 20,
-                  "x": -18,
-                  "y": 29,
-                  "z": -4,
-                  "rotationY": -15,
-                  "rotationZ": -30,
-                  "color": "#2AA52A"
+                  "rotationY": 30,
+                  "rotationZ": -12,
+                  "color": "#2AA52A",
+                  "rotationX": -5,
+                  "name": "wing-right-0"
                 }
               ]
             },
@@ -17928,11 +18012,69 @@
                   "height": 1,
                   "depth": 28,
                   "x": 18,
-                  "y": 24.5,
+                  "y": 25.5,
                   "z": -4,
+                  "rotationY": -30,
+                  "rotationZ": 12,
+                  "color": "#2AA52A",
+                  "rotationX": -5,
+                  "name": "wing-left-0"
+                },
+                {
+                  "type": "box",
+                  "width": 6,
+                  "height": 1,
+                  "depth": 20,
+                  "x": -40,
+                  "y": 12,
+                  "z": -25,
                   "rotationY": 15,
-                  "rotationZ": 8,
-                  "color": "#2AA52A"
+                  "rotationZ": 15,
+                  "color": "#2AA52A",
+                  "rotationX": -25,
+                  "name": "wing-right-2"
+                },
+                {
+                  "type": "box",
+                  "width": 18,
+                  "height": 1,
+                  "depth": 24,
+                  "x": 30,
+                  "y": 20,
+                  "z": -15,
+                  "rotationY": 15,
+                  "rotationZ": -15,
+                  "color": "#2AA52A",
+                  "rotationX": -15,
+                  "name": "wing-left-1"
+                },
+                {
+                  "type": "box",
+                  "width": 18,
+                  "height": 1,
+                  "depth": 24,
+                  "x": -30,
+                  "y": 20,
+                  "z": -15,
+                  "rotationY": -15,
+                  "rotationZ": 15,
+                  "color": "#2AA52A",
+                  "rotationX": -15,
+                  "name": "wing-right-1"
+                },
+                {
+                  "type": "box",
+                  "width": 6,
+                  "height": 1,
+                  "depth": 20,
+                  "x": 40,
+                  "y": 12,
+                  "z": -25,
+                  "rotationY": -15,
+                  "rotationZ": -15,
+                  "color": "#2AA52A",
+                  "rotationX": -25,
+                  "name": "wing-left-2"
                 },
                 {
                   "type": "box",
@@ -17940,59 +18082,13 @@
                   "height": 1,
                   "depth": 28,
                   "x": -18,
-                  "y": 24.5,
+                  "y": 25.5,
                   "z": -4,
-                  "rotationY": -15,
-                  "rotationZ": -16,
-                  "color": "#2AA52A"
-                },
-                {
-                  "type": "box",
-                  "width": 18,
-                  "height": 1,
-                  "depth": 24,
-                  "x": 18,
-                  "y": 27.5,
-                  "z": -4,
-                  "rotationY": 15,
-                  "rotationZ": 20,
-                  "color": "#2AA52A"
-                },
-                {
-                  "type": "box",
-                  "width": 18,
-                  "height": 1,
-                  "depth": 24,
-                  "x": -18,
-                  "y": 27.5,
-                  "z": -4,
-                  "rotationY": -15,
-                  "rotationZ": -28,
-                  "color": "#2AA52A"
-                },
-                {
-                  "type": "box",
-                  "width": 16,
-                  "height": 1,
-                  "depth": 20,
-                  "x": 18,
-                  "y": 30.5,
-                  "z": -4,
-                  "rotationY": 15,
-                  "rotationZ": 32,
-                  "color": "#2AA52A"
-                },
-                {
-                  "type": "box",
-                  "width": 16,
-                  "height": 1,
-                  "depth": 20,
-                  "x": -18,
-                  "y": 30.5,
-                  "z": -4,
-                  "rotationY": -15,
-                  "rotationZ": -40,
-                  "color": "#2AA52A"
+                  "rotationY": 30,
+                  "rotationZ": -12,
+                  "color": "#2AA52A",
+                  "rotationX": -5,
+                  "name": "wing-right-0"
                 }
               ]
             },
@@ -18313,11 +18409,69 @@
                   "height": 1,
                   "depth": 28,
                   "x": 18,
-                  "y": 25,
+                  "y": 26,
                   "z": -4,
+                  "rotationY": -30,
+                  "rotationZ": 12,
+                  "color": "#2AA52A",
+                  "rotationX": -5,
+                  "name": "wing-left-0"
+                },
+                {
+                  "type": "box",
+                  "width": 6,
+                  "height": 1,
+                  "depth": 20,
+                  "x": -40,
+                  "y": 12.5,
+                  "z": -25,
                   "rotationY": 15,
-                  "rotationZ": 6,
-                  "color": "#2AA52A"
+                  "rotationZ": 15,
+                  "color": "#2AA52A",
+                  "rotationX": -25,
+                  "name": "wing-right-2"
+                },
+                {
+                  "type": "box",
+                  "width": 18,
+                  "height": 1,
+                  "depth": 24,
+                  "x": 30,
+                  "y": 20,
+                  "z": -15,
+                  "rotationY": 15,
+                  "rotationZ": -15,
+                  "color": "#2AA52A",
+                  "rotationX": -15,
+                  "name": "wing-left-1"
+                },
+                {
+                  "type": "box",
+                  "width": 18,
+                  "height": 1,
+                  "depth": 24,
+                  "x": -30,
+                  "y": 20,
+                  "z": -15,
+                  "rotationY": -15,
+                  "rotationZ": 15,
+                  "color": "#2AA52A",
+                  "rotationX": -15,
+                  "name": "wing-right-1"
+                },
+                {
+                  "type": "box",
+                  "width": 6,
+                  "height": 1,
+                  "depth": 20,
+                  "x": 40,
+                  "y": 12.5,
+                  "z": -25,
+                  "rotationY": -15,
+                  "rotationZ": -15,
+                  "color": "#2AA52A",
+                  "rotationX": -25,
+                  "name": "wing-left-2"
                 },
                 {
                   "type": "box",
@@ -18325,59 +18479,13 @@
                   "height": 1,
                   "depth": 28,
                   "x": -18,
-                  "y": 25,
+                  "y": 26,
                   "z": -4,
-                  "rotationY": -15,
-                  "rotationZ": -18,
-                  "color": "#2AA52A"
-                },
-                {
-                  "type": "box",
-                  "width": 18,
-                  "height": 1,
-                  "depth": 24,
-                  "x": 18,
-                  "y": 28,
-                  "z": -4,
-                  "rotationY": 15,
-                  "rotationZ": 18,
-                  "color": "#2AA52A"
-                },
-                {
-                  "type": "box",
-                  "width": 18,
-                  "height": 1,
-                  "depth": 24,
-                  "x": -18,
-                  "y": 28,
-                  "z": -4,
-                  "rotationY": -15,
-                  "rotationZ": -30,
-                  "color": "#2AA52A"
-                },
-                {
-                  "type": "box",
-                  "width": 16,
-                  "height": 1,
-                  "depth": 20,
-                  "x": 18,
-                  "y": 31,
-                  "z": -4,
-                  "rotationY": 15,
-                  "rotationZ": 30,
-                  "color": "#2AA52A"
-                },
-                {
-                  "type": "box",
-                  "width": 16,
-                  "height": 1,
-                  "depth": 20,
-                  "x": -18,
-                  "y": 31,
-                  "z": -4,
-                  "rotationY": -15,
-                  "rotationZ": -42,
-                  "color": "#2AA52A"
+                  "rotationY": 30,
+                  "rotationZ": -12,
+                  "color": "#2AA52A",
+                  "rotationX": -5,
+                  "name": "wing-right-0"
                 }
               ]
             },
@@ -18693,11 +18801,69 @@
                   "height": 1,
                   "depth": 28,
                   "x": 18,
-                  "y": 24.5,
+                  "y": 25.5,
                   "z": -4,
+                  "rotationY": -30,
+                  "rotationZ": 12,
+                  "color": "#2AA52A",
+                  "rotationX": -5,
+                  "name": "wing-left-0"
+                },
+                {
+                  "type": "box",
+                  "width": 6,
+                  "height": 1,
+                  "depth": 20,
+                  "x": -40,
+                  "y": 12,
+                  "z": -25,
                   "rotationY": 15,
-                  "rotationZ": 8,
-                  "color": "#2AA52A"
+                  "rotationZ": 15,
+                  "color": "#2AA52A",
+                  "rotationX": -25,
+                  "name": "wing-right-2"
+                },
+                {
+                  "type": "box",
+                  "width": 18,
+                  "height": 1,
+                  "depth": 24,
+                  "x": 30,
+                  "y": 20,
+                  "z": -15,
+                  "rotationY": 15,
+                  "rotationZ": -15,
+                  "color": "#2AA52A",
+                  "rotationX": -15,
+                  "name": "wing-left-1"
+                },
+                {
+                  "type": "box",
+                  "width": 18,
+                  "height": 1,
+                  "depth": 24,
+                  "x": -30,
+                  "y": 20,
+                  "z": -15,
+                  "rotationY": -15,
+                  "rotationZ": 15,
+                  "color": "#2AA52A",
+                  "rotationX": -15,
+                  "name": "wing-right-1"
+                },
+                {
+                  "type": "box",
+                  "width": 6,
+                  "height": 1,
+                  "depth": 20,
+                  "x": 40,
+                  "y": 12,
+                  "z": -25,
+                  "rotationY": -15,
+                  "rotationZ": -15,
+                  "color": "#2AA52A",
+                  "rotationX": -25,
+                  "name": "wing-left-2"
                 },
                 {
                   "type": "box",
@@ -18705,59 +18871,13 @@
                   "height": 1,
                   "depth": 28,
                   "x": -18,
-                  "y": 24.5,
+                  "y": 25.5,
                   "z": -4,
-                  "rotationY": -15,
-                  "rotationZ": -16,
-                  "color": "#2AA52A"
-                },
-                {
-                  "type": "box",
-                  "width": 18,
-                  "height": 1,
-                  "depth": 24,
-                  "x": 18,
-                  "y": 27.5,
-                  "z": -4,
-                  "rotationY": 15,
-                  "rotationZ": 20,
-                  "color": "#2AA52A"
-                },
-                {
-                  "type": "box",
-                  "width": 18,
-                  "height": 1,
-                  "depth": 24,
-                  "x": -18,
-                  "y": 27.5,
-                  "z": -4,
-                  "rotationY": -15,
-                  "rotationZ": -28,
-                  "color": "#2AA52A"
-                },
-                {
-                  "type": "box",
-                  "width": 16,
-                  "height": 1,
-                  "depth": 20,
-                  "x": 18,
-                  "y": 30.5,
-                  "z": -4,
-                  "rotationY": 15,
-                  "rotationZ": 32,
-                  "color": "#2AA52A"
-                },
-                {
-                  "type": "box",
-                  "width": 16,
-                  "height": 1,
-                  "depth": 20,
-                  "x": -18,
-                  "y": 30.5,
-                  "z": -4,
-                  "rotationY": -15,
-                  "rotationZ": -40,
-                  "color": "#2AA52A"
+                  "rotationY": 30,
+                  "rotationZ": -12,
+                  "color": "#2AA52A",
+                  "rotationX": -5,
+                  "name": "wing-right-0"
                 }
               ]
             }
@@ -19082,11 +19202,69 @@
                   "height": 1,
                   "depth": 28,
                   "x": 18,
-                  "y": 20,
+                  "y": 24,
                   "z": -4,
-                  "rotationY": 15,
+                  "rotationY": -30,
                   "rotationZ": 12,
-                  "color": "#A52A2A"
+                  "color": "#A52A2A",
+                  "rotationX": -5,
+                  "name": "wing-left-0"
+                },
+                {
+                  "type": "box",
+                  "width": 6,
+                  "height": 1,
+                  "depth": 20,
+                  "x": -40,
+                  "y": 12,
+                  "z": -25,
+                  "rotationY": 15,
+                  "rotationZ": 15,
+                  "color": "#A52A2A",
+                  "rotationX": -25,
+                  "name": "wing-right-2"
+                },
+                {
+                  "type": "box",
+                  "width": 18,
+                  "height": 1,
+                  "depth": 24,
+                  "x": 30,
+                  "y": 19,
+                  "z": -15,
+                  "rotationY": 15,
+                  "rotationZ": -15,
+                  "color": "#A52A2A",
+                  "rotationX": -15,
+                  "name": "wing-left-1"
+                },
+                {
+                  "type": "box",
+                  "width": 18,
+                  "height": 1,
+                  "depth": 24,
+                  "x": -30,
+                  "y": 19,
+                  "z": -15,
+                  "rotationY": -15,
+                  "rotationZ": 15,
+                  "color": "#A52A2A",
+                  "rotationX": -15,
+                  "name": "wing-right-1"
+                },
+                {
+                  "type": "box",
+                  "width": 6,
+                  "height": 1,
+                  "depth": 20,
+                  "x": 40,
+                  "y": 12,
+                  "z": -25,
+                  "rotationY": -15,
+                  "rotationZ": -15,
+                  "color": "#A52A2A",
+                  "rotationX": -25,
+                  "name": "wing-left-2"
                 },
                 {
                   "type": "box",
@@ -19094,59 +19272,13 @@
                   "height": 1,
                   "depth": 28,
                   "x": -18,
-                  "y": 20,
+                  "y": 24,
                   "z": -4,
-                  "rotationY": -15,
+                  "rotationY": 30,
                   "rotationZ": -12,
-                  "color": "#A52A2A"
-                },
-                {
-                  "type": "box",
-                  "width": 18,
-                  "height": 1,
-                  "depth": 24,
-                  "x": 18,
-                  "y": 23,
-                  "z": -4,
-                  "rotationY": 15,
-                  "rotationZ": 24,
-                  "color": "#A52A2A"
-                },
-                {
-                  "type": "box",
-                  "width": 18,
-                  "height": 1,
-                  "depth": 24,
-                  "x": -18,
-                  "y": 23,
-                  "z": -4,
-                  "rotationY": -15,
-                  "rotationZ": -24,
-                  "color": "#A52A2A"
-                },
-                {
-                  "type": "box",
-                  "width": 16,
-                  "height": 1,
-                  "depth": 20,
-                  "x": 18,
-                  "y": 26,
-                  "z": -4,
-                  "rotationY": 15,
-                  "rotationZ": 36,
-                  "color": "#A52A2A"
-                },
-                {
-                  "type": "box",
-                  "width": 16,
-                  "height": 1,
-                  "depth": 20,
-                  "x": -18,
-                  "y": 26,
-                  "z": -4,
-                  "rotationY": -15,
-                  "rotationZ": -36,
-                  "color": "#A52A2A"
+                  "color": "#A52A2A",
+                  "rotationX": -5,
+                  "name": "wing-right-0"
                 }
               ]
             }
@@ -19469,11 +19601,69 @@
                   "height": 1,
                   "depth": 28,
                   "x": 18,
-                  "y": 23,
+                  "y": 24,
                   "z": -4,
+                  "rotationY": -30,
+                  "rotationZ": 12,
+                  "color": "#A52A2A",
+                  "rotationX": -5,
+                  "name": "wing-left-0"
+                },
+                {
+                  "type": "box",
+                  "width": 6,
+                  "height": 1,
+                  "depth": 20,
+                  "x": -40,
+                  "y": 12,
+                  "z": -25,
                   "rotationY": 15,
-                  "rotationZ": 18,
-                  "color": "#A52A2A"
+                  "rotationZ": 15,
+                  "color": "#A52A2A",
+                  "rotationX": -25,
+                  "name": "wing-right-2"
+                },
+                {
+                  "type": "box",
+                  "width": 18,
+                  "height": 1,
+                  "depth": 24,
+                  "x": 30,
+                  "y": 19,
+                  "z": -15,
+                  "rotationY": 15,
+                  "rotationZ": -15,
+                  "color": "#A52A2A",
+                  "rotationX": -15,
+                  "name": "wing-left-1"
+                },
+                {
+                  "type": "box",
+                  "width": 18,
+                  "height": 1,
+                  "depth": 24,
+                  "x": -30,
+                  "y": 19,
+                  "z": -15,
+                  "rotationY": -15,
+                  "rotationZ": 15,
+                  "color": "#A52A2A",
+                  "rotationX": -15,
+                  "name": "wing-right-1"
+                },
+                {
+                  "type": "box",
+                  "width": 6,
+                  "height": 1,
+                  "depth": 20,
+                  "x": 40,
+                  "y": 12,
+                  "z": -25,
+                  "rotationY": -15,
+                  "rotationZ": -15,
+                  "color": "#A52A2A",
+                  "rotationX": -25,
+                  "name": "wing-left-2"
                 },
                 {
                   "type": "box",
@@ -19481,59 +19671,13 @@
                   "height": 1,
                   "depth": 28,
                   "x": -18,
-                  "y": 23,
+                  "y": 24,
                   "z": -4,
-                  "rotationY": -15,
-                  "rotationZ": -6,
-                  "color": "#A52A2A"
-                },
-                {
-                  "type": "box",
-                  "width": 18,
-                  "height": 1,
-                  "depth": 24,
-                  "x": 18,
-                  "y": 26,
-                  "z": -4,
-                  "rotationY": 15,
-                  "rotationZ": 30,
-                  "color": "#A52A2A"
-                },
-                {
-                  "type": "box",
-                  "width": 18,
-                  "height": 1,
-                  "depth": 24,
-                  "x": -18,
-                  "y": 26,
-                  "z": -4,
-                  "rotationY": -15,
-                  "rotationZ": -18,
-                  "color": "#A52A2A"
-                },
-                {
-                  "type": "box",
-                  "width": 16,
-                  "height": 1,
-                  "depth": 20,
-                  "x": 18,
-                  "y": 29,
-                  "z": -4,
-                  "rotationY": 15,
-                  "rotationZ": 42,
-                  "color": "#A52A2A"
-                },
-                {
-                  "type": "box",
-                  "width": 16,
-                  "height": 1,
-                  "depth": 20,
-                  "x": -18,
-                  "y": 29,
-                  "z": -4,
-                  "rotationY": -15,
-                  "rotationZ": -30,
-                  "color": "#A52A2A"
+                  "rotationY": 30,
+                  "rotationZ": -12,
+                  "color": "#A52A2A",
+                  "rotationX": -5,
+                  "name": "wing-right-0"
                 }
               ]
             },
@@ -19849,11 +19993,69 @@
                   "height": 1,
                   "depth": 28,
                   "x": 18,
-                  "y": 24.5,
+                  "y": 25.5,
                   "z": -4,
+                  "rotationY": -30,
+                  "rotationZ": 12,
+                  "color": "#A52A2A",
+                  "rotationX": -5,
+                  "name": "wing-left-0"
+                },
+                {
+                  "type": "box",
+                  "width": 6,
+                  "height": 1,
+                  "depth": 20,
+                  "x": -40,
+                  "y": 12,
+                  "z": -25,
                   "rotationY": 15,
-                  "rotationZ": 8,
-                  "color": "#A52A2A"
+                  "rotationZ": 15,
+                  "color": "#A52A2A",
+                  "rotationX": -25,
+                  "name": "wing-right-2"
+                },
+                {
+                  "type": "box",
+                  "width": 18,
+                  "height": 1,
+                  "depth": 24,
+                  "x": 30,
+                  "y": 20,
+                  "z": -15,
+                  "rotationY": 15,
+                  "rotationZ": -15,
+                  "color": "#A52A2A",
+                  "rotationX": -15,
+                  "name": "wing-left-1"
+                },
+                {
+                  "type": "box",
+                  "width": 18,
+                  "height": 1,
+                  "depth": 24,
+                  "x": -30,
+                  "y": 20,
+                  "z": -15,
+                  "rotationY": -15,
+                  "rotationZ": 15,
+                  "color": "#A52A2A",
+                  "rotationX": -15,
+                  "name": "wing-right-1"
+                },
+                {
+                  "type": "box",
+                  "width": 6,
+                  "height": 1,
+                  "depth": 20,
+                  "x": 40,
+                  "y": 12,
+                  "z": -25,
+                  "rotationY": -15,
+                  "rotationZ": -15,
+                  "color": "#A52A2A",
+                  "rotationX": -25,
+                  "name": "wing-left-2"
                 },
                 {
                   "type": "box",
@@ -19861,59 +20063,13 @@
                   "height": 1,
                   "depth": 28,
                   "x": -18,
-                  "y": 24.5,
+                  "y": 25.5,
                   "z": -4,
-                  "rotationY": -15,
-                  "rotationZ": -16,
-                  "color": "#A52A2A"
-                },
-                {
-                  "type": "box",
-                  "width": 18,
-                  "height": 1,
-                  "depth": 24,
-                  "x": 18,
-                  "y": 27.5,
-                  "z": -4,
-                  "rotationY": 15,
-                  "rotationZ": 20,
-                  "color": "#A52A2A"
-                },
-                {
-                  "type": "box",
-                  "width": 18,
-                  "height": 1,
-                  "depth": 24,
-                  "x": -18,
-                  "y": 27.5,
-                  "z": -4,
-                  "rotationY": -15,
-                  "rotationZ": -28,
-                  "color": "#A52A2A"
-                },
-                {
-                  "type": "box",
-                  "width": 16,
-                  "height": 1,
-                  "depth": 20,
-                  "x": 18,
-                  "y": 30.5,
-                  "z": -4,
-                  "rotationY": 15,
-                  "rotationZ": 32,
-                  "color": "#A52A2A"
-                },
-                {
-                  "type": "box",
-                  "width": 16,
-                  "height": 1,
-                  "depth": 20,
-                  "x": -18,
-                  "y": 30.5,
-                  "z": -4,
-                  "rotationY": -15,
-                  "rotationZ": -40,
-                  "color": "#A52A2A"
+                  "rotationY": 30,
+                  "rotationZ": -12,
+                  "color": "#A52A2A",
+                  "rotationX": -5,
+                  "name": "wing-right-0"
                 }
               ]
             },
@@ -20234,11 +20390,69 @@
                   "height": 1,
                   "depth": 28,
                   "x": 18,
-                  "y": 25,
+                  "y": 26,
                   "z": -4,
+                  "rotationY": -30,
+                  "rotationZ": 12,
+                  "color": "#A52A2A",
+                  "rotationX": -5,
+                  "name": "wing-left-0"
+                },
+                {
+                  "type": "box",
+                  "width": 6,
+                  "height": 1,
+                  "depth": 20,
+                  "x": -40,
+                  "y": 12.5,
+                  "z": -25,
                   "rotationY": 15,
-                  "rotationZ": 6,
-                  "color": "#A52A2A"
+                  "rotationZ": 15,
+                  "color": "#A52A2A",
+                  "rotationX": -25,
+                  "name": "wing-right-2"
+                },
+                {
+                  "type": "box",
+                  "width": 18,
+                  "height": 1,
+                  "depth": 24,
+                  "x": 30,
+                  "y": 20,
+                  "z": -15,
+                  "rotationY": 15,
+                  "rotationZ": -15,
+                  "color": "#A52A2A",
+                  "rotationX": -15,
+                  "name": "wing-left-1"
+                },
+                {
+                  "type": "box",
+                  "width": 18,
+                  "height": 1,
+                  "depth": 24,
+                  "x": -30,
+                  "y": 20,
+                  "z": -15,
+                  "rotationY": -15,
+                  "rotationZ": 15,
+                  "color": "#A52A2A",
+                  "rotationX": -15,
+                  "name": "wing-right-1"
+                },
+                {
+                  "type": "box",
+                  "width": 6,
+                  "height": 1,
+                  "depth": 20,
+                  "x": 40,
+                  "y": 12.5,
+                  "z": -25,
+                  "rotationY": -15,
+                  "rotationZ": -15,
+                  "color": "#A52A2A",
+                  "rotationX": -25,
+                  "name": "wing-left-2"
                 },
                 {
                   "type": "box",
@@ -20246,59 +20460,13 @@
                   "height": 1,
                   "depth": 28,
                   "x": -18,
-                  "y": 25,
+                  "y": 26,
                   "z": -4,
-                  "rotationY": -15,
-                  "rotationZ": -18,
-                  "color": "#A52A2A"
-                },
-                {
-                  "type": "box",
-                  "width": 18,
-                  "height": 1,
-                  "depth": 24,
-                  "x": 18,
-                  "y": 28,
-                  "z": -4,
-                  "rotationY": 15,
-                  "rotationZ": 18,
-                  "color": "#A52A2A"
-                },
-                {
-                  "type": "box",
-                  "width": 18,
-                  "height": 1,
-                  "depth": 24,
-                  "x": -18,
-                  "y": 28,
-                  "z": -4,
-                  "rotationY": -15,
-                  "rotationZ": -30,
-                  "color": "#A52A2A"
-                },
-                {
-                  "type": "box",
-                  "width": 16,
-                  "height": 1,
-                  "depth": 20,
-                  "x": 18,
-                  "y": 31,
-                  "z": -4,
-                  "rotationY": 15,
-                  "rotationZ": 30,
-                  "color": "#A52A2A"
-                },
-                {
-                  "type": "box",
-                  "width": 16,
-                  "height": 1,
-                  "depth": 20,
-                  "x": -18,
-                  "y": 31,
-                  "z": -4,
-                  "rotationY": -15,
-                  "rotationZ": -42,
-                  "color": "#A52A2A"
+                  "rotationY": 30,
+                  "rotationZ": -12,
+                  "color": "#A52A2A",
+                  "rotationX": -5,
+                  "name": "wing-right-0"
                 }
               ]
             },
@@ -20614,11 +20782,69 @@
                   "height": 1,
                   "depth": 28,
                   "x": 18,
-                  "y": 24.5,
+                  "y": 25.5,
                   "z": -4,
+                  "rotationY": -30,
+                  "rotationZ": 12,
+                  "color": "#A52A2A",
+                  "rotationX": -5,
+                  "name": "wing-left-0"
+                },
+                {
+                  "type": "box",
+                  "width": 6,
+                  "height": 1,
+                  "depth": 20,
+                  "x": -40,
+                  "y": 12,
+                  "z": -25,
                   "rotationY": 15,
-                  "rotationZ": 8,
-                  "color": "#A52A2A"
+                  "rotationZ": 15,
+                  "color": "#A52A2A",
+                  "rotationX": -25,
+                  "name": "wing-right-2"
+                },
+                {
+                  "type": "box",
+                  "width": 18,
+                  "height": 1,
+                  "depth": 24,
+                  "x": 30,
+                  "y": 20,
+                  "z": -15,
+                  "rotationY": 15,
+                  "rotationZ": -15,
+                  "color": "#A52A2A",
+                  "rotationX": -15,
+                  "name": "wing-left-1"
+                },
+                {
+                  "type": "box",
+                  "width": 18,
+                  "height": 1,
+                  "depth": 24,
+                  "x": -30,
+                  "y": 20,
+                  "z": -15,
+                  "rotationY": -15,
+                  "rotationZ": 15,
+                  "color": "#A52A2A",
+                  "rotationX": -15,
+                  "name": "wing-right-1"
+                },
+                {
+                  "type": "box",
+                  "width": 6,
+                  "height": 1,
+                  "depth": 20,
+                  "x": 40,
+                  "y": 12,
+                  "z": -25,
+                  "rotationY": -15,
+                  "rotationZ": -15,
+                  "color": "#A52A2A",
+                  "rotationX": -25,
+                  "name": "wing-left-2"
                 },
                 {
                   "type": "box",
@@ -20626,59 +20852,13 @@
                   "height": 1,
                   "depth": 28,
                   "x": -18,
-                  "y": 24.5,
+                  "y": 25.5,
                   "z": -4,
-                  "rotationY": -15,
-                  "rotationZ": -16,
-                  "color": "#A52A2A"
-                },
-                {
-                  "type": "box",
-                  "width": 18,
-                  "height": 1,
-                  "depth": 24,
-                  "x": 18,
-                  "y": 27.5,
-                  "z": -4,
-                  "rotationY": 15,
-                  "rotationZ": 20,
-                  "color": "#A52A2A"
-                },
-                {
-                  "type": "box",
-                  "width": 18,
-                  "height": 1,
-                  "depth": 24,
-                  "x": -18,
-                  "y": 27.5,
-                  "z": -4,
-                  "rotationY": -15,
-                  "rotationZ": -28,
-                  "color": "#A52A2A"
-                },
-                {
-                  "type": "box",
-                  "width": 16,
-                  "height": 1,
-                  "depth": 20,
-                  "x": 18,
-                  "y": 30.5,
-                  "z": -4,
-                  "rotationY": 15,
-                  "rotationZ": 32,
-                  "color": "#A52A2A"
-                },
-                {
-                  "type": "box",
-                  "width": 16,
-                  "height": 1,
-                  "depth": 20,
-                  "x": -18,
-                  "y": 30.5,
-                  "z": -4,
-                  "rotationY": -15,
-                  "rotationZ": -40,
-                  "color": "#A52A2A"
+                  "rotationY": 30,
+                  "rotationZ": -12,
+                  "color": "#A52A2A",
+                  "rotationX": -5,
+                  "name": "wing-right-0"
                 }
               ]
             }
@@ -20710,7 +20890,7 @@
                   "y": 16,
                   "z": -6.4,
                   "rotationX": -19,
-                  "color": "#8B8B00"
+                  "color": "#8b8b00"
                 },
                 {
                   "type": "box",
@@ -20721,7 +20901,7 @@
                   "y": 26,
                   "z": 18,
                   "rotationX": -10,
-                  "color": "#8B8B00"
+                  "color": "#8b8b00"
                 },
                 {
                   "type": "box",
@@ -20732,7 +20912,7 @@
                   "y": 36,
                   "z": 30,
                   "rotationX": -20,
-                  "color": "#8B8B00"
+                  "color": "#8b8b00"
                 },
                 {
                   "type": "cone",
@@ -20742,7 +20922,7 @@
                   "y": 38,
                   "z": 42,
                   "rotationX": 90,
-                  "color": "#8B8B00"
+                  "color": "#8b8b00"
                 },
                 {
                   "type": "box",
@@ -20753,7 +20933,7 @@
                   "y": 10,
                   "z": -24,
                   "rotationX": -5,
-                  "color": "#8B8B00"
+                  "color": "#8b8b00"
                 },
                 {
                   "type": "box",
@@ -20764,7 +20944,7 @@
                   "y": 6,
                   "z": -42,
                   "rotationX": -5,
-                  "color": "#8B8B00"
+                  "color": "#8b8b00"
                 },
                 {
                   "type": "cone",
@@ -20774,7 +20954,7 @@
                   "y": 4,
                   "z": -54,
                   "rotationX": -90,
-                  "color": "#8B8B00"
+                  "color": "#8b8b00"
                 },
                 {
                   "type": "box",
@@ -20785,7 +20965,7 @@
                   "y": 22,
                   "z": 0,
                   "rotationX": -14,
-                  "color": "#8B8B00"
+                  "color": "#8b8b00"
                 },
                 {
                   "type": "sphere",
@@ -20793,7 +20973,7 @@
                   "x": 0,
                   "y": 42,
                   "z": 34,
-                  "color": "#8B8B00"
+                  "color": "#8b8b00"
                 },
                 {
                   "type": "sphere",
@@ -20835,7 +21015,7 @@
                   "x": 0,
                   "y": 36,
                   "z": 40,
-                  "color": "#A5A52A"
+                  "color": "#A5a52A"
                 },
                 {
                   "type": "box",
@@ -20885,7 +21065,7 @@
                   "x": 10,
                   "y": 8,
                   "z": 0,
-                  "color": "#8B8B00"
+                  "color": "#8b8b00"
                 },
                 {
                   "type": "box",
@@ -20895,7 +21075,7 @@
                   "x": -10,
                   "y": 8,
                   "z": 0,
-                  "color": "#8B8B00"
+                  "color": "#8b8b00"
                 },
                 {
                   "type": "box",
@@ -20905,7 +21085,7 @@
                   "x": 10,
                   "y": 8,
                   "z": -16,
-                  "color": "#8B8B00"
+                  "color": "#8b8b00"
                 },
                 {
                   "type": "box",
@@ -20915,7 +21095,7 @@
                   "x": -10,
                   "y": 8,
                   "z": -16,
-                  "color": "#8B8B00"
+                  "color": "#8b8b00"
                 },
                 {
                   "type": "box",
@@ -20925,7 +21105,7 @@
                   "x": 10,
                   "y": 1,
                   "z": 0,
-                  "color": "#8B8B00"
+                  "color": "#8b8b00"
                 },
                 {
                   "type": "box",
@@ -20935,7 +21115,7 @@
                   "x": -10,
                   "y": 1,
                   "z": 0,
-                  "color": "#8B8B00"
+                  "color": "#8b8b00"
                 },
                 {
                   "type": "box",
@@ -20945,7 +21125,7 @@
                   "x": 10,
                   "y": 2,
                   "z": -16,
-                  "color": "#8B8B00"
+                  "color": "#8b8b00"
                 },
                 {
                   "type": "box",
@@ -20955,7 +21135,7 @@
                   "x": -10,
                   "y": 2,
                   "z": -16,
-                  "color": "#8B8B00"
+                  "color": "#8b8b00"
                 },
                 {
                   "type": "cone",
@@ -20965,7 +21145,7 @@
                   "y": 32,
                   "z": 10,
                   "rotationX": -20,
-                  "color": "#A5A52A"
+                  "color": "#A5a52A"
                 },
                 {
                   "type": "cone",
@@ -20975,7 +21155,7 @@
                   "y": 30,
                   "z": -8,
                   "rotationX": -32,
-                  "color": "#A5A52A"
+                  "color": "#A5a52A"
                 },
                 {
                   "type": "cone",
@@ -20985,7 +21165,7 @@
                   "y": 18,
                   "z": -24,
                   "rotationX": -75,
-                  "color": "#A5A52A"
+                  "color": "#A5a52A"
                 },
                 {
                   "type": "cone",
@@ -20995,7 +21175,7 @@
                   "y": 12,
                   "z": -38,
                   "rotationX": -75,
-                  "color": "#A5A52A"
+                  "color": "#A5a52A"
                 },
                 {
                   "type": "box",
@@ -21003,11 +21183,69 @@
                   "height": 1,
                   "depth": 28,
                   "x": 18,
-                  "y": 20,
+                  "y": 24,
                   "z": -4,
-                  "rotationY": 15,
+                  "rotationY": -30,
                   "rotationZ": 12,
-                  "color": "#A5A52A"
+                  "color": "#A5a52A",
+                  "rotationX": -5,
+                  "name": "wing-left-0"
+                },
+                {
+                  "type": "box",
+                  "width": 6,
+                  "height": 1,
+                  "depth": 20,
+                  "x": -40,
+                  "y": 12,
+                  "z": -25,
+                  "rotationY": 15,
+                  "rotationZ": 15,
+                  "color": "#A5a52A",
+                  "rotationX": -25,
+                  "name": "wing-right-2"
+                },
+                {
+                  "type": "box",
+                  "width": 18,
+                  "height": 1,
+                  "depth": 24,
+                  "x": 30,
+                  "y": 19,
+                  "z": -15,
+                  "rotationY": 15,
+                  "rotationZ": -15,
+                  "color": "#A5a52A",
+                  "rotationX": -15,
+                  "name": "wing-left-1"
+                },
+                {
+                  "type": "box",
+                  "width": 18,
+                  "height": 1,
+                  "depth": 24,
+                  "x": -30,
+                  "y": 19,
+                  "z": -15,
+                  "rotationY": -15,
+                  "rotationZ": 15,
+                  "color": "#A5a52A",
+                  "rotationX": -15,
+                  "name": "wing-right-1"
+                },
+                {
+                  "type": "box",
+                  "width": 6,
+                  "height": 1,
+                  "depth": 20,
+                  "x": 40,
+                  "y": 12,
+                  "z": -25,
+                  "rotationY": -15,
+                  "rotationZ": -15,
+                  "color": "#A5a52A",
+                  "rotationX": -25,
+                  "name": "wing-left-2"
                 },
                 {
                   "type": "box",
@@ -21015,59 +21253,13 @@
                   "height": 1,
                   "depth": 28,
                   "x": -18,
-                  "y": 20,
+                  "y": 24,
                   "z": -4,
-                  "rotationY": -15,
+                  "rotationY": 30,
                   "rotationZ": -12,
-                  "color": "#A5A52A"
-                },
-                {
-                  "type": "box",
-                  "width": 18,
-                  "height": 1,
-                  "depth": 24,
-                  "x": 18,
-                  "y": 23,
-                  "z": -4,
-                  "rotationY": 15,
-                  "rotationZ": 24,
-                  "color": "#A5A52A"
-                },
-                {
-                  "type": "box",
-                  "width": 18,
-                  "height": 1,
-                  "depth": 24,
-                  "x": -18,
-                  "y": 23,
-                  "z": -4,
-                  "rotationY": -15,
-                  "rotationZ": -24,
-                  "color": "#A5A52A"
-                },
-                {
-                  "type": "box",
-                  "width": 16,
-                  "height": 1,
-                  "depth": 20,
-                  "x": 18,
-                  "y": 26,
-                  "z": -4,
-                  "rotationY": 15,
-                  "rotationZ": 36,
-                  "color": "#A5A52A"
-                },
-                {
-                  "type": "box",
-                  "width": 16,
-                  "height": 1,
-                  "depth": 20,
-                  "x": -18,
-                  "y": 26,
-                  "z": -4,
-                  "rotationY": -15,
-                  "rotationZ": -36,
-                  "color": "#A5A52A"
+                  "color": "#A5a52A",
+                  "rotationX": -5,
+                  "name": "wing-right-0"
                 }
               ]
             }
@@ -21084,7 +21276,7 @@
                   "y": 19,
                   "z": -6.4,
                   "rotationX": -19,
-                  "color": "#8B8B00"
+                  "color": "#8b8b00"
                 },
                 {
                   "type": "box",
@@ -21095,7 +21287,7 @@
                   "y": 29,
                   "z": 18,
                   "rotationX": -10,
-                  "color": "#8B8B00"
+                  "color": "#8b8b00"
                 },
                 {
                   "type": "box",
@@ -21106,7 +21298,7 @@
                   "y": 39,
                   "z": 30,
                   "rotationX": -20,
-                  "color": "#8B8B00"
+                  "color": "#8b8b00"
                 },
                 {
                   "type": "cone",
@@ -21116,7 +21308,7 @@
                   "y": 41,
                   "z": 42,
                   "rotationX": 90,
-                  "color": "#8B8B00"
+                  "color": "#8b8b00"
                 },
                 {
                   "type": "box",
@@ -21128,7 +21320,7 @@
                   "z": -24,
                   "rotationX": -5,
                   "rotationZ": 5,
-                  "color": "#8B8B00"
+                  "color": "#8b8b00"
                 },
                 {
                   "type": "box",
@@ -21140,7 +21332,7 @@
                   "z": -42,
                   "rotationX": -5,
                   "rotationZ": 8,
-                  "color": "#8B8B00"
+                  "color": "#8b8b00"
                 },
                 {
                   "type": "cone",
@@ -21151,7 +21343,7 @@
                   "z": -54,
                   "rotationX": -90,
                   "rotationZ": 10,
-                  "color": "#8B8B00"
+                  "color": "#8b8b00"
                 },
                 {
                   "type": "box",
@@ -21162,7 +21354,7 @@
                   "y": 25,
                   "z": 0,
                   "rotationX": -14,
-                  "color": "#8B8B00"
+                  "color": "#8b8b00"
                 },
                 {
                   "type": "sphere",
@@ -21170,7 +21362,7 @@
                   "x": 0,
                   "y": 45,
                   "z": 34,
-                  "color": "#8B8B00"
+                  "color": "#8b8b00"
                 },
                 {
                   "type": "sphere",
@@ -21212,7 +21404,7 @@
                   "x": 0,
                   "y": 39,
                   "z": 40,
-                  "color": "#A5A52A"
+                  "color": "#A5a52A"
                 },
                 {
                   "type": "box",
@@ -21263,7 +21455,7 @@
                   "y": 10,
                   "z": 5,
                   "rotationX": 20,
-                  "color": "#8B8B00"
+                  "color": "#8b8b00"
                 },
                 {
                   "type": "box",
@@ -21274,7 +21466,7 @@
                   "y": 8,
                   "z": -10,
                   "rotationX": -30,
-                  "color": "#8B8B00"
+                  "color": "#8b8b00"
                 },
                 {
                   "type": "box",
@@ -21285,7 +21477,7 @@
                   "y": 8,
                   "z": -21,
                   "rotationX": -30,
-                  "color": "#8B8B00"
+                  "color": "#8b8b00"
                 },
                 {
                   "type": "box",
@@ -21296,7 +21488,7 @@
                   "y": 12,
                   "z": -11,
                   "rotationX": 20,
-                  "color": "#8B8B00"
+                  "color": "#8b8b00"
                 },
                 {
                   "type": "box",
@@ -21307,7 +21499,7 @@
                   "y": 5,
                   "z": 10,
                   "rotationX": 20,
-                  "color": "#8B8B00"
+                  "color": "#8b8b00"
                 },
                 {
                   "type": "box",
@@ -21318,7 +21510,7 @@
                   "y": 1,
                   "z": -14,
                   "rotationX": -30,
-                  "color": "#8B8B00"
+                  "color": "#8b8b00"
                 },
                 {
                   "type": "box",
@@ -21329,7 +21521,7 @@
                   "y": 2,
                   "z": -25,
                   "rotationX": -30,
-                  "color": "#8B8B00"
+                  "color": "#8b8b00"
                 },
                 {
                   "type": "box",
@@ -21340,7 +21532,7 @@
                   "y": 7,
                   "z": -6,
                   "rotationX": 20,
-                  "color": "#8B8B00"
+                  "color": "#8b8b00"
                 },
                 {
                   "type": "cone",
@@ -21350,7 +21542,7 @@
                   "y": 35,
                   "z": 10,
                   "rotationX": -20,
-                  "color": "#A5A52A"
+                  "color": "#A5a52A"
                 },
                 {
                   "type": "cone",
@@ -21360,7 +21552,7 @@
                   "y": 33,
                   "z": -8,
                   "rotationX": -32,
-                  "color": "#A5A52A"
+                  "color": "#A5a52A"
                 },
                 {
                   "type": "cone",
@@ -21371,7 +21563,7 @@
                   "z": -24,
                   "rotationX": -75,
                   "rotationZ": 5,
-                  "color": "#A5A52A"
+                  "color": "#A5a52A"
                 },
                 {
                   "type": "cone",
@@ -21382,7 +21574,7 @@
                   "z": -38,
                   "rotationX": -75,
                   "rotationZ": 8,
-                  "color": "#A5A52A"
+                  "color": "#A5a52A"
                 },
                 {
                   "type": "box",
@@ -21390,11 +21582,69 @@
                   "height": 1,
                   "depth": 28,
                   "x": 18,
-                  "y": 23,
+                  "y": 24,
                   "z": -4,
+                  "rotationY": -30,
+                  "rotationZ": 12,
+                  "color": "#A5a52A",
+                  "rotationX": -5,
+                  "name": "wing-left-0"
+                },
+                {
+                  "type": "box",
+                  "width": 6,
+                  "height": 1,
+                  "depth": 20,
+                  "x": -40,
+                  "y": 12,
+                  "z": -25,
                   "rotationY": 15,
-                  "rotationZ": 18,
-                  "color": "#A5A52A"
+                  "rotationZ": 15,
+                  "color": "#A5a52A",
+                  "rotationX": -25,
+                  "name": "wing-right-2"
+                },
+                {
+                  "type": "box",
+                  "width": 18,
+                  "height": 1,
+                  "depth": 24,
+                  "x": 30,
+                  "y": 19,
+                  "z": -15,
+                  "rotationY": 15,
+                  "rotationZ": -15,
+                  "color": "#A5a52A",
+                  "rotationX": -15,
+                  "name": "wing-left-1"
+                },
+                {
+                  "type": "box",
+                  "width": 18,
+                  "height": 1,
+                  "depth": 24,
+                  "x": -30,
+                  "y": 19,
+                  "z": -15,
+                  "rotationY": -15,
+                  "rotationZ": 15,
+                  "color": "#A5a52A",
+                  "rotationX": -15,
+                  "name": "wing-right-1"
+                },
+                {
+                  "type": "box",
+                  "width": 6,
+                  "height": 1,
+                  "depth": 20,
+                  "x": 40,
+                  "y": 12,
+                  "z": -25,
+                  "rotationY": -15,
+                  "rotationZ": -15,
+                  "color": "#A5a52A",
+                  "rotationX": -25,
+                  "name": "wing-left-2"
                 },
                 {
                   "type": "box",
@@ -21402,59 +21652,13 @@
                   "height": 1,
                   "depth": 28,
                   "x": -18,
-                  "y": 23,
+                  "y": 24,
                   "z": -4,
-                  "rotationY": -15,
-                  "rotationZ": -6,
-                  "color": "#A5A52A"
-                },
-                {
-                  "type": "box",
-                  "width": 18,
-                  "height": 1,
-                  "depth": 24,
-                  "x": 18,
-                  "y": 26,
-                  "z": -4,
-                  "rotationY": 15,
-                  "rotationZ": 30,
-                  "color": "#A5A52A"
-                },
-                {
-                  "type": "box",
-                  "width": 18,
-                  "height": 1,
-                  "depth": 24,
-                  "x": -18,
-                  "y": 26,
-                  "z": -4,
-                  "rotationY": -15,
-                  "rotationZ": -18,
-                  "color": "#A5A52A"
-                },
-                {
-                  "type": "box",
-                  "width": 16,
-                  "height": 1,
-                  "depth": 20,
-                  "x": 18,
-                  "y": 29,
-                  "z": -4,
-                  "rotationY": 15,
-                  "rotationZ": 42,
-                  "color": "#A5A52A"
-                },
-                {
-                  "type": "box",
-                  "width": 16,
-                  "height": 1,
-                  "depth": 20,
-                  "x": -18,
-                  "y": 29,
-                  "z": -4,
-                  "rotationY": -15,
-                  "rotationZ": -30,
-                  "color": "#A5A52A"
+                  "rotationY": 30,
+                  "rotationZ": -12,
+                  "color": "#A5a52A",
+                  "rotationX": -5,
+                  "name": "wing-right-0"
                 }
               ]
             },
@@ -21469,7 +21673,7 @@
                   "y": 20.5,
                   "z": -6.4,
                   "rotationX": -19,
-                  "color": "#8B8B00"
+                  "color": "#8b8b00"
                 },
                 {
                   "type": "box",
@@ -21480,7 +21684,7 @@
                   "y": 30.5,
                   "z": 18,
                   "rotationX": -10,
-                  "color": "#8B8B00"
+                  "color": "#8b8b00"
                 },
                 {
                   "type": "box",
@@ -21491,7 +21695,7 @@
                   "y": 40.5,
                   "z": 30,
                   "rotationX": -20,
-                  "color": "#8B8B00"
+                  "color": "#8b8b00"
                 },
                 {
                   "type": "cone",
@@ -21501,7 +21705,7 @@
                   "y": 42.5,
                   "z": 42,
                   "rotationX": 90,
-                  "color": "#8B8B00"
+                  "color": "#8b8b00"
                 },
                 {
                   "type": "box",
@@ -21512,7 +21716,7 @@
                   "y": 14,
                   "z": -24,
                   "rotationX": -5,
-                  "color": "#8B8B00"
+                  "color": "#8b8b00"
                 },
                 {
                   "type": "box",
@@ -21523,7 +21727,7 @@
                   "y": 10,
                   "z": -42,
                   "rotationX": -5,
-                  "color": "#8B8B00"
+                  "color": "#8b8b00"
                 },
                 {
                   "type": "cone",
@@ -21533,7 +21737,7 @@
                   "y": 8,
                   "z": -54,
                   "rotationX": -90,
-                  "color": "#8B8B00"
+                  "color": "#8b8b00"
                 },
                 {
                   "type": "box",
@@ -21544,7 +21748,7 @@
                   "y": 26.5,
                   "z": 0,
                   "rotationX": -14,
-                  "color": "#8B8B00"
+                  "color": "#8b8b00"
                 },
                 {
                   "type": "sphere",
@@ -21552,7 +21756,7 @@
                   "x": 0,
                   "y": 46.5,
                   "z": 34,
-                  "color": "#8B8B00"
+                  "color": "#8b8b00"
                 },
                 {
                   "type": "sphere",
@@ -21594,7 +21798,7 @@
                   "x": 0,
                   "y": 40.5,
                   "z": 40,
-                  "color": "#A5A52A"
+                  "color": "#A5a52A"
                 },
                 {
                   "type": "box",
@@ -21645,7 +21849,7 @@
                   "y": 11,
                   "z": 0,
                   "rotationX": -5,
-                  "color": "#8B8B00"
+                  "color": "#8b8b00"
                 },
                 {
                   "type": "box",
@@ -21656,7 +21860,7 @@
                   "y": 11,
                   "z": 0,
                   "rotationX": -5,
-                  "color": "#8B8B00"
+                  "color": "#8b8b00"
                 },
                 {
                   "type": "box",
@@ -21667,7 +21871,7 @@
                   "y": 11,
                   "z": -16,
                   "rotationX": -15,
-                  "color": "#8B8B00"
+                  "color": "#8b8b00"
                 },
                 {
                   "type": "box",
@@ -21678,7 +21882,7 @@
                   "y": 13,
                   "z": -16,
                   "rotationX": 5,
-                  "color": "#8B8B00"
+                  "color": "#8b8b00"
                 },
                 {
                   "type": "box",
@@ -21689,7 +21893,7 @@
                   "y": 4,
                   "z": -1,
                   "rotationX": -5,
-                  "color": "#8B8B00"
+                  "color": "#8b8b00"
                 },
                 {
                   "type": "box",
@@ -21700,7 +21904,7 @@
                   "y": 4,
                   "z": -1,
                   "rotationX": -5,
-                  "color": "#8B8B00"
+                  "color": "#8b8b00"
                 },
                 {
                   "type": "box",
@@ -21711,7 +21915,7 @@
                   "y": 5,
                   "z": -18,
                   "rotationX": -15,
-                  "color": "#8B8B00"
+                  "color": "#8b8b00"
                 },
                 {
                   "type": "box",
@@ -21722,7 +21926,7 @@
                   "y": 7,
                   "z": -14,
                   "rotationX": 5,
-                  "color": "#8B8B00"
+                  "color": "#8b8b00"
                 },
                 {
                   "type": "cone",
@@ -21732,7 +21936,7 @@
                   "y": 36.5,
                   "z": 10,
                   "rotationX": -20,
-                  "color": "#A5A52A"
+                  "color": "#A5a52A"
                 },
                 {
                   "type": "cone",
@@ -21742,7 +21946,7 @@
                   "y": 34.5,
                   "z": -8,
                   "rotationX": -32,
-                  "color": "#A5A52A"
+                  "color": "#A5a52A"
                 },
                 {
                   "type": "cone",
@@ -21752,7 +21956,7 @@
                   "y": 22,
                   "z": -24,
                   "rotationX": -75,
-                  "color": "#A5A52A"
+                  "color": "#A5a52A"
                 },
                 {
                   "type": "cone",
@@ -21762,7 +21966,7 @@
                   "y": 16,
                   "z": -38,
                   "rotationX": -75,
-                  "color": "#A5A52A"
+                  "color": "#A5a52A"
                 },
                 {
                   "type": "box",
@@ -21770,11 +21974,69 @@
                   "height": 1,
                   "depth": 28,
                   "x": 18,
-                  "y": 24.5,
+                  "y": 25.5,
                   "z": -4,
+                  "rotationY": -30,
+                  "rotationZ": 12,
+                  "color": "#A5a52A",
+                  "rotationX": -5,
+                  "name": "wing-left-0"
+                },
+                {
+                  "type": "box",
+                  "width": 6,
+                  "height": 1,
+                  "depth": 20,
+                  "x": -40,
+                  "y": 12,
+                  "z": -25,
                   "rotationY": 15,
-                  "rotationZ": 8,
-                  "color": "#A5A52A"
+                  "rotationZ": 15,
+                  "color": "#A5a52A",
+                  "rotationX": -25,
+                  "name": "wing-right-2"
+                },
+                {
+                  "type": "box",
+                  "width": 18,
+                  "height": 1,
+                  "depth": 24,
+                  "x": 30,
+                  "y": 20,
+                  "z": -15,
+                  "rotationY": 15,
+                  "rotationZ": -15,
+                  "color": "#A5a52A",
+                  "rotationX": -15,
+                  "name": "wing-left-1"
+                },
+                {
+                  "type": "box",
+                  "width": 18,
+                  "height": 1,
+                  "depth": 24,
+                  "x": -30,
+                  "y": 20,
+                  "z": -15,
+                  "rotationY": -15,
+                  "rotationZ": 15,
+                  "color": "#A5a52A",
+                  "rotationX": -15,
+                  "name": "wing-right-1"
+                },
+                {
+                  "type": "box",
+                  "width": 6,
+                  "height": 1,
+                  "depth": 20,
+                  "x": 40,
+                  "y": 12,
+                  "z": -25,
+                  "rotationY": -15,
+                  "rotationZ": -15,
+                  "color": "#A5a52A",
+                  "rotationX": -25,
+                  "name": "wing-left-2"
                 },
                 {
                   "type": "box",
@@ -21782,59 +22044,13 @@
                   "height": 1,
                   "depth": 28,
                   "x": -18,
-                  "y": 24.5,
+                  "y": 25.5,
                   "z": -4,
-                  "rotationY": -15,
-                  "rotationZ": -16,
-                  "color": "#A5A52A"
-                },
-                {
-                  "type": "box",
-                  "width": 18,
-                  "height": 1,
-                  "depth": 24,
-                  "x": 18,
-                  "y": 27.5,
-                  "z": -4,
-                  "rotationY": 15,
-                  "rotationZ": 20,
-                  "color": "#A5A52A"
-                },
-                {
-                  "type": "box",
-                  "width": 18,
-                  "height": 1,
-                  "depth": 24,
-                  "x": -18,
-                  "y": 27.5,
-                  "z": -4,
-                  "rotationY": -15,
-                  "rotationZ": -28,
-                  "color": "#A5A52A"
-                },
-                {
-                  "type": "box",
-                  "width": 16,
-                  "height": 1,
-                  "depth": 20,
-                  "x": 18,
-                  "y": 30.5,
-                  "z": -4,
-                  "rotationY": 15,
-                  "rotationZ": 32,
-                  "color": "#A5A52A"
-                },
-                {
-                  "type": "box",
-                  "width": 16,
-                  "height": 1,
-                  "depth": 20,
-                  "x": -18,
-                  "y": 30.5,
-                  "z": -4,
-                  "rotationY": -15,
-                  "rotationZ": -40,
-                  "color": "#A5A52A"
+                  "rotationY": 30,
+                  "rotationZ": -12,
+                  "color": "#A5a52A",
+                  "rotationX": -5,
+                  "name": "wing-right-0"
                 }
               ]
             },
@@ -21849,7 +22065,7 @@
                   "y": 21,
                   "z": -6.4,
                   "rotationX": -19,
-                  "color": "#8B8B00"
+                  "color": "#8b8b00"
                 },
                 {
                   "type": "box",
@@ -21860,7 +22076,7 @@
                   "y": 31,
                   "z": 18,
                   "rotationX": -10,
-                  "color": "#8B8B00"
+                  "color": "#8b8b00"
                 },
                 {
                   "type": "box",
@@ -21871,7 +22087,7 @@
                   "y": 41,
                   "z": 30,
                   "rotationX": -20,
-                  "color": "#8B8B00"
+                  "color": "#8b8b00"
                 },
                 {
                   "type": "cone",
@@ -21881,7 +22097,7 @@
                   "y": 43,
                   "z": 42,
                   "rotationX": 90,
-                  "color": "#8B8B00"
+                  "color": "#8b8b00"
                 },
                 {
                   "type": "box",
@@ -21893,7 +22109,7 @@
                   "z": -24,
                   "rotationX": -5,
                   "rotationZ": -5,
-                  "color": "#8B8B00"
+                  "color": "#8b8b00"
                 },
                 {
                   "type": "box",
@@ -21905,7 +22121,7 @@
                   "z": -42,
                   "rotationX": -5,
                   "rotationZ": -8,
-                  "color": "#8B8B00"
+                  "color": "#8b8b00"
                 },
                 {
                   "type": "cone",
@@ -21916,7 +22132,7 @@
                   "z": -54,
                   "rotationX": -90,
                   "rotationZ": -10,
-                  "color": "#8B8B00"
+                  "color": "#8b8b00"
                 },
                 {
                   "type": "box",
@@ -21927,7 +22143,7 @@
                   "y": 27,
                   "z": 0,
                   "rotationX": -14,
-                  "color": "#8B8B00"
+                  "color": "#8b8b00"
                 },
                 {
                   "type": "sphere",
@@ -21935,7 +22151,7 @@
                   "x": 0,
                   "y": 47,
                   "z": 34,
-                  "color": "#8B8B00"
+                  "color": "#8b8b00"
                 },
                 {
                   "type": "sphere",
@@ -21977,7 +22193,7 @@
                   "x": 0,
                   "y": 41,
                   "z": 40,
-                  "color": "#A5A52A"
+                  "color": "#A5a52A"
                 },
                 {
                   "type": "box",
@@ -22028,7 +22244,7 @@
                   "y": 10,
                   "z": -10,
                   "rotationX": -30,
-                  "color": "#8B8B00"
+                  "color": "#8b8b00"
                 },
                 {
                   "type": "box",
@@ -22039,7 +22255,7 @@
                   "y": 12,
                   "z": 5,
                   "rotationX": 20,
-                  "color": "#8B8B00"
+                  "color": "#8b8b00"
                 },
                 {
                   "type": "box",
@@ -22050,7 +22266,7 @@
                   "y": 14,
                   "z": -11,
                   "rotationX": 20,
-                  "color": "#8B8B00"
+                  "color": "#8b8b00"
                 },
                 {
                   "type": "box",
@@ -22061,7 +22277,7 @@
                   "y": 10,
                   "z": -21,
                   "rotationX": -30,
-                  "color": "#8B8B00"
+                  "color": "#8b8b00"
                 },
                 {
                   "type": "box",
@@ -22072,7 +22288,7 @@
                   "y": 3,
                   "z": -14,
                   "rotationX": -30,
-                  "color": "#8B8B00"
+                  "color": "#8b8b00"
                 },
                 {
                   "type": "box",
@@ -22083,7 +22299,7 @@
                   "y": 7,
                   "z": 10,
                   "rotationX": 20,
-                  "color": "#8B8B00"
+                  "color": "#8b8b00"
                 },
                 {
                   "type": "box",
@@ -22094,7 +22310,7 @@
                   "y": 9,
                   "z": -6,
                   "rotationX": 20,
-                  "color": "#8B8B00"
+                  "color": "#8b8b00"
                 },
                 {
                   "type": "box",
@@ -22105,7 +22321,7 @@
                   "y": 4,
                   "z": -25,
                   "rotationX": -30,
-                  "color": "#8B8B00"
+                  "color": "#8b8b00"
                 },
                 {
                   "type": "cone",
@@ -22115,7 +22331,7 @@
                   "y": 37,
                   "z": 10,
                   "rotationX": -20,
-                  "color": "#A5A52A"
+                  "color": "#A5a52A"
                 },
                 {
                   "type": "cone",
@@ -22125,7 +22341,7 @@
                   "y": 35,
                   "z": -8,
                   "rotationX": -32,
-                  "color": "#A5A52A"
+                  "color": "#A5a52A"
                 },
                 {
                   "type": "cone",
@@ -22136,7 +22352,7 @@
                   "z": -24,
                   "rotationX": -75,
                   "rotationZ": -5,
-                  "color": "#A5A52A"
+                  "color": "#A5a52A"
                 },
                 {
                   "type": "cone",
@@ -22147,7 +22363,7 @@
                   "z": -38,
                   "rotationX": -75,
                   "rotationZ": -8,
-                  "color": "#A5A52A"
+                  "color": "#A5a52A"
                 },
                 {
                   "type": "box",
@@ -22155,11 +22371,69 @@
                   "height": 1,
                   "depth": 28,
                   "x": 18,
-                  "y": 25,
+                  "y": 26,
                   "z": -4,
+                  "rotationY": -30,
+                  "rotationZ": 12,
+                  "color": "#A5a52A",
+                  "rotationX": -5,
+                  "name": "wing-left-0"
+                },
+                {
+                  "type": "box",
+                  "width": 6,
+                  "height": 1,
+                  "depth": 20,
+                  "x": -40,
+                  "y": 12.5,
+                  "z": -25,
                   "rotationY": 15,
-                  "rotationZ": 6,
-                  "color": "#A5A52A"
+                  "rotationZ": 15,
+                  "color": "#A5a52A",
+                  "rotationX": -25,
+                  "name": "wing-right-2"
+                },
+                {
+                  "type": "box",
+                  "width": 18,
+                  "height": 1,
+                  "depth": 24,
+                  "x": 30,
+                  "y": 20,
+                  "z": -15,
+                  "rotationY": 15,
+                  "rotationZ": -15,
+                  "color": "#A5a52A",
+                  "rotationX": -15,
+                  "name": "wing-left-1"
+                },
+                {
+                  "type": "box",
+                  "width": 18,
+                  "height": 1,
+                  "depth": 24,
+                  "x": -30,
+                  "y": 20,
+                  "z": -15,
+                  "rotationY": -15,
+                  "rotationZ": 15,
+                  "color": "#A5a52A",
+                  "rotationX": -15,
+                  "name": "wing-right-1"
+                },
+                {
+                  "type": "box",
+                  "width": 6,
+                  "height": 1,
+                  "depth": 20,
+                  "x": 40,
+                  "y": 12.5,
+                  "z": -25,
+                  "rotationY": -15,
+                  "rotationZ": -15,
+                  "color": "#A5a52A",
+                  "rotationX": -25,
+                  "name": "wing-left-2"
                 },
                 {
                   "type": "box",
@@ -22167,59 +22441,13 @@
                   "height": 1,
                   "depth": 28,
                   "x": -18,
-                  "y": 25,
+                  "y": 26,
                   "z": -4,
-                  "rotationY": -15,
-                  "rotationZ": -18,
-                  "color": "#A5A52A"
-                },
-                {
-                  "type": "box",
-                  "width": 18,
-                  "height": 1,
-                  "depth": 24,
-                  "x": 18,
-                  "y": 28,
-                  "z": -4,
-                  "rotationY": 15,
-                  "rotationZ": 18,
-                  "color": "#A5A52A"
-                },
-                {
-                  "type": "box",
-                  "width": 18,
-                  "height": 1,
-                  "depth": 24,
-                  "x": -18,
-                  "y": 28,
-                  "z": -4,
-                  "rotationY": -15,
-                  "rotationZ": -30,
-                  "color": "#A5A52A"
-                },
-                {
-                  "type": "box",
-                  "width": 16,
-                  "height": 1,
-                  "depth": 20,
-                  "x": 18,
-                  "y": 31,
-                  "z": -4,
-                  "rotationY": 15,
-                  "rotationZ": 30,
-                  "color": "#A5A52A"
-                },
-                {
-                  "type": "box",
-                  "width": 16,
-                  "height": 1,
-                  "depth": 20,
-                  "x": -18,
-                  "y": 31,
-                  "z": -4,
-                  "rotationY": -15,
-                  "rotationZ": -42,
-                  "color": "#A5A52A"
+                  "rotationY": 30,
+                  "rotationZ": -12,
+                  "color": "#A5a52A",
+                  "rotationX": -5,
+                  "name": "wing-right-0"
                 }
               ]
             },
@@ -22234,7 +22462,7 @@
                   "y": 20.5,
                   "z": -6.4,
                   "rotationX": -19,
-                  "color": "#8B8B00"
+                  "color": "#8b8b00"
                 },
                 {
                   "type": "box",
@@ -22245,7 +22473,7 @@
                   "y": 30.5,
                   "z": 18,
                   "rotationX": -10,
-                  "color": "#8B8B00"
+                  "color": "#8b8b00"
                 },
                 {
                   "type": "box",
@@ -22256,7 +22484,7 @@
                   "y": 40.5,
                   "z": 30,
                   "rotationX": -20,
-                  "color": "#8B8B00"
+                  "color": "#8b8b00"
                 },
                 {
                   "type": "cone",
@@ -22266,7 +22494,7 @@
                   "y": 42.5,
                   "z": 42,
                   "rotationX": 90,
-                  "color": "#8B8B00"
+                  "color": "#8b8b00"
                 },
                 {
                   "type": "box",
@@ -22277,7 +22505,7 @@
                   "y": 14,
                   "z": -24,
                   "rotationX": -5,
-                  "color": "#8B8B00"
+                  "color": "#8b8b00"
                 },
                 {
                   "type": "box",
@@ -22288,7 +22516,7 @@
                   "y": 10,
                   "z": -42,
                   "rotationX": -5,
-                  "color": "#8B8B00"
+                  "color": "#8b8b00"
                 },
                 {
                   "type": "cone",
@@ -22298,7 +22526,7 @@
                   "y": 8,
                   "z": -54,
                   "rotationX": -90,
-                  "color": "#8B8B00"
+                  "color": "#8b8b00"
                 },
                 {
                   "type": "box",
@@ -22309,7 +22537,7 @@
                   "y": 26.5,
                   "z": 0,
                   "rotationX": -14,
-                  "color": "#8B8B00"
+                  "color": "#8b8b00"
                 },
                 {
                   "type": "sphere",
@@ -22317,7 +22545,7 @@
                   "x": 0,
                   "y": 46.5,
                   "z": 34,
-                  "color": "#8B8B00"
+                  "color": "#8b8b00"
                 },
                 {
                   "type": "sphere",
@@ -22359,7 +22587,7 @@
                   "x": 0,
                   "y": 40.5,
                   "z": 40,
-                  "color": "#A5A52A"
+                  "color": "#A5a52A"
                 },
                 {
                   "type": "box",
@@ -22410,7 +22638,7 @@
                   "y": 11,
                   "z": 0,
                   "rotationX": -5,
-                  "color": "#8B8B00"
+                  "color": "#8b8b00"
                 },
                 {
                   "type": "box",
@@ -22421,7 +22649,7 @@
                   "y": 11,
                   "z": 0,
                   "rotationX": -5,
-                  "color": "#8B8B00"
+                  "color": "#8b8b00"
                 },
                 {
                   "type": "box",
@@ -22432,7 +22660,7 @@
                   "y": 11,
                   "z": -16,
                   "rotationX": -15,
-                  "color": "#8B8B00"
+                  "color": "#8b8b00"
                 },
                 {
                   "type": "box",
@@ -22443,7 +22671,7 @@
                   "y": 13,
                   "z": -16,
                   "rotationX": 5,
-                  "color": "#8B8B00"
+                  "color": "#8b8b00"
                 },
                 {
                   "type": "box",
@@ -22454,7 +22682,7 @@
                   "y": 4,
                   "z": -1,
                   "rotationX": -5,
-                  "color": "#8B8B00"
+                  "color": "#8b8b00"
                 },
                 {
                   "type": "box",
@@ -22465,7 +22693,7 @@
                   "y": 4,
                   "z": -1,
                   "rotationX": -5,
-                  "color": "#8B8B00"
+                  "color": "#8b8b00"
                 },
                 {
                   "type": "box",
@@ -22476,7 +22704,7 @@
                   "y": 5,
                   "z": -18,
                   "rotationX": -15,
-                  "color": "#8B8B00"
+                  "color": "#8b8b00"
                 },
                 {
                   "type": "box",
@@ -22487,7 +22715,7 @@
                   "y": 7,
                   "z": -14,
                   "rotationX": 5,
-                  "color": "#8B8B00"
+                  "color": "#8b8b00"
                 },
                 {
                   "type": "cone",
@@ -22497,7 +22725,7 @@
                   "y": 36.5,
                   "z": 10,
                   "rotationX": -20,
-                  "color": "#A5A52A"
+                  "color": "#A5a52A"
                 },
                 {
                   "type": "cone",
@@ -22507,7 +22735,7 @@
                   "y": 34.5,
                   "z": -8,
                   "rotationX": -32,
-                  "color": "#A5A52A"
+                  "color": "#A5a52A"
                 },
                 {
                   "type": "cone",
@@ -22517,7 +22745,7 @@
                   "y": 22,
                   "z": -24,
                   "rotationX": -75,
-                  "color": "#A5A52A"
+                  "color": "#A5a52A"
                 },
                 {
                   "type": "cone",
@@ -22527,7 +22755,7 @@
                   "y": 16,
                   "z": -38,
                   "rotationX": -75,
-                  "color": "#A5A52A"
+                  "color": "#A5a52A"
                 },
                 {
                   "type": "box",
@@ -22535,11 +22763,69 @@
                   "height": 1,
                   "depth": 28,
                   "x": 18,
-                  "y": 24.5,
+                  "y": 25.5,
                   "z": -4,
+                  "rotationY": -30,
+                  "rotationZ": 12,
+                  "color": "#A5a52A",
+                  "rotationX": -5,
+                  "name": "wing-left-0"
+                },
+                {
+                  "type": "box",
+                  "width": 6,
+                  "height": 1,
+                  "depth": 20,
+                  "x": -40,
+                  "y": 12,
+                  "z": -25,
                   "rotationY": 15,
-                  "rotationZ": 8,
-                  "color": "#A5A52A"
+                  "rotationZ": 15,
+                  "color": "#A5a52A",
+                  "rotationX": -25,
+                  "name": "wing-right-2"
+                },
+                {
+                  "type": "box",
+                  "width": 18,
+                  "height": 1,
+                  "depth": 24,
+                  "x": 30,
+                  "y": 20,
+                  "z": -15,
+                  "rotationY": 15,
+                  "rotationZ": -15,
+                  "color": "#A5a52A",
+                  "rotationX": -15,
+                  "name": "wing-left-1"
+                },
+                {
+                  "type": "box",
+                  "width": 18,
+                  "height": 1,
+                  "depth": 24,
+                  "x": -30,
+                  "y": 20,
+                  "z": -15,
+                  "rotationY": -15,
+                  "rotationZ": 15,
+                  "color": "#A5a52A",
+                  "rotationX": -15,
+                  "name": "wing-right-1"
+                },
+                {
+                  "type": "box",
+                  "width": 6,
+                  "height": 1,
+                  "depth": 20,
+                  "x": 40,
+                  "y": 12,
+                  "z": -25,
+                  "rotationY": -15,
+                  "rotationZ": -15,
+                  "color": "#A5a52A",
+                  "rotationX": -25,
+                  "name": "wing-left-2"
                 },
                 {
                   "type": "box",
@@ -22547,59 +22833,13 @@
                   "height": 1,
                   "depth": 28,
                   "x": -18,
-                  "y": 24.5,
+                  "y": 25.5,
                   "z": -4,
-                  "rotationY": -15,
-                  "rotationZ": -16,
-                  "color": "#A5A52A"
-                },
-                {
-                  "type": "box",
-                  "width": 18,
-                  "height": 1,
-                  "depth": 24,
-                  "x": 18,
-                  "y": 27.5,
-                  "z": -4,
-                  "rotationY": 15,
-                  "rotationZ": 20,
-                  "color": "#A5A52A"
-                },
-                {
-                  "type": "box",
-                  "width": 18,
-                  "height": 1,
-                  "depth": 24,
-                  "x": -18,
-                  "y": 27.5,
-                  "z": -4,
-                  "rotationY": -15,
-                  "rotationZ": -28,
-                  "color": "#A5A52A"
-                },
-                {
-                  "type": "box",
-                  "width": 16,
-                  "height": 1,
-                  "depth": 20,
-                  "x": 18,
-                  "y": 30.5,
-                  "z": -4,
-                  "rotationY": 15,
-                  "rotationZ": 32,
-                  "color": "#A5A52A"
-                },
-                {
-                  "type": "box",
-                  "width": 16,
-                  "height": 1,
-                  "depth": 20,
-                  "x": -18,
-                  "y": 30.5,
-                  "z": -4,
-                  "rotationY": -15,
-                  "rotationZ": -40,
-                  "color": "#A5A52A"
+                  "rotationY": 30,
+                  "rotationZ": -12,
+                  "color": "#A5a52A",
+                  "rotationX": -5,
+                  "name": "wing-right-0"
                 }
               ]
             }
@@ -24463,7 +24703,7 @@
     "level1": {
       "title": "Level 1",
       "wavesets": [
-        "swarm",
+        "level1_start1",
         "level1_start2"
       ],
       "tileMap": {
