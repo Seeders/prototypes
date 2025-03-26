@@ -9,7 +9,10 @@
     },
     "editor": {
       "title": "Editor Config",
-      "theme": "videogame"
+      "theme": "videogame",
+      "aiEndPoint": "http://127.0.0.1:11434/api/generate",
+      "aiModel": "deepseek-r1:32b",
+      "defaultPrompt": "I am developing a 2D tower defense game featuring a minimalist art style where players strategically deploy towers to prevent enemies from reaching key objectives. The game includes resource management, strategic upgrades, and dynamic enemy waves.  Generate a new ${type} object based on the following context.    Please provide ONLY a valid JSON object with keys MATCHING EXACTLY to the context above. It absolutely MUST have an appropriate 'id' field. Ensure all existing key types are maintained. Do not wrap the json object with any other text."
     }
   },
   "projectiles": {
@@ -3361,7 +3364,8 @@
                   "x": 0,
                   "y": 3.0216666666666674,
                   "z": 1.8888888888888884,
-                  "color": "#555555"
+                  "color": "#555555",
+                  "name": "base"
                 },
                 {
                   "type": "cylinder",
@@ -3370,7 +3374,8 @@
                   "x": 0,
                   "y": 10,
                   "z": 1.8888888888888884,
-                  "color": "#444444"
+                  "color": "#444444",
+                  "name": "body"
                 },
                 {
                   "type": "box",
@@ -3381,7 +3386,8 @@
                   "y": 19.521666666666665,
                   "z": 1.8888888888888884,
                   "color": "#3A3A3A",
-                  "rotationX": 15
+                  "rotationX": 15,
+                  "name": "missile-box"
                 },
                 {
                   "type": "cylinder",
@@ -3391,7 +3397,8 @@
                   "y": 24.021666666666665,
                   "z": 3.3888888888888884,
                   "rotationX": 105,
-                  "color": "#2A2A2A"
+                  "color": "#2A2A2A",
+                  "name": "left missile container"
                 },
                 {
                   "type": "cylinder",
@@ -3401,7 +3408,8 @@
                   "y": 24.021666666666665,
                   "z": 3.3888888888888884,
                   "rotationX": 105,
-                  "color": "#2A2A2A"
+                  "color": "#2A2A2A",
+                  "name": "right missile container"
                 },
                 {
                   "type": "cylinder",
@@ -3412,7 +3420,8 @@
                   "z": -7.111111111111111,
                   "rotationX": 105,
                   "color": "#7f7f7f",
-                  "rotationZ": 0
+                  "rotationZ": 0,
+                  "name": "left missile"
                 },
                 {
                   "type": "cylinder",
@@ -3422,7 +3431,8 @@
                   "y": 27.021666666666665,
                   "z": -7.111111111111111,
                   "rotationX": 105,
-                  "color": "#7f7f7f"
+                  "color": "#7f7f7f",
+                  "name": "right missile"
                 },
                 {
                   "type": "cone",
@@ -3432,7 +3442,8 @@
                   "y": 29.429166666666667,
                   "z": -16.11111111111111,
                   "rotationX": -75,
-                  "color": "#D14A4A"
+                  "color": "#D14A4A",
+                  "name": "left missile tip"
                 },
                 {
                   "type": "cone",
@@ -3442,7 +3453,8 @@
                   "y": 29.429166666666667,
                   "z": -16.11111111111111,
                   "rotationX": -75,
-                  "color": "#D14A4A"
+                  "color": "#D14A4A",
+                  "name": "right missile tip"
                 }
               ]
             }
@@ -3573,6 +3585,81 @@
                   "y": 12,
                   "z": -14,
                   "color": "#C0FFFF"
+                }
+              ]
+            }
+          ]
+        }
+      }
+    },
+    "guardTower": {
+      "id": "guardTower",
+      "title": "Guard Tower",
+      "info": "A robust defensive structure that deals consistent damage while slowing enemies within a radius.",
+      "cost": 70,
+      "population": 3,
+      "range": 4,
+      "damage": 8,
+      "attackSpeed": 40,
+      "projectile": "",
+      "critChance": 0.05,
+      "critMultiplier": 2,
+      "splashRadius": 2,
+      "render": {
+        "animations": {
+          "idle": [
+            {
+              "shapes": [
+                {
+                  "type": "box",
+                  "width": 1.5,
+                  "height": 3,
+                  "color": "#4a697d"
+                },
+                {
+                  "type": "box",
+                  "x": -0.25,
+                  "y": 1.5,
+                  "width": 1,
+                  "height": 1.5,
+                  "color": "#4a697d"
+                },
+                {
+                  "type": "box",
+                  "x": -0.75,
+                  "y": 3,
+                  "width": 2.5,
+                  "height": 0.5,
+                  "color": "#4a697d"
+                },
+                {
+                  "type": "circle",
+                  "radius": 0.5,
+                  "x": -1.25,
+                  "y": 3.5,
+                  "color": "#e6e6fa"
+                },
+                {
+                  "type": "circle",
+                  "radius": 0.5,
+                  "x": 0.75,
+                  "y": 3.5,
+                  "color": "#e6e6fa"
+                },
+                {
+                  "type": "line",
+                  "points": [
+                    {
+                      "x": -1,
+                      "y": 4
+                    },
+                    {
+                      "x": 1,
+                      "y": 4
+                    }
+                  ],
+                  "width": 0.2,
+                  "color": "#87CEEB"
                 }
               ]
             }
@@ -23329,6 +23416,13 @@
       "title": "Slow",
       "desc": "Target is slowed",
       "stat": "speed",
+      "lifeTime": 100
+    },
+    "weaken": {
+      "id": "weaken",
+      "title": "Weakened",
+      "desc": "Target's armor is reduced",
+      "stat": "armor",
       "lifeTime": 100
     }
   },
