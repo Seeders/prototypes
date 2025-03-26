@@ -1,8 +1,7 @@
 import { Component } from "../engine/Component.js";
 
 class Health extends Component { 
-    constructor( game, parent ) {
-        super(game, parent);        
+    init(){
         let statsComp = parent.getComponent('stats');
         this.hp = statsComp.stats.hp;
         

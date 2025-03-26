@@ -1,8 +1,7 @@
 import { Component } from "../engine/Component.js";
 
 class PopulationBurden extends Component {
-    constructor(game, parent) {
-        super(game, parent);
+    init(){
         this.stats = this.parent.getComponent('stats').stats;        
     }
     update() {

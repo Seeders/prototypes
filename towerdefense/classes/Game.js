@@ -28,8 +28,6 @@ import { ChainProjectile } from "../components/ChainProjectile.js";
 import { Projectile } from "../components/Projectile.js";
 import { EnergyShield } from "../components/EnergyShield.js";
 
-import { calculateStats } from "../functions/calculateStats.js";
-
 class Game extends Engine {
     constructor() {
         super();
@@ -56,7 +54,6 @@ class Game extends Engine {
 
         await super.init(this.gameConfig);
  
-        this.upgradeManager = new UpgradeManager(this);
         this.setupTowerPlacement();
         this.state.isPaused = true;
         this.drawStats();
@@ -77,7 +74,6 @@ class Game extends Engine {
                 
         // Update wave status using WaveManager
        // this.waveManager.update();
-        this.upgradeManager.update();
 
         // Game over check
         if (this.state.bloodCoreHP <= 0 && !this.state.gameOver) {

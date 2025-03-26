@@ -1,8 +1,7 @@
 import { Component } from "../engine/Component.js";
 
 class ArrayTracker extends Component {
-    constructor(game, parent, arr) {
-        super(game, parent);
+    init( arr) {
         this.arr = arr;
         if(!this.game.state[this.arr]){
             this.game.state[this.arr] = [];

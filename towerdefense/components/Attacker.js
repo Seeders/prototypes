@@ -1,8 +1,7 @@
 import { Component } from "../engine/Component.js";
 
 class Attacker extends Component {
-    constructor(game, parent) {
-        super(game, parent);     
+    init() {        
         this.stats = this.getComponent('stats').stats;    
         this.level = 1;
         this.target = null;

@@ -1,8 +1,7 @@
 import { Component } from "../engine/Component.js";
 
 class Explosion extends Component {
-    constructor(game, parent, radius) {
-        super(game, parent);
+    init( radius) {
         this.maxRadius = radius * this.game.gameConfig.configs.game.gridSize;
         this.currentRadius = 0;
         this.alpha = 1;

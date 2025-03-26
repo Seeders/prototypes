@@ -2,8 +2,7 @@ import { Component } from "../engine/Component.js";
 import { calculateDamage } from "../functions/calculateDamage.js";
 
 class ChainProjectile extends Component {
-    constructor(game, parent, type, owner, target, stats) {
-        super(game, parent);
+    init( type, owner, target, stats) {        
         this.type = type;
         this.owner = owner;
         this.target = target;

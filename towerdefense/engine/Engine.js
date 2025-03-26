@@ -92,9 +92,8 @@ class Engine {
         try {
             // Default constructor if none is provided in scriptText
             const defaultConstructor = `
-                constructor(game, parent, params) {
+                constructor(game, parent) {
                     super(game, parent);
-                    this.params = params;
                 }
             `;
 
@@ -107,9 +106,8 @@ class Engine {
                 classBody = `${defaultConstructor}\n${scriptText}`;
             }
             // If a constructor is found, it will override the default one entirely
-
             const scriptFunction = new Function(
-                'game', 'parent', 'params', 'Component', 'calculateStats', 'calculateDamage',
+                'game', 'parent', 'params', 'Component',
                 `return class ${typeName}Script extends Component {
                     ${classBody}
                 }`
@@ -119,9 +117,7 @@ class Engine {
                 this.scriptContext.game,
                 null, // parent will be set by entity
                 {},   // initial params
-                this.scriptContext.Component,
-                this.scriptContext.calculateStats,
-                this.scriptContext.calculateDamage
+                this.scriptContext.Component
             );
 
             this.scriptCache.set(typeName, ScriptClass);

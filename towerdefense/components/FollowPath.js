@@ -1,7 +1,6 @@
 import { Component } from "../engine/Component.js";
 class FollowPath extends Component {
-    constructor(game, parent, pathIndex = 0) {
-        super(game, parent);
+    init( pathIndex = 0) {
         this.gridSize = this.game.gameConfig.configs.game.gridSize;
         this.pathIndex = pathIndex;
         this.indexInPath = 0;

@@ -1,9 +1,8 @@
 import { Component } from "../engine/Component.js";
 
 class LightningRenderer extends Component {
-    constructor(game, parent, ownerStats) {
-        super(game, parent);
-        this.ctx = game.ctx;
+    init( ownerStats) {
+        this.ctx = this.game.ctx;
         this.startOffsetY = ownerStats.projectileStartOffsetY || CONFIG.GRID_SIZE / 2;
     }
 

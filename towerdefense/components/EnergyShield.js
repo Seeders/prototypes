@@ -1,9 +1,7 @@
 import { Component } from "../engine/Component.js";
 
 class EnergyShield extends Component {
-    constructor(game, parent) {
-        super(game, parent);
-        
+    init(){
         // Get stats component for reference
         let statsComp = parent.getComponent('stats');
         

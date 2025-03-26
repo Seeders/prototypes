@@ -1,9 +1,8 @@
 import { Component } from "../engine/Component.js";
 
 class Animator extends Component {
-    constructor(game, parent, prefix, type) {
-        super(game, parent);
-        this.animations = game.imageManager.getImages(prefix, type); // { "idle": [...], "walk": [...] }
+    init(prefix, type) {
+        this.animations = this.game.imageManager.getImages(prefix, type); // { "idle": [...], "walk": [...] }
         this.currentAnimation = "idle";
         if(this.animations.walk) this.currentAnimation = "walk";
         this.currentFrame = 0;

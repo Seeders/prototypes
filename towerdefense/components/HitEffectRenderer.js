@@ -1,9 +1,8 @@
 import { Component } from "../engine/Component.js";
 
 class HitEffectRenderer extends Component {
-    constructor(game, parent, image, offsetY) {
-        super(game, parent);
-        this.ctx = game.ctx;
+    init( image, offsetY) {
+        this.ctx = this.game.ctx;
     }
 
     draw() {

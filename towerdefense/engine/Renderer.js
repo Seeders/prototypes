@@ -1,8 +1,7 @@
 import { Component } from "./Component.js";
 
 class Renderer extends Component {
-    constructor(game, parent, images, setDirection = -1) {
-        super(game, parent);
+    init( images, setDirection = -1) {
         this.images = images;  
         this.setDirection = setDirection;
         this.currentDirection = 0; // Default direction (will be 0-7 now)

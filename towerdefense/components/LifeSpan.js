@@ -1,8 +1,7 @@
 import { Component } from "../engine/Component.js";
 
 class LifeSpan extends Component {
-    constructor(game, parent, lifeSpan) {
-        super(game, parent);
+    init( lifeSpan) {
         this.lifeSpan = lifeSpan;
     }
     update() {        

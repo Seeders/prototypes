@@ -1,8 +1,7 @@
 import { Component } from "../engine/Component.js";
 
 class Effect extends Component { 
-    constructor(game, parent, config, applyFn, amount) {
-        super(game, parent);
+    init( config, applyFn, amount) {
         this.id = config.id;
         this.title = config.title;
         this.desc = config.desc;

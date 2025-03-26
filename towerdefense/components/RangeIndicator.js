@@ -1,10 +1,9 @@
 import { Component } from "../engine/Component.js";
 
 class RangeIndicator extends Component {
-    constructor(game, parent, image, offsetY) {
-        super(game, parent);
-        this.ctx = game.ctx;
-        this.translator = game.translator; // Access translator for tileWidth
+    init( image, offsetY) {
+        this.ctx = this.game.ctx;
+        this.translator = this.game.translator; // Access translator for tileWidth
     }
 
     draw() {

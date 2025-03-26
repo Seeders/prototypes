@@ -3,8 +3,7 @@ import { calculateStats } from "../functions/calculateStats.js";
 import { Effect } from "./Effect.js";
 
 class Stats extends Component { 
-    constructor( game, parent, type, stats ) {
-        super(game, parent);
+    init( type, stats ) {        
         this.type = type;
         this.stats = {...stats};
         this.defaultStats = {...this.stats};

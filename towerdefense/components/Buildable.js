@@ -1,8 +1,7 @@
 import { Component } from "../engine/Component.js";
 
 class Buildable extends Component {
-    constructor(game, parent) {
-        super(game, parent);
+    init() {        
         this.placed = false;
     }
 }
