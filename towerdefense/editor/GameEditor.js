@@ -178,7 +178,8 @@ class GameEditor {
             <div class="actions">
                 <div>
                     <button class="primary" id="save-object-btn">Save ${singularType}</button>
-                    <button id="revert-changes-btn">Revert Changes</button>
+                    <button id="duplicate-object-btn">Duplicate Object</button>
+                    <button id="revert-changes-btn">Revert Changes</button>                    
                     <button class="danger" id="delete-object-btn">Delete ${singularType}</button>
                 </div>
             </div>
@@ -188,6 +189,12 @@ class GameEditor {
         // Add event listener
         document.getElementById('ai-prompt-btn').addEventListener('click', () => {
             this.aiPromptPanel.showModal();
+        });
+        document.getElementById('duplicate-object-btn').addEventListener('click', () => {
+            this.elements.duplicateObjectIdInput.value = '';
+            this.elements.duplicateObjectNameInput.value = '';
+            this.updateDuplicateObjectModal();
+            this.elements.duplicateObjectModal.classList.add('show');
         });
         // Setup property editor
         const customPropertiesContainer = document.getElementById('custom-properties');
@@ -234,7 +241,7 @@ class GameEditor {
         
         // Check if the key matches a type name (plural or singular)
         const matchingTypePlural = this.state.objectTypeDefinitions.find(t => t.id.toLowerCase() === key.toLowerCase());
-        const matchingTypeSingular = this.state.objectTypeDefinitions.find(t => t.singular.toLowerCase() === key.toLowerCase());
+        const matchingTypeSingular = this.state.objectTypeDefinitions.find(t => t.singular.replace(/ /g,'').toLowerCase() === key.toLowerCase());
         
         propertyItem.appendChild(keyInput);
         // Regular property input (not a reference)
@@ -851,12 +858,7 @@ class GameEditor {
         document.getElementById('create-object-btn').addEventListener('click', () => this.createNewObject());
         
         // New object handling
-        document.getElementById('duplicate-object-btn').addEventListener('click', () => {
-            this.elements.duplicateObjectIdInput.value = '';
-            this.elements.duplicateObjectNameInput.value = '';
-            this.updateDuplicateObjectModal();
-            this.elements.duplicateObjectModal.classList.add('show');
-        });
+
 
         document.getElementById('close-duplicate-object-modal').addEventListener('click', () => {
             this.elements.duplicateObjectModal.classList.remove('show');

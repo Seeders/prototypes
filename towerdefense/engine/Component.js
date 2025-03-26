@@ -9,6 +9,7 @@ class Component {
         return this.parent.getComponent(type);
     }
     update() {}
+    postUpdate() {}
     destroy() {}
 }
 

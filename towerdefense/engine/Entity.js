@@ -38,23 +38,32 @@ class Entity {
         this.gridPosition = this.game.translator.snapToGrid(gridPosition.x, gridPosition.y);      
         this.drawPosition = { x: isoPos.x, y: isoPos.y};
     }
+    updateLastPositions() {
+        this.lastPosition = {...this.position};
+        this.lastGridPosition = {...this.gridPosition};
+        this.lastDrawPosition = {...this.drawPosition};         
+    }
     update() {    
-        
         this.setPositions();
         for(let c in this.components) {
             this.components[c].update();   
             if(this.destroyed) break;
+        }             
+        this.setPositions();        
+        return !this.destroyed;
+    }
+    postUpdate() {
+        for(let c in this.components) {
+            this.components[c].postUpdate();   
+            if(this.destroyed) break;
         }     
+        this.updateLastPositions(); 
         return !this.destroyed;
     }
     draw() {
         if( this.renderers.length ) {
             this.renderers.forEach( (r) => r.draw() );
         }   
-        
-        this.lastPosition = {...this.position};
-        this.lastGridPosition = {...this.gridPosition};
-        this.lastDrawPosition = {...this.drawPosition}; 
     }
     destroy() {
         this.destroyed = true;

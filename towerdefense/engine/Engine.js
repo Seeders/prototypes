@@ -4,8 +4,10 @@ import { SpatialGrid } from "./SpatialGrid.js";
 import { ImageManager } from "./ImageManager.js";
 import { CoordinateTranslator } from './CoordinateTranslator.js';
 import { MapRenderer } from "./MapRenderer.js";
+import { MapManager } from "./MapManager.js";
 import { calculateDamage } from "../functions/calculateDamage.js";
 import { calculateStats } from "../functions/calculateStats.js";
+import { GameState } from "../engine/GameState.js";
 
 class Engine {
     constructor() {
@@ -22,32 +24,49 @@ class Engine {
         this.deltaTime = 0;
     }
 
-    async init(config) {
-        this.gameConfig = config;
+    async init() {
+        this.gameConfig = await this.loadConfig();
+        if (!this.gameConfig) {
+            console.error("Failed to load game configuration");
+            return;
+        }
         
-        this.canvasBuffer.setAttribute('width', this.gameConfig.configs.game.canvasWidth);
-        this.canvasBuffer.setAttribute('height', this.gameConfig.configs.game.canvasHeight);
-        this.canvas.setAttribute('width', this.gameConfig.configs.game.canvasWidth);
-        this.canvas.setAttribute('height', this.gameConfig.configs.game.canvasHeight);
+        this.state = new GameState(this.gameConfig);
         
-        this.translator = new CoordinateTranslator(this.gameConfig.configs.game, this.gameConfig.levels[this.state.currentLevel].tileMap.terrainMap.length);
-        this.spatialGrid = new SpatialGrid(this.gameConfig.levels[this.state.currentLevel].tileMap.terrainMap.length, this.gameConfig.configs.game.gridSize);
         this.imageManager = new ImageManager(this.gameConfig.configs.game.imageSize);
      
 
         // Load all images
         for(let objectType in this.gameConfig) {
             await this.imageManager.loadImages(objectType, this.gameConfig[objectType]);
-        }   
+        }  
         
-        this.mapRenderer = new MapRenderer(this.canvasBuffer, this.gameConfig.environment, this.imageManager, this.gameConfig.configs.game.level, this.gameConfig.configs.game, this.gameConfig.levels[this.state.currentLevel].tileMap.terrainBGColor );
-   
+        this.mapManager = new MapManager(); 
+        const { tileMap, paths } = this.mapManager.generateMap(this.gameConfig.levels[this.state.level].tileMap);
+        this.state.tileMap = tileMap;
+        this.state.paths = paths;
+        this.state.tileMapData = this.gameConfig.levels[this.state.level].tileMap;
+        
+        this.canvasBuffer.setAttribute('width', this.gameConfig.configs.game.canvasWidth);
+        this.canvasBuffer.setAttribute('height', this.gameConfig.configs.game.canvasHeight);
+        this.canvas.setAttribute('width', this.gameConfig.configs.game.canvasWidth);
+        this.canvas.setAttribute('height', this.gameConfig.configs.game.canvasHeight);
+        
+        this.translator = new CoordinateTranslator(this.gameConfig.configs.game, this.gameConfig.levels[this.state.level].tileMap.terrainMap.length);
+        this.spatialGrid = new SpatialGrid(this.gameConfig.levels[this.state.level].tileMap.terrainMap.length, this.gameConfig.configs.game.gridSize);
+        this.mapRenderer = new MapRenderer(this.canvasBuffer, this.gameConfig.environment, this.imageManager, this.state.level, this.gameConfig.configs.game, this.gameConfig.levels[this.state.level].tileMap.terrainBGColor );   
+
         this.imageManager.dispose();
 
         this.scriptCache = new Map(); // Cache compiled scripts
         this.setupScriptEnvironment();
         this.preCompileScripts();
+        this.gameEntity = this.createEntityFromConfig(0, 0, 'game');
         this.animationFrameId = requestAnimationFrame(() => this.gameLoop());
+
+    }
+
+    reset() {
 
     }
 
@@ -84,10 +103,15 @@ class Engine {
             }
         }
     }
-    createEntityFromConfig(x, y, type, params) {
-        const entity = new Entity(this, x, y);
-        const def = this.gameConfig.entities[type];
+    
+    spawn(x, y, type, params) {
+        return this.addEntity(this.createEntityFromConfig(x, y, type, params));
+    }
 
+    createEntityFromConfig(x, y, type, params) {
+        const entity = this.createEntity(x, y);
+        const def = this.gameConfig.entities[type];
+        
         if (def.components) {
             def.components.forEach((componentType) => {
                 const componentDef = this.gameConfig.components[componentType];
@@ -149,6 +173,7 @@ class Engine {
     }
 
     update() {
+
         this.currentTime = Date.now();
     
         // Only update if a reasonable amount of time has passed
@@ -169,16 +194,19 @@ class Engine {
         this.state.entities.sort((a, b) => {
             return (b.position.y * this.state.tileMap.length + b.position.x) - (a.position.y * this.state.tileMap.length + a.position.x)
         });
-
+        this.gameEntity.update();
         // Update all entities
         for(let i = this.state.entities.length - 1; i >= 0; i--) {
             let e = this.state.entities[i];
-            let result = e.update();      
+            let result = e.update();     
+            e.draw();
+            e.postUpdate(); 
             if(!result) {               
                 this.state.entities.splice(i, 1);
-            }
-            e.draw();
+            }     
         }   
+        this.gameEntity.draw();
+        this.gameEntity.postUpdate();
     
         // Add any new entities
         this.entitiesToAdd.forEach((entity) => this.state.addEntity(entity));
@@ -208,6 +236,7 @@ class Engine {
     }
     addEntity(entity) {
         this.entitiesToAdd.push(entity);
+        return entity;
     }
 
     async loadConfig() {

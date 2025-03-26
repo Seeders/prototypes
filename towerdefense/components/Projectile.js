@@ -4,8 +4,8 @@ import { Explosion } from "./Explosion.js";
 import { calculateDamage } from "../functions/calculateDamage.js";
 
 class Projectile extends Component {
-    init( type, owner, target, stats) {
-        this.type = type;
+    init( {spawnType, owner, target, stats}) {
+        this.type = spawnType;
         this.def = this.game.gameConfig.projectiles[this.type];
         this.owner = owner;
         this.target = target;
