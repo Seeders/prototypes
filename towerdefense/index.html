@@ -73,9 +73,9 @@
     </div>
 </div>
 <script type="module">        
-    import { Game } from './classes/Game.js';
+    import { Engine } from './engine/Engine.js';
 
-    const game = new Game();  
+    const game = new Engine();  
     async function main() {  
         await game.init();
         document.getElementById('startGameBtn').removeAttribute('style');
