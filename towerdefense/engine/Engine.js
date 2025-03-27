@@ -79,7 +79,7 @@ class Engine {
             calculateDamage: calculateDamage,
             calculateStats: calculateStats,
             // Add a way to access other compiled scripts
-            getScript: (typeName) => this.scriptCache.get(typeName) || this.compileScript(this.gameConfig.components[typeName].script, typeName),
+            getComponent: (typeName) => this.scriptCache.get(typeName) || this.compileScript(this.gameConfig.components[typeName].script, typeName),
             Math: Math,
             console: {
                 log: (...args) => console.log('[Script]', ...args),
