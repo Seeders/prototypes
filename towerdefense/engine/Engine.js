@@ -165,10 +165,10 @@ class Engine {
             game: this,
             Entity: Entity,
             Component: Component,
-            calculateDamage: calculateDamage,
-            calculateStats: calculateStats,
+            getFunction: (typeName) => this.scriptCache.get(typeName) || this.compileScript(this.config.functions[typeName].script, typeName),
             // Add a way to access other compiled scripts
             getComponent: (typeName) => this.scriptCache.get(typeName) || this.compileScript(this.config.components[typeName].script, typeName),
+            getRenderer: (typeName) => this.scriptCache.get(typeName) || this.compileScript(this.config.renderers[typeName].script, typeName),
             Math: Math,
             console: {
                 log: (...args) => console.log('[Script]', ...args),
@@ -190,6 +190,10 @@ class Engine {
             if (componentDef.script) {
                 this.compileScript(componentDef.script, componentType);
             }
+        }
+        for( let func in this.config.functions) {
+            const compiledFunction = new Function('return ' + this.config.functions[func].script)();
+            this.scriptCache.set(func, compiledFunction);
         }
     }
     
