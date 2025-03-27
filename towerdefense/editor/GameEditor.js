@@ -85,58 +85,111 @@ class GameEditor {
 
     // Rendering methods
     renderTypeSelector() {
-        let html = `<h2>Object Types</h2>
-                    <div class="type-selector">`;
-        
+        let html = `<h2>Object Types</h2>`;
+    
+        // Group object types by category
+        const categories = {};
         this.state.objectTypeDefinitions.forEach(type => {
-            html += `<div class="object-item ${this.state.selectedType === type.id ? 'selected' : ''}" data-type="${type.id}">${type.name}</div>`;
+            const category = type.category || 'Uncategorized';
+            if (!categories[category]) {
+                categories[category] = [];
+            }
+            categories[category].push(type);
         });
-        
-        html += `</div>
-                <div class="type-actions">
-                    <button id="add-type-btn" class="small-btn">Add Type</button>
-                    ${this.state.objectTypeDefinitions.length > 1 ? `<button id="remove-type-btn" class="small-btn danger">Remove Type</button>` : ''}
-                </div>
-                <h2>${this.getPluralType(this.state.selectedType)}</h2>`;
-        
+    
+        // Initialize expandedCategories if not already set
+        if (!this.state.expandedCategories) {
+            this.state.expandedCategories = {};
+            for (const category in categories) {
+                this.state.expandedCategories[category] = false; // All closed by default
+            }
+        }
+    
+        // Render categories and their types
+        html += `<div class="type-selector">`;
+        for (const [category, types] of Object.entries(categories)) {
+            const isExpanded = this.state.expandedCategories[category] || false;
+            html += `
+                <div class="category">
+                    <div class="category-header">${category}</div>
+                    <div class="category-types" style="display: ${isExpanded ? 'block' : 'none'};">`;
+            types.forEach(type => {
+                const isSelected = this.state.selectedType === type.id;
+                html += `
+                    <div class="object-type-item ${isSelected ? 'selected' : ''}" data-type="${type.id}">
+                        ${type.name}
+                    </div>`;
+    
+                // If this is the selected type, render its objects underneath
+                if (isSelected) {
+                    html += `<div class="object-list">`;
+                    Object.keys(this.state.objectTypes[type.id] || {}).forEach(objId => {
+                        html += `
+                            <div class="object-item ${this.state.selectedObject === objId ? 'selected' : ''}" data-object="${objId}">
+                                ${objId}
+                            </div>`;
+                    });
+                    html += `</div>`;
+                }
+            });
+            html += `</div></div>`;
+        }
+        html += `</div>`;
+    
+        // Add type action buttons
+        html += `
+            <div class="type-actions">
+                <button id="add-type-btn" class="small-btn">Add Type</button>
+                ${this.state.objectTypeDefinitions.length > 1 ? `<button id="remove-type-btn" class="small-btn danger">Remove Type</button>` : ''}
+            </div>`;
+    
         return html;
     }
-
     renderObjectList() {
-        // Add type selector
+        // Render the type selector with integrated object list
         this.elements.objectList.innerHTML = this.renderTypeSelector();
-        
-        // Add objects of the selected type
-        Object.keys(this.state.objectTypes[this.state.selectedType] || {}).forEach(objId => {
-            const objectItem = document.createElement('div');
-            objectItem.className = `object-item ${this.state.selectedObject === objId ? 'selected' : ''}`;
-            objectItem.textContent = objId;
-            objectItem.addEventListener('click', () => this.selectObject(objId));
-            this.elements.objectList.appendChild(objectItem);
-        });
-        
+    
         // Add event listeners for type selection
-        document.querySelectorAll('.type-selector .object-item').forEach(item => {
+        document.querySelectorAll('.type-selector .object-type-item').forEach(item => {
             item.addEventListener('click', () => {
                 this.state.selectedType = item.dataset.type;
-                this.state.selectedObject = null;
+                this.state.selectedObject = null; // Reset selected object when changing type
                 this.renderObjectList();
                 this.renderEditor();
                 this.renderPreview();
                 this.updateSidebarButtons();
-                let objects = this.state.objectTypes[this.state.selectedType];
-                for(let objectType in objects) {                 
-                    this.selectObject(objectType);
-                    break;                 
+    
+                // Auto-select the first object of the new type, if any
+                const objects = this.state.objectTypes[this.state.selectedType];
+                if (objects && Object.keys(objects).length > 0) {
+                    this.selectObject(Object.keys(objects)[0]);
                 }
             });
         });
-        
+    
+        // Add event listeners for object selection
+        document.querySelectorAll('.object-list .object-item').forEach(item => {
+            item.addEventListener('click', () => {
+                this.selectObject(item.dataset.object);
+            });
+        });
+    
+        // Add event listeners for category collapse/expand
+        document.querySelectorAll('.category-header').forEach(header => {
+            header.addEventListener('click', () => {
+                const category = header.textContent.trim(); // Use category name as key
+                // Collapse all categories except the clicked one
+                for (const cat in this.state.expandedCategories) {
+                    this.state.expandedCategories[cat] = cat === category;
+                }
+                this.renderObjectList(); // Re-render to reflect new state
+            });
+        });
+    
         // Add event listeners for type actions
         document.getElementById('add-type-btn')?.addEventListener('click', () => this.showAddTypeModal());
         document.getElementById('remove-type-btn')?.addEventListener('click', () => this.showRemoveTypeModal());
     }
-
     selectObject(objId) {
         this.state.selectedObject = objId;
         this.renderObjectList();
@@ -577,30 +630,29 @@ class GameEditor {
         const typeId = document.getElementById('new-type-id').value.trim();
         const typeName = document.getElementById('new-type-name').value.trim();
         const typeSingular = document.getElementById('new-type-singular').value.trim();
-        
+        const typeCategory = document.getElementById('new-type-category').value.trim();
+    
         if (!typeId) {
             alert('Please enter a Type ID');
             return;
         }
-        
+    
         if (this.state.objectTypes[typeId]) {
             alert(`Type "${typeId}" already exists`);
             return;
         }
-        
-        // Add the new type
+    
         this.state.objectTypes[typeId] = {};
         this.state.objectTypeDefinitions.push({
             id: typeId,
             name: typeName || typeId.charAt(0).toUpperCase() + typeId.slice(1),
-            singular: typeSingular || typeId.slice(0, -1).charAt(0).toUpperCase() + typeId.slice(0, -1).slice(1)
+            singular: typeSingular || typeId.slice(0, -1).charAt(0).toUpperCase() + typeId.slice(0, -1).slice(1),
+            category: typeCategory || 'Uncategorized'
         });
-        
-        // Switch to the new type
+    
         this.state.selectedType = typeId;
         this.state.selectedObject = null;
-        
-        // Close the modal and update UI
+    
         document.getElementById('add-type-modal').classList.remove('show');
         this.renderObjectList();
         this.renderEditor();
@@ -610,7 +662,6 @@ class GameEditor {
     }
 
     showAddTypeModal() {
-        // Create the modal if it doesn't exist
         if (!document.getElementById('add-type-modal')) {
             const modal = document.createElement('div');
             modal.className = 'modal';
@@ -630,6 +681,10 @@ class GameEditor {
                         <label for="new-type-singular">Singular Name:</label>
                         <input type="text" id="new-type-singular" placeholder="e.g. Weapon">
                     </div>
+                    <div class="form-group">
+                        <label for="new-type-category">Category:</label>
+                        <input type="text" id="new-type-category" placeholder="e.g. Gameplay">
+                    </div>
                     <div class="actions">
                         <button class="primary" id="create-type-btn">Create Type</button>
                         <button id="close-add-type-modal">Cancel</button>
@@ -637,15 +692,12 @@ class GameEditor {
                 </div>
             `;
             document.body.appendChild(modal);
-            
-            // Add event listeners
+    
             document.getElementById('create-type-btn').addEventListener('click', () => this.createNewType());
             document.getElementById('close-add-type-modal').addEventListener('click', () => {
                 document.getElementById('add-type-modal').classList.remove('show');
             });
         }
-        
-        // Show the modal
         document.getElementById('add-type-modal').classList.add('show');
     }
 

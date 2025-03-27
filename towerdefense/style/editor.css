@@ -443,8 +443,6 @@ button:after {
     100% { transform: translateX(100%); }
 }
 
-
-
 /* styles.css */
 .script-editor-container {
     margin-top: 20px;
@@ -471,7 +469,6 @@ button:after {
 }
 
 .tab.active {
-    background-color: #f0f0f0;
     border-bottom: 2px solid #007bff;
 }
 
@@ -481,4 +478,34 @@ button:after {
 
 .tab-content.active {
     display: block;
+}
+
+/* Category Structure (Structure-Only) */
+.type-selector {
+    margin-bottom: 10px;
+}
+
+.category {
+    margin: 5px 0;
+}
+
+.category-header {
+    padding: 5px 10px;
+    cursor: pointer;
+}
+
+.category-types {
+    padding-left: 15px;
+}
+
+.object-type-item {
+    padding: 5px;
+    cursor: pointer;
+}
+
+
+.object-item {
+    padding: 3px 5px; /* Adjusted to match structural intent */
+    cursor: pointer;
+    font-size: 0.9em;
 }
