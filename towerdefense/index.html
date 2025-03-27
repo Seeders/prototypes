@@ -8,88 +8,18 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Crimson+Pro:wght@400;600;700&family=Cinzel:wght@500;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="./style/style.css">
 </head>
-<body>
+<body style="background-color: black;">
 <div id="appContainer">
-    <div id="gameContainer">
-        <div id="waveInfo">
-            <span>Wave: <span id="waveDisplay">1</span></span>
-            <div class="progress-bar">
-                <div class="progress-fill" id="waveProgress"></div>
-            </div>
-        </div>
-        
-        <div id="statsContainer">
-            <div id="stats">
-                <div class="stat">
-                    <div class="stat-icon" style="background-color: var(--gold-color);"></div>
-                    <span>Gold: <span id="shardsDisplay">50</span></span>
-                </div>
-                <div class="stat">
-                    <div class="stat-icon" style="background-color: var(--essence-color);"></div>
-                    <span>Essence: <span id="essenceDisplay">0</span>/<span id="essenceNeededDisplay">100</span></span>
-                </div>
-                <div class="stat">
-                    <div class="stat-icon" style="background-color: var(--essence-color);"></div>
-                    <span>Population: <span id="populationDisplay">0</span>/<span id="maxPopulationDisplay">5</span></span>
-                </div>
-                <div class="stat">
-                    <div class="stat-icon" style="background-color: var(--health-color);"></div>
-                    <span>Core: <span id="hpDisplay">100</span></span>
-                </div>
-            </div>
-        </div>
-        
-        <canvas id="gameCanvas" width="800" height="600"></canvas>
-        <canvas id="mapCanvas" style="display:none" width="800" height="600"></canvas>
-        
-        <div id="towerMenu">
-             Loading...
-        </div>
-        
-        <button id="startGameBtn" style="display:none">Start Game</button>
-    </div>
     
-    <div id="overlay"></div>
-    
-    <div id="upgradeMenu">
-        <h2>Level Up! Choose an Upgrade:</h2>
-        <div id="upgradeOptions"></div>
-    </div>
-    
-    <div id="tooltip"></div>
-    
-    <div id="gameOverMenu">
-        <h2>Home Destroyed!</h2>
-        <p>You survived <span id="gameOverWave">0</span> waves</p>
-        <button class="menu-button"">Try Again</button>
-    </div>
-    
-    <div id="victoryMenu">
-        <h2>Victory!</h2>
-        <p>You've successfully defended your Home through all waves!</p>
-        <button class="menu-button">Play Again</button>
-    </div>
 </div>
 <script type="module">        
     import { Engine } from './engine/Engine.js';
 
-    const game = new Engine();  
+    const game = new Engine("appContainer");  
     async function main() {  
         await game.init();
-        document.getElementById('startGameBtn').removeAttribute('style');
-        document.getElementById('startGameBtn').addEventListener('click', (e) => {    
-            game.state.isPaused = false;
-            e.target.setAttribute('style','display:none;');
-        });
-        document.querySelector("#gameOverMenu .menu-button").addEventListener("click", (e) => {
-            game.reset();
-        });
-        
-        document.querySelector("#victoryMenu .menu-button").addEventListener("click", (e) => {
-            game.reset();
-        });
+
     }
 
     function resetGame() {

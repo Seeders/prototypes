@@ -10,13 +10,10 @@ import { calculateStats } from "../functions/calculateStats.js";
 import { GameState } from "../engine/GameState.js";
 
 class Engine {
-    constructor() {
+    constructor(target) {
         this.entityId = 0;
-        this.canvas = document.getElementById("gameCanvas");
-        this.finalCtx = this.canvas.getContext("2d");
-        this.canvasBuffer = document.createElement("canvas");
-        this.ctx = this.canvasBuffer.getContext("2d");
 
+        this.applicationTarget = document.getElementById(target);
         this.entitiesToAdd = [];
         
         this.currentTime = Date.now();
@@ -25,36 +22,29 @@ class Engine {
     }
 
     async init() {
-        this.gameConfig = await this.loadConfig();
-        if (!this.gameConfig) {
+        this.displayLoadScreen();
+        this.config = await this.loadConfig();
+        if (!this.config) {
             console.error("Failed to load game configuration");
             return;
         }
-        
-        this.state = new GameState(this.gameConfig);
-        
-        this.imageManager = new ImageManager(this.gameConfig.configs.game.imageSize);
-     
-
-        // Load all images
-        for(let objectType in this.gameConfig) {
-            await this.imageManager.loadImages(objectType, this.gameConfig[objectType]);
-        }  
+        this.state = new GameState(this.config);  
+      
+        await this.loadImages();
+ 
+        this.setupHTML();
         
         this.mapManager = new MapManager(); 
-        const { tileMap, paths } = this.mapManager.generateMap(this.gameConfig.levels[this.state.level].tileMap);
+        const { tileMap, paths } = this.mapManager.generateMap(this.config.levels[this.state.level].tileMap);
         this.state.tileMap = tileMap;
         this.state.paths = paths;
-        this.state.tileMapData = this.gameConfig.levels[this.state.level].tileMap;
+        this.state.tileMapData = this.config.levels[this.state.level].tileMap;
         
-        this.canvasBuffer.setAttribute('width', this.gameConfig.configs.game.canvasWidth);
-        this.canvasBuffer.setAttribute('height', this.gameConfig.configs.game.canvasHeight);
-        this.canvas.setAttribute('width', this.gameConfig.configs.game.canvasWidth);
-        this.canvas.setAttribute('height', this.gameConfig.configs.game.canvasHeight);
+
         
-        this.translator = new CoordinateTranslator(this.gameConfig.configs.game, this.gameConfig.levels[this.state.level].tileMap.terrainMap.length);
-        this.spatialGrid = new SpatialGrid(this.gameConfig.levels[this.state.level].tileMap.terrainMap.length, this.gameConfig.configs.game.gridSize);
-        this.mapRenderer = new MapRenderer(this.canvasBuffer, this.gameConfig.environment, this.imageManager, this.state.level, this.gameConfig.configs.game, this.gameConfig.levels[this.state.level].tileMap.terrainBGColor );   
+        this.translator = new CoordinateTranslator(this.config.configs.game, this.config.levels[this.state.level].tileMap.terrainMap.length);
+        this.spatialGrid = new SpatialGrid(this.config.levels[this.state.level].tileMap.terrainMap.length, this.config.configs.game.gridSize);
+        this.mapRenderer = new MapRenderer(this.canvasBuffer, this.config.environment, this.imageManager, this.state.level, this.config.configs.game, this.config.levels[this.state.level].tileMap.terrainBGColor );   
 
         this.imageManager.dispose();
 
@@ -63,7 +53,106 @@ class Engine {
         this.preCompileScripts();
         this.gameEntity = this.createEntityFromConfig(0, 0, 'game');
         this.animationFrameId = requestAnimationFrame(() => this.gameLoop());
+        this.setupEventListeners();
 
+    }
+
+    async loadImages() {
+        this.imageManager = new ImageManager(this.config.configs.game.imageSize);    
+
+        // Load all images
+        for(let objectType in this.config) {
+            await this.imageManager.loadImages(objectType, this.config[objectType]);
+        }  
+    }
+
+    setupHTML() {      
+        document.body.style = "";  
+        this.applicationTarget.innerHTML = this.config.configs.game.html; 
+        const styleEl = document.createElement("style");
+        styleEl.innerHTML = this.config.configs.game.css;
+        document.head.appendChild(styleEl);
+        this.setupCanvas();
+    }
+
+    setupCanvas() {
+        this.canvas = document.getElementById("gameCanvas");
+        this.finalCtx = this.canvas.getContext("2d");
+        this.canvasBuffer = document.createElement("canvas");
+        this.ctx = this.canvasBuffer.getContext("2d");
+        this.canvasBuffer.setAttribute('width', this.config.configs.game.canvasWidth);
+        this.canvasBuffer.setAttribute('height', this.config.configs.game.canvasHeight);
+        this.canvas.setAttribute('width', this.config.configs.game.canvasWidth);
+        this.canvas.setAttribute('height', this.config.configs.game.canvasHeight);
+
+    }
+
+    setupEventListeners() {
+        this.canvas.addEventListener('mousemove', (e) => {
+            const rect = this.canvas.getBoundingClientRect();
+            const mouseX = e.clientX - rect.left;
+            const mouseY = e.clientY - rect.top;
+            const gridPos = this.translator.isoToGrid(mouseX, mouseY);
+            const snappedGrid = this.translator.snapToGrid(gridPos.x, gridPos.y);
+            const pixelIsoPos = this.translator.pixelToIso(mouseX, mouseY);
+            this.state.mousePosition = { 
+                x: mouseX, 
+                y: mouseY, 
+                isoX: pixelIsoPos.x, 
+                isoY: pixelIsoPos.y, 
+                gridX: snappedGrid.x, 
+                gridY: snappedGrid.y 
+            };
+        
+        });
+    }
+
+    displayLoadScreen() {
+        this.applicationTarget.innerHTML = `
+        <div class='loading-screen' style='
+      border: none;
+      border-radius: 1.5em;
+      background: #2d2d2d;
+      color: #ffffff;
+      width: 600px;
+      height: 400px;
+      position: absolute;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      top: 0;
+      margin: auto;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+      overflow: hidden;
+    '>
+      <div style='
+        position: relative;
+        font-family: Arial, sans-serif;
+        font-size: 1.5em;
+        letter-spacing: 2px;
+        text-transform: uppercase;
+      '>
+        Loading
+        <span style='
+          animation: dots 1.5s infinite;
+        '>
+          <span style='opacity: 0.5; animation: dotFade 1.5s infinite 0s;'>.</span>
+          <span style='opacity: 0.5; animation: dotFade 1.5s infinite 0.2s;'>.</span>
+          <span style='opacity: 0.5; animation: dotFade 1.5s infinite 0.4s;'>.</span>
+        </span>
+      </div>
+      <style>
+        @keyframes dotFade {
+          0% { opacity: 0.5; }
+          50% { opacity: 1; }
+          100% { opacity: 0.5; }
+        }
+      </style>
+    </div>
+        `;
     }
 
     reset() {
@@ -79,7 +168,7 @@ class Engine {
             calculateDamage: calculateDamage,
             calculateStats: calculateStats,
             // Add a way to access other compiled scripts
-            getComponent: (typeName) => this.scriptCache.get(typeName) || this.compileScript(this.gameConfig.components[typeName].script, typeName),
+            getComponent: (typeName) => this.scriptCache.get(typeName) || this.compileScript(this.config.components[typeName].script, typeName),
             Math: Math,
             console: {
                 log: (...args) => console.log('[Script]', ...args),
@@ -90,14 +179,14 @@ class Engine {
 
     // Pre-compile all scripts to ensure availability
     preCompileScripts() {
-        for (let componentType in this.gameConfig.components) {
-            const componentDef = this.gameConfig.components[componentType];
+        for (let componentType in this.config.components) {
+            const componentDef = this.config.components[componentType];
             if (componentDef.script) {
                 this.compileScript(componentDef.script, componentType);
             }
         }
-        for (let componentType in this.gameConfig.renderers) {
-            const componentDef = this.gameConfig.renderers[componentType];
+        for (let componentType in this.config.renderers) {
+            const componentDef = this.config.renderers[componentType];
             if (componentDef.script) {
                 this.compileScript(componentDef.script, componentType);
             }
@@ -110,11 +199,11 @@ class Engine {
 
     createEntityFromConfig(x, y, type, params) {
         const entity = this.createEntity(x, y);
-        const def = this.gameConfig.entities[type];
+        const def = this.config.entities[type];
         
         if (def.components) {
             def.components.forEach((componentType) => {
-                const componentDef = this.gameConfig.components[componentType];
+                const componentDef = this.config.components[componentType];
                 if (componentDef.script) {
                     const ScriptComponent = this.scriptCache.get(componentType);
                     if (ScriptComponent) {
@@ -125,7 +214,7 @@ class Engine {
         }
         if (def.renderers) {
             def.renderers.forEach((rendererType) => {
-                const componentDef = this.gameConfig.renderers[rendererType];
+                const componentDef = this.config.renderers[rendererType];
                 if (componentDef.script) {
                     const ScriptComponent = this.scriptCache.get(rendererType);
                     if (ScriptComponent) {
